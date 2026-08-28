@@ -1,0 +1,1632 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SoC-TEQ — Wayne State pilot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=IBM+Plex+Mono:wght@500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#0E1A1C; --ink2:#414F52; --ink3:#8A999D;
+  --bg:#F2F6F5; --card:#FFFFFF; --line:#E2EAE9;
+  --teal:#0E7C72; --teal-d:#064B45; --teal-w:#DCEFEB;
+  --plum:#5E3F73; --plum-w:#EEE7F3;
+  --amber:#8F5205; --amber-w:#FAEBD4;
+  --rose:#93393E; --rose-w:#F8E4E4;
+  --sage:#3D6B49; --sage-w:#E3EFE5;
+  --sh:0 1px 2px rgba(14,26,28,.04), 0 8px 22px rgba(14,26,28,.07);
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{background:radial-gradient(1100px 500px at 50% -8%, #1f3336 0%, #0d1a1c 55%, #060d0e 100%);
+  min-height:100vh; padding:26px 12px 56px; display:flex; justify-content:center; align-items:flex-start;
+  font-family:"Plus Jakarta Sans",system-ui,sans-serif; color:var(--ink)}
+.frame{width:100%; max-width:414px; min-height:820px; background:var(--bg); border-radius:34px; overflow:hidden;
+  position:relative; display:flex; flex-direction:column;
+  box-shadow:0 30px 70px rgba(0,0,0,.55), 0 0 0 9px #161d1e, 0 0 0 10px #2a3739}
+.demobar{background:#08110F; color:#7E9895; font-family:"IBM Plex Mono",monospace; font-size:10px;
+  letter-spacing:.08em; text-transform:uppercase; padding:8px 14px; display:flex; justify-content:space-between; align-items:center}
+.demobtn{background:#132322; color:#5E7B77; border-radius:6px; padding:4px 8px; font-family:inherit;
+  font-size:9px; letter-spacing:.08em; text-transform:uppercase; font-weight:700}
+.demobar select{background:#132322; color:#C9E0DC; border:1px solid #1f3634; border-radius:7px;
+  font-family:inherit; font-size:10px; padding:4px 6px; text-transform:none; letter-spacing:0}
+.screen{display:none; flex:1; flex-direction:column; min-height:0}
+.screen.active{display:flex}
+.scroll{flex:1; overflow-y:auto; padding:18px 16px 28px}
+
+h1,h2{font-family:"Bricolage Grotesque",system-ui,sans-serif; margin:0; letter-spacing:-.025em}
+h1{font-size:28px; font-weight:800; line-height:1.08}
+h2{font-size:21px; font-weight:700}
+h3{margin:0; font-size:15px; font-weight:700; letter-spacing:-.01em}
+p{margin:8px 0 0; font-size:14px; line-height:1.55; color:var(--ink2)}
+.eyebrow{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--teal)}
+.muted{color:var(--ink3); font-size:12.5px; line-height:1.5}
+
+.card{background:var(--card); border-radius:20px; padding:17px; margin-top:12px; box-shadow:var(--sh)}
+.row{display:flex; justify-content:space-between; align-items:center; gap:10px}
+.pill{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.06em; text-transform:uppercase;
+  font-weight:600; padding:5px 8px; border-radius:8px; background:var(--teal-w); color:var(--teal-d); white-space:nowrap}
+.pill.off{background:#EAEFEE; color:var(--ink3)}
+.pill.flag{background:var(--amber-w); color:var(--amber)}
+.pill.vio{background:var(--plum-w); color:var(--plum)}
+.pill.lock{background:#EEF1F0; color:var(--ink3)}
+
+label.f{display:block; margin:16px 0 6px; font-size:12.5px; font-weight:700}
+.flabel{display:flex; align-items:center; gap:7px; margin:16px 0 6px}
+.flabel span{font-size:12.5px; font-weight:700}
+.info{width:19px; height:19px; border-radius:50%; background:var(--teal-w); color:var(--teal-d);
+  font-size:11px; font-weight:800; line-height:1; display:flex; align-items:center; justify-content:center; padding:0; flex-shrink:0}
+.info.on{background:var(--teal); color:#fff}
+.guide{background:#F0F5F4; border-radius:13px; padding:13px; margin-top:8px; display:none; font-size:12.5px; line-height:1.55; color:var(--ink2)}
+.guide.open{display:block}
+.guide b{color:var(--ink)}
+.guide .src{display:block; margin-top:9px; font-size:11px; color:var(--ink3)}
+
+input,select,textarea{width:100%; padding:13px; font-family:inherit; font-size:15px; color:var(--ink);
+  background:var(--card); border:1.5px solid var(--line); border-radius:14px; outline:none}
+input:focus,select:focus,textarea:focus{border-color:var(--teal); box-shadow:0 0 0 4px var(--teal-w)}
+textarea{min-height:72px; resize:vertical}
+.code{font-family:"IBM Plex Mono",monospace; letter-spacing:.2em; text-transform:uppercase; text-align:center; font-size:17px}
+button{font-family:inherit; cursor:pointer; border:none}
+.btn{width:100%; padding:15px; border-radius:15px; background:var(--teal); color:#fff; font-size:15px;
+  font-weight:700; margin-top:20px; box-shadow:0 5px 14px rgba(14,124,114,.26)}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:var(--card); color:var(--teal-d); box-shadow:var(--sh); margin-top:10px}
+.btn.plum{background:var(--plum); box-shadow:0 5px 14px rgba(94,63,115,.26)}
+.btn.sm{padding:12px; font-size:13.5px; margin-top:12px}
+.btn.quiet{background:transparent; box-shadow:none; color:var(--ink3); font-weight:600; font-size:13px; margin-top:6px; padding:10px}
+.btn.danger{background:var(--rose-w); color:var(--rose); box-shadow:none}
+.err{display:none; margin-top:12px; padding:11px 13px; border-radius:12px; background:var(--rose-w); color:var(--rose); font-size:13px; font-weight:600}
+.err.show{display:block}
+
+.hero{flex:1; background:linear-gradient(168deg,#12897E 0%,#0A5850 52%,#06322E 100%); color:#fff; padding:38px 24px 0; display:flex; flex-direction:column}
+.hero h1{font-size:38px; line-height:1.04}
+.hero p{color:#C4E4DE; font-size:15px; margin-top:14px}
+.herosub{color:#9FCFC7!important; font-size:13px!important; margin-top:14px!important; line-height:1.5}
+.chiprow{display:flex; flex-wrap:wrap; gap:9px; margin-top:20px}
+.chip{align-self:flex-start; background:rgba(255,255,255,.15); color:#E4F5F1;
+  border-radius:999px; padding:11px 17px; font-size:13px; font-weight:700; display:flex; align-items:center; gap:8px;
+  text-decoration:none}
+.chip i{font-style:normal; opacity:.65}
+.heroacts{background:#06322E; padding:20px 24px 26px}
+.heroacts .btn{background:#fff; color:#06322E; box-shadow:none; margin-top:0}
+.signlink{display:block; width:100%; text-align:center; background:none; color:#9CCFC7; font-size:13.5px; font-weight:700; padding:14px 0 2px}
+
+.mcard{border-radius:22px; padding:22px; margin-top:14px; box-shadow:var(--sh); background:var(--card)}
+.mcard .n{font-family:"IBM Plex Mono",monospace; font-size:11px; font-weight:600}
+.mcard h2{margin-top:12px; font-size:24px; color:var(--ink)}
+.mcard .sub{font-size:12.5px; font-weight:700; margin-top:5px}
+.mcard p{font-size:14px; margin-top:12px; color:var(--ink2)}
+.t-teal{background:var(--teal-w)} .t-teal .n,.t-teal .sub{color:var(--teal-d)}
+.t-plum{background:var(--plum-w)} .t-plum .n,.t-plum .sub{color:var(--plum)}
+.t-amber{background:var(--amber-w)} .t-amber .n,.t-amber .sub{color:var(--amber)}
+.t-rose{background:var(--rose-w)} .t-rose .n,.t-rose .sub{color:var(--rose)}
+.t-sage{background:var(--sage-w)} .t-sage .n,.t-sage .sub{color:var(--sage)}
+
+.calhead{display:flex; justify-content:space-between; align-items:baseline}
+.strip{display:flex; gap:8px; overflow-x:auto; padding:12px 16px; margin:0 -16px}
+.strip::-webkit-scrollbar{display:none}
+.day{min-width:52px; padding:11px 0; border-radius:16px; background:var(--card); text-align:center; box-shadow:var(--sh); cursor:pointer; flex-shrink:0}
+.day .dw{font-size:10px; font-weight:700; color:var(--ink3); text-transform:uppercase; letter-spacing:.05em}
+.day .dn{font-family:"IBM Plex Mono",monospace; font-size:19px; font-weight:600; margin-top:3px}
+.day .dot{width:5px; height:5px; border-radius:50%; background:var(--teal); margin:4px auto 0}
+.day.sel{background:var(--teal); color:#fff}
+.day.sel .dw{color:#A8DBD4} .day.sel .dot{background:#A8DBD4}
+.day.future{opacity:.38}
+
+.sess{background:var(--card); border-radius:20px; margin-top:12px; box-shadow:var(--sh); overflow:hidden}
+.sesshead{padding:15px 17px; display:flex; justify-content:space-between; align-items:center}
+.sesshead .t{font-weight:800; font-size:15.5px}
+.topic{padding:14px 17px; border-top:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; gap:10px}
+.topic .tn{font-weight:700; font-size:14.5px}
+.topic .tm{font-size:11.5px; color:var(--ink3); margin-top:3px}
+.tapme{cursor:pointer}
+.tapme:active{background:#F7FAFA}
+
+.rm{margin-top:20px; padding-top:18px; border-top:1px solid var(--line)}
+.rm:first-child{margin-top:6px; padding-top:0; border-top:none}
+.rmhead{display:flex; justify-content:space-between; align-items:center}
+.rmname{display:flex; align-items:center; gap:7px; font-size:15px; font-weight:800}
+.rmq{font-size:12.5px; color:var(--ink2); margin-top:5px; line-height:1.45}
+.rmval{font-family:"IBM Plex Mono",monospace; font-size:16px; font-weight:600; color:var(--plum)}
+.rmval.un{color:var(--ink3)}
+.anchors{display:flex; justify-content:space-between; gap:10px; margin-top:6px}
+.anchors span{font-size:10.5px; line-height:1.3; color:var(--ink3)}
+.anchors span:last-child{text-align:right}
+input[type=range]{-webkit-appearance:none; appearance:none; background:transparent; height:28px; padding:0; border:none; margin-top:10px}
+input[type=range]:focus{box-shadow:none}
+input[type=range]::-webkit-slider-runnable-track{height:8px; border-radius:99px; background:linear-gradient(90deg,#C99189,#DFC98F,#6BA97F)}
+input[type=range]::-moz-range-track{height:8px; border-radius:99px; background:linear-gradient(90deg,#C99189,#DFC98F,#6BA97F)}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none; width:27px; height:27px; margin-top:-9.5px; border-radius:50%; background:#fff; border:3px solid var(--plum); box-shadow:0 2px 7px rgba(0,0,0,.22)}
+input[type=range]::-moz-range-thumb{width:27px; height:27px; border-radius:50%; background:#fff; border:3px solid var(--plum); box-shadow:0 2px 7px rgba(0,0,0,.22)}
+input[type=range].untouched::-webkit-slider-runnable-track{background:#E3E9E8}
+input[type=range].untouched::-moz-range-track{background:#E3E9E8}
+input[type=range].untouched::-webkit-slider-thumb{opacity:0}
+input[type=range].untouched::-moz-range-thumb{opacity:0}
+.tapnote{font-size:11px; color:var(--ink3); margin-top:6px; line-height:1.5}
+
+.meanbox{background:var(--plum); color:#F0E9F5; border-radius:18px; padding:15px 17px; display:flex; justify-content:space-between; align-items:center; margin-top:20px}
+.meanbox.flag{background:var(--amber); color:#FBF1E1}
+.meanbox.teal{background:var(--teal-d); color:#DCEEEB}
+.meanbox.grey{background:#DFE6E5; color:var(--ink2)}
+.meanbox .lab{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; opacity:.85}
+.meanbox .num{font-family:"IBM Plex Mono",monospace; font-size:33px; font-weight:600; line-height:1}
+.subnote{font-size:11px; margin-top:4px; opacity:.92}
+
+.bar{margin-top:11px}
+.bar .bl{display:flex; justify-content:space-between; font-size:12.5px; font-weight:600}
+.bar .bl b{font-family:"IBM Plex Mono",monospace; font-weight:600}
+.track{height:8px; border-radius:99px; background:#EAEFEE; margin-top:5px; overflow:hidden; position:relative}
+.fill{height:100%; border-radius:99px; background:var(--teal)}
+.fill.low{background:var(--amber)}
+.fill.me{background:var(--plum)}
+.mark{position:absolute; top:-3px; width:2px; height:14px; background:var(--ink); opacity:.45}
+.stack{display:flex; height:12px; border-radius:99px; overflow:hidden; margin-top:10px; background:#EAEFEE}
+.stack div{height:100%}
+.legend{display:flex; gap:14px; margin-top:10px; flex-wrap:wrap}
+.legend span{font-size:11.5px; color:var(--ink2); display:flex; align-items:center; gap:6px}
+.dotk{width:9px; height:9px; border-radius:3px; display:inline-block}
+
+.nav{display:flex; background:var(--card); border-top:1px solid var(--line); padding-bottom:6px}
+.nav button{flex:1; padding:11px 1px 10px; background:none; font-size:9px; font-weight:700; color:var(--ink3); display:flex; flex-direction:column; align-items:center; gap:5px}
+.nav .ic{width:20px; height:20px; border-radius:8px; background:#E8EEED}
+.nav button.on{color:var(--teal-d)}
+.nav button.on .ic{background:var(--teal)}
+.topbar{display:flex; align-items:center; padding:14px 16px 0}
+.back{background:none; font-size:14px; font-weight:700; color:var(--teal); padding:0}
+.empty{text-align:center; padding:26px 12px; color:var(--ink3); font-size:13px; line-height:1.55}
+.toast{position:absolute; left:16px; right:16px; bottom:88px; background:var(--ink); color:#fff; padding:14px 16px;
+  border-radius:15px; font-size:13.5px; font-weight:600; opacity:0; transform:translateY(10px); transition:.25s; pointer-events:none; z-index:30}
+.toast.show{opacity:1; transform:none}
+.seg{display:flex; gap:8px; margin-top:6px}
+.seg button{flex:1; padding:12px; border-radius:14px; background:var(--card); border:1.5px solid var(--line); font-size:14px; font-weight:700; color:var(--ink2)}
+.seg button.on{background:var(--teal); border-color:var(--teal); color:#fff}
+.tabs{display:flex; gap:6px; background:#E6ECEB; padding:4px; border-radius:14px; margin-top:16px}
+.tabs button{flex:1; padding:10px; border-radius:11px; background:transparent; font-size:13px; font-weight:700; color:var(--ink3)}
+.tabs button.on{background:var(--card); color:var(--teal-d); box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.avatar{width:38px; height:38px; border-radius:13px; background:var(--teal-w); color:var(--teal-d);
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0}
+.avatar.v{background:var(--plum-w); color:var(--plum)}
+.avatar.lg{width:54px; height:54px; border-radius:18px; font-size:18px}
+.note{background:#F5F8F7; border-left:3px solid var(--line); border-radius:0 10px 10px 0; padding:9px 11px; margin-top:9px; font-size:12.5px; line-height:1.5; color:var(--ink2)}
+.cohort{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600; letter-spacing:.1em; color:var(--ink3); text-transform:uppercase; margin-top:22px}
+.brief{background:linear-gradient(160deg,#123F3A,#0A2A27); color:#DCEEEA; border-radius:22px; padding:20px; margin-top:14px}
+.brief h3{color:#fff; font-size:17px; font-family:"Bricolage Grotesque",sans-serif}
+.brief .lab{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:#7FC3B9}
+.brief p{color:#BEDCD6; font-size:13.5px}
+.brief li{font-size:13.5px; line-height:1.6; color:#D6EBE7; margin-top:6px}
+.brief ul{padding-left:18px; margin:10px 0 0}
+.phasecard{background:var(--card); border-radius:18px; padding:16px; margin-top:10px; box-shadow:var(--sh); opacity:.62}
+.phasecard.now{opacity:1; box-shadow:0 0 0 2px var(--teal), var(--sh)}
+.phasecard.done{opacity:.5}
+.phasecard .pn{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.1em; text-transform:uppercase; color:var(--teal); font-weight:600; margin-bottom:5px}
+select.fmt{padding:11px; font-size:14px}
+.advisory{background:var(--amber-w); border-radius:14px; padding:12px 14px; margin-top:12px; font-size:12.5px; line-height:1.5; color:var(--amber); font-weight:600}
+.reminder{background:var(--plum); color:#F0E9F5; border-radius:16px; padding:14px 16px; margin-top:14px; font-size:12.5px; line-height:1.5}
+.reminder b{font-size:14px}
+.rcount{font-size:11px; opacity:.8}
+.rrow{display:flex; justify-content:space-between; align-items:center; gap:10px; padding:11px 0;
+  border-top:1px solid rgba(255,255,255,.18); font-size:13.5px; font-weight:600; cursor:pointer}
+.rtag{font-family:"IBM Plex Mono",monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+  background:rgba(255,255,255,.2); padding:4px 7px; border-radius:6px}
+.sep{display:flex; align-items:center; gap:12px; margin:30px 0 4px}
+.sep::before,.sep::after{content:""; flex:1; height:1px; background:var(--line)}
+.sep span{font-family:"IBM Plex Mono",monospace; font-size:10px; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color:var(--ink3)}
+.partcard{background:var(--teal-w); border-radius:18px; padding:16px; margin-top:12px}
+.partcard.v{background:var(--plum-w)}
+.partcard .pl{font-family:"IBM Plex Mono",monospace; font-size:10px; letter-spacing:.11em; text-transform:uppercase; font-weight:600; color:var(--teal-d)}
+.partcard.v .pl{color:var(--plum)}
+.partcard p{margin-top:8px; font-size:13.5px; color:var(--ink2)}
+.howstep{background:var(--card); border-radius:18px; padding:16px; margin-top:12px; box-shadow:var(--sh); display:flex; gap:14px}
+.howstep .num{width:28px; height:28px; border-radius:10px; background:var(--teal-w); color:var(--teal-d);
+  display:flex; align-items:center; justify-content:center; font-weight:800; font-size:13px; flex-shrink:0}
+.rlink{color:var(--teal); font-weight:700; font-size:13.5px; text-decoration:underline; text-underline-offset:3px}
+.btn-sm-share{margin-top:14px}
+.tonechips{display:flex; gap:6px; margin-top:10px}
+.tonechips span{flex:1; text-align:center; font-family:"IBM Plex Mono",monospace; font-size:10.5px; font-weight:600;
+  padding:6px 4px; border-radius:8px; background:#EEF1F0; color:var(--ink3)}
+.tonechips span.has{background:var(--teal-w); color:var(--teal-d)}
+.checkrow{display:flex; gap:11px; align-items:flex-start; text-align:left; background:var(--card);
+  border-radius:14px; padding:14px; margin-top:18px; box-shadow:var(--sh); width:100%; font-size:12.5px;
+  line-height:1.45; color:var(--ink2); font-weight:600}
+.checkrow .box{width:19px; height:19px; border-radius:6px; border:2px solid var(--line); flex-shrink:0; margin-top:1px}
+.checkrow.on .box{background:var(--teal); border-color:var(--teal); position:relative}
+.checkrow.on .box::after{content:"✓"; color:#fff; font-size:12px; position:absolute; inset:0; display:flex; align-items:center; justify-content:center}
+.pwrap{position:relative}
+.pwrap input{padding-right:66px}
+.eye{position:absolute; right:8px; top:50%; transform:translateY(-50%); background:var(--teal-w); color:var(--teal-d);
+  border-radius:10px; padding:8px 11px; font-size:11.5px; font-weight:800; letter-spacing:.02em}
+.linkbtn{background:none; color:var(--teal); font-size:13px; font-weight:700; padding:12px 0 0; text-decoration:underline; text-underline-offset:3px}
+.demoacct{background:#F0F5F4; border-radius:14px; padding:13px; margin-top:14px; font-size:12px; line-height:1.7; color:var(--ink2); font-family:"IBM Plex Mono",monospace}
+@media (prefers-reduced-motion:reduce){*{transition:none!important; animation:none!important}}
+</style>
+</head>
+<body>
+<div class="frame">
+  <div class="demobar"><span id="demolabel">Prototype · signed out</span>
+    <span style="display:flex;align-items:center;gap:8px" id="demoswitch"></span></div>
+
+  <!-- LANDING -->
+  <section class="screen active" id="s-land">
+    <div class="hero">
+      <h1>SoC-TEQ<br>framework</h1>
+      <p>A resident-led framework to quantify and improve the quality of skin of color education through data-driven feedback loops.</p>
+      <p class="herosub">This app is a direct translation of the published framework. Teaching exposure is measured as the share of visually relevant topics that are fully covered for skin of color.</p>
+      <div class="chiprow">
+        <button class="chip" data-go="s-mission">What is SoC-TEQ? <i>›</i></button>
+        <button class="chip" data-go="s-how">How to use it <i>›</i></button>
+        <a class="chip" id="paper-link" href="https://doi.org/10.1080/0142159X.2026.2637609" target="_blank" rel="noopener">Read the paper <i>↗</i></a>
+      </div>
+    </div>
+    <div class="heroacts">
+      <button class="btn" data-go="s-signup">Create an account</button>
+      <button class="signlink" data-go="s-signin">Already registered? Log in</button>
+    </div>
+  </section>
+
+  <!-- MISSION -->
+  <section class="screen" id="s-mission">
+    <div class="topbar"><button class="back" id="mission-back">‹ Back</button></div>
+    <div class="scroll"><div class="eyebrow">Mission map</div><div id="deck"></div></div>
+  </section>
+
+  <!-- HOW TO USE -->
+  <section class="screen" id="s-how">
+    <div class="topbar"><button class="back" id="how-back">‹ Back</button></div>
+    <div class="scroll">
+      <div class="eyebrow">Getting started</div>
+      <h1 style="margin-top:8px">How to use SoC-TEQ</h1>
+      <div id="how-intro"></div>
+      <div class="sep"><span>The daily flow</span></div>
+      <div id="how-body"></div>
+      <button class="btn" id="how-done">Got it</button>
+    </div>
+  </section>
+
+  <!-- SIGN UP -->
+  <section class="screen" id="s-signup">
+    <div class="topbar"><button class="back" data-go="s-land">‹ Back</button></div>
+    <div class="scroll">
+      <h1>Create your account</h1>
+      <p>You'll need your program's access code to join.</p>
+      <label class="f" for="su-name">Full name</label><input id="su-name" placeholder="e.g. Diala Kakish">
+      <label class="f" for="su-user">Username</label><input id="su-user" placeholder="Letters and numbers, no spaces" autocapitalize="none">
+      <label class="f" for="su-pass">Password</label>
+      <div class="pwrap"><input id="su-pass" type="password" placeholder="At least 6 characters">
+        <button class="eye" data-eye="su-pass" aria-label="Show password">show</button></div>
+      <div class="tapnote">Forgotten passwords are reset by email.</div>
+      <label class="f" for="su-email">Email</label><input id="su-email" type="email" placeholder="you@med.wayne.edu">
+      <label class="f" for="su-pgy">PGY level</label>
+      <select id="su-pgy"><option>PGY-2</option><option>PGY-3</option><option>PGY-4</option></select>
+      <label class="f" for="su-prog">Dermatology program</label>
+      <select id="su-prog"><option value="">Select your program…</option>
+        <option>Wayne State University</option><option>Tufts Medical Center</option><option>Emory University</option>
+        <option>Mayo Clinic</option><option>Larkin Community Hospital</option><option>Boston University</option></select>
+      <label class="f" for="su-code">Program access code</label>
+      <input id="su-code" class="code" placeholder="··········" autocomplete="off">
+      <button class="checkrow" id="su-pre"><span class="box"></span>
+        <span>I've completed the SoC-TEQ pre-course and understand the coverage criteria.</span></button>
+      <div class="err" id="su-err"></div>
+      <button class="btn" id="su-go">Create account</button>
+      <div class="tapnote">Your name is visible to your cohort. It never appears next to a rating or in exported data.</div>
+    </div>
+  </section>
+
+  <!-- LOG IN -->
+  <section class="screen" id="s-signin">
+    <div class="topbar"><button class="back" data-go="s-land">‹ Back</button></div>
+    <div class="scroll">
+      <h1>Log in</h1>
+      <p>Use the username and password you signed up with.</p>
+      <label class="f" for="li-user">Username</label><input id="li-user" placeholder="Username" autocapitalize="none">
+      <label class="f" for="li-pass">Password</label>
+      <div class="pwrap"><input id="li-pass" type="password" placeholder="Password">
+        <button class="eye" data-eye="li-pass" aria-label="Show password">show</button></div>
+      <button class="linkbtn" id="forgot">Forgot your password?</button>
+      <div class="err" id="li-err"></div>
+      <button class="btn" id="li-go">Log in</button>
+
+    </div>
+  </section>
+
+  <!-- TODAY -->
+  <section class="screen" id="s-today">
+    <div class="scroll">
+      <div class="calhead">
+        <div><div class="eyebrow" id="cal-month">August 2026</div><h1 style="margin-top:6px" id="cal-day">Monday</h1></div>
+        <span class="pill" id="cal-tag">Today</span></div>
+      <div class="strip" id="strip"></div>
+      <div class="card" id="logger-card"></div>
+      <div id="quick-capture"></div>
+      <div id="today-body"></div>
+    </div>
+    <nav class="nav" data-tab="s-today"></nav>
+  </section>
+
+  <!-- ADD / EDIT TOPIC -->
+  <section class="screen" id="s-addtopic">
+    <div class="topbar"><button class="back" id="at-back">‹ Cancel</button></div>
+    <div class="scroll">
+      <div class="eyebrow" id="at-eyebrow">Part 1 · logger only</div>
+      <h1 style="margin-top:8px" id="at-title">Register a topic</h1>
+      <div class="advisory">Before marking coverage, check with the residents in the room that you agree on what was shown and discussed.</div>
+      <label class="f" for="at-sess">Session</label><select id="at-sess"></select>
+
+      <div class="flabel"><span>Topic taught</span><button class="info" data-guide="topic">i</button></div>
+      <div class="guide" id="g-topic"></div>
+      <input id="at-topic" placeholder="e.g. Hidradenitis suppurativa">
+      <div class="tapnote">Full name, not an abbreviation — data is grouped by this text.</div>
+
+      <div class="flabel"><span>Is this a visually relevant topic?</span><button class="info" data-guide="visual">i</button></div>
+      <div class="guide" id="g-visual"></div>
+      <div class="seg" id="seg-vis"><button data-v="1">Yes</button><button data-v="0">No</button></div>
+
+      <div id="at-rest"></div>
+      <div id="at-cover"></div><div class="err" id="at-err"></div>
+      <button class="btn" id="at-save">Register topic</button>
+      <button class="btn danger" id="at-delete" style="display:none">Delete this topic</button>
+    </div>
+  </section>
+
+  <!-- RATE -->
+  <section class="screen" id="s-rate">
+    <div class="topbar"><button class="back" id="rate-back">‹ Back</button></div>
+    <div class="scroll">
+      <div class="eyebrow" id="rate-eyebrow">Part 2 · your rating</div>
+      <h1 style="margin-top:8px" id="rate-topic">Topic</h1>
+      <p id="rate-meta"></p>
+      <div id="rate-body"></div>
+      <label class="f" for="rate-note">Note <span class="muted" style="font-weight:500">· optional</span></label>
+      <textarea id="rate-note" placeholder="Anything worth remembering about how this was taught."></textarea>
+      <div class="err" id="rate-err"></div>
+      <button class="btn plum" id="rate-save">Submit my rating</button>
+      <button class="btn quiet" id="rate-absent">I wasn't at this session</button>
+    </div>
+  </section>
+
+  <!-- SUMMARY -->
+  <section class="screen" id="s-sum">
+    <div class="scroll">
+      <div class="eyebrow" id="sum-eyebrow">Summary</div>
+      <h1 style="margin-top:8px">Cohort record</h1>
+      <div class="tabs" id="sum-tabs">
+        <button data-p="day" class="on">Days</button>
+        <button data-p="week">Week</button>
+        <button data-p="month">Month</button>
+        <button data-p="cycle">Cycle</button>
+      </div>
+      <div id="sum-body"></div>
+    </div>
+    <nav class="nav" data-tab="s-sum"></nav>
+  </section>
+
+  <!-- TOPIC DETAIL -->
+  <section class="screen" id="s-topic">
+    <div class="topbar"><button class="back" id="topic-back">‹ Back</button></div>
+    <div class="scroll" id="topic-body"></div>
+  </section>
+
+  <!-- TRACK MY INFO -->
+  <section class="screen" id="s-me">
+    <div class="scroll">
+      <div class="eyebrow">Track my info</div>
+      <div id="me-body"></div>
+    </div>
+    <nav class="nav" data-tab="s-me"></nav>
+  </section>
+
+  <!-- TEAM -->
+  <section class="screen" id="s-team">
+    <div class="scroll">
+      <div class="eyebrow">Resident directory</div>
+      <h1 style="margin-top:8px" id="team-title">Wayne State</h1>
+      <p id="team-sub"></p>
+      <div id="team-body"></div>
+    </div>
+    <nav class="nav" data-tab="s-team"></nav>
+  </section>
+
+  <!-- CASES -->
+  <section class="screen" id="s-cases">
+    <div class="scroll">
+      <div class="eyebrow">Diversity database</div>
+      <h1 style="margin-top:8px">Topics covered in SoC</h1>
+      <p id="cases-sub"></p>
+      <div id="cases-body"></div>
+    </div>
+    <nav class="nav" data-tab="s-cases"></nav>
+  </section>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script>
+const CODE="WSUDERM2026", THRESH=3.5, CLOSE_HOUR=4;
+const SETTINGS=["Lecture","Didactic","Grand round","Clinic outpatient","Clinic inpatient","Journal club","Tumor board"];
+/* SoC = Fitzpatrick IV–VI per the published operational definition */
+const SKINS=["Fitzpatrick IV","Fitzpatrick V","Fitzpatrick VI","Mixed across IV–VI","Not specified"];
+const DOM=[
+  {k:"depth",  n:"Depth",          q:"The SoC content was taught with the same emphasis as non-SoC content.",
+   g:"1 = surface level or a brief mention. 5 = comprehensive, given the same weight as the rest of the topic."},
+  {k:"clarity",n:"Visual clarity", q:"High-quality, diagnostic images of skin of color were used.",
+   g:"1 = poor detail, or images that weren't really SoC. 5 = crystal clear, high-fidelity SoC imagery."},
+  {k:"nuance", n:"Nuance",         q:"Diagnostic pitfalls specific to skin of color were explicitly addressed — for example erythema masking.",
+   g:"1 = a generic, colour-blind description. 5 = culturally and morphologically nuanced, SoC-targeted."},
+  {k:"mgmt",   n:"Management",     q:"Management considerations specific to skin of color were clearly discussed.",
+   g:"1 = the standard protocol only. 5 = SoC-specific management pearls."},
+  {k:"conf",   n:"Confidence",     q:"I feel more capable of managing this condition in skin of color after this session.",
+   g:"1 = still unsure for SoC patients. 5 = ready to treat SoC patients."}
+];
+const SRC=`<span class="src">Source: SoC-TEQ published supplementary material.</span>`;
+const GUIDE={
+  topic:`<b>Teaching topic</b><br>One distinct diagnostic or management subject addressed during a formal teaching session. Individual slides are not counted — the topic itself is the unit of analysis.${SRC}`,
+  visual:`<b>Visually relevant</b><br>Only visually relevant teaching topics belong in SoC-TEQ. Non-visual subjects — research methods, biostatistics, health policy and similar — are outside the framework and shouldn't be registered at all.${SRC}`,
+  img:`<b>Image criterion</b><br>At least one image representing Fitzpatrick skin types IV–VI was shown. Skin of color is defined as Fitzpatrick IV–VI.${SRC}`,
+  disc:`<b>Discussion criterion</b><br>Explicit skin-of-color-specific discussion took place — visual differences, diagnostic pitfalls, pigmentary sequelae, erythema masking, dermoscopy, or management considerations.${SRC}`,
+  covered:`<b>SoC-covered topic</b><br>Both criteria must be met: at least one image of Fitzpatrick IV–VI <i>and</i> explicit SoC-specific discussion. One without the other is recorded as not covered.${SRC}`
+};
+DOM.forEach(d=>GUIDE[d.k]=`<b>${d.n}</b><br>${d.q}<br><br>${d.g}<br><br>Rated 1 (strongly disagree) to 5 (strongly agree).${SRC}`);
+
+const MISSION=[
+  ["The definition","Our core framework","A resident-led framework to quantify and improve the quality of skin of color education through data-driven feedback loops.","t-teal"],
+  ["Why SoC-TEQ?","Addressing the gap","Skin of color images make up only 4.5% of medical texts. Physicians are twice as likely to miss malignant lesions in skin of color. Closing that representation gap is what makes diagnosis accurate for every patient.","t-rose"],
+  ["Your impact","Resident-led change","Curricular change moves fastest when resident perspectives sit at the centre. Change needs capability, opportunity and motivation. You aren't only a learner here — you're an active peer-educator.","t-plum"],
+  ["The six-month loop","Our data process","Months 1–3 you log. At the end of month 3, topics averaging below 3.5 are flagged and a baseline assessment is taken. Months 4–6 those gaps trigger resident-led remediation. The three-month gap before retesting avoids recall bias, so what's measured is retention rather than transient confidence.","t-amber"],
+  ["Clinical excellence","High-fidelity training","We evaluate morphologic nuance, pitfalls and skin of color management, then re-test after three months to check the learning held.","t-sage"],
+  ["Your safe space","Privacy and trust","No patient-identifying information is ever registered or stored.","t-teal"],
+  ["Master milestones","Your career wins","SoC-TEQ activity maps directly onto ACGME core competencies, and counts toward patient care and practice-based learning requirements.","t-plum"]
+];
+
+const uid=(()=>{let i=0; return()=>"x"+(++i)})();
+/* Passwords are never held in readable form. This prototype stores a one-way hash
+   only; the live app uses Supabase Auth, which salts and bcrypts and never returns
+   the stored value to the client or to any export. */
+const digest=s=>{let h=5381; for(const c of s) h=(((h*33)^c.charCodeAt(0))>>>0); return "h"+h.toString(16)};
+const RES=[
+  {id:"r1",name:"Diala Kakish", pgy:"PGY-3", email:"dkakish@med.wayne.edu", user:"dkakish", ph:digest("soc2026")},
+  {id:"r2",name:"Marcus Bell",  pgy:"PGY-3", email:"mbell@med.wayne.edu",   user:"mbell",   ph:digest("soc2026")},
+  {id:"r3",name:"Leila Okafor", pgy:"PGY-3", email:"lokafor@med.wayne.edu", user:"lokafor", ph:digest("soc2026")},
+  {id:"r4",name:"Alex Rivera",  pgy:"PGY-2", email:"arivera@med.wayne.edu", user:"arivera", ph:digest("soc2026")},
+  {id:"r5",name:"Nour Haddad",  pgy:"PGY-2", email:"nhaddad@med.wayne.edu", user:"nhaddad", ph:digest("soc2026")},
+  {id:"r6",name:"Priya Raman",  pgy:"PGY-2", email:"praman@med.wayne.edu",  user:"praman",  ph:digest("soc2026")},
+  {id:"r7",name:"Sam Okonkwo",  pgy:"PGY-4", email:"sokonkwo@med.wayne.edu",user:"sokonkwo",ph:digest("soc2026")},
+  {id:"r8",name:"Tomas Vega",   pgy:"PGY-4", email:"tvega@med.wayne.edu",   user:"tvega",   ph:digest("soc2026")}
+];
+function assignCodes(){
+  const h=s=>[...s].reduce((a,c)=>(a*33+c.charCodeAt(0))>>>0,7);
+  ["PGY-2","PGY-3","PGY-4"].forEach(p=>{
+    RES.filter(r=>r.pgy===p).slice().sort((a,b)=>h(a.email)-h(b.email))
+      .forEach((r,i)=>r.code="Resident "+String.fromCharCode(65+i));
+  });
+}
+assignCodes();
+
+const iso=d=>d.toISOString().slice(0,10);
+const TODAY=iso(new Date());
+const dayBack=n=>{const d=new Date(); d.setDate(d.getDate()-n); return iso(d)};
+const DAYS={};
+const key=(d,p)=>d+"|"+p;
+const ensureDay=(d,p)=>DAYS[key(d,p)]||(DAYS[key(d,p)]={date:d, pgy:p, logger:null, sessions:[]});
+function isOpen(date){
+  const c=new Date(date+"T00:00:00"); c.setDate(c.getDate()+1); c.setHours(CLOSE_HOUR,0,0,0);
+  return new Date()<c;
+}
+function closesAt(date){
+  const c=new Date(date+"T00:00:00"); c.setDate(c.getDate()+1);
+  return c.toLocaleDateString(undefined,{weekday:"short"})+" "+CLOSE_HOUR+":00am";
+}
+
+(function seed(){
+  const a=ensureDay(dayBack(4),"PGY-3"); a.logger="r2";
+  a.sessions=[
+    {id:uid(), type:"Lecture", topics:[
+      {id:uid(), title:"Vitiligo", visual:1, covered:true, img:1, disc:1, skin:"Fitzpatrick V", absent:[],
+       ratings:{ r1:{depth:3,clarity:2,nuance:3,mgmt:2,conf:3,note:"Only one image, and it was on light skin."},
+                 r2:{depth:4,clarity:2,nuance:3,mgmt:3,conf:3,note:""} }},
+      {id:uid(), title:"Melanoma", visual:1, covered:false, img:1, disc:0, absent:[], ratings:{}}
+    ]},
+    {id:uid(), type:"Grand round", topics:[
+      {id:uid(), title:"Hidradenitis suppurativa", visual:1, covered:true, img:1, disc:1, skin:"Fitzpatrick IV", absent:["r3"],
+       ratings:{ r1:{depth:4,clarity:4,nuance:4,mgmt:5,conf:4,note:"Excellent management pearls."},
+                 r2:{depth:5,clarity:4,nuance:4,mgmt:4,conf:4,note:""} }}
+    ]}
+  ];
+  const b=ensureDay(dayBack(2),"PGY-3"); b.logger="r1";
+  b.sessions=[{id:uid(), type:"Didactic", topics:[
+    {id:uid(), title:"Acne keloidalis nuchae", visual:1, covered:true, img:1, disc:1, skin:"Fitzpatrick VI", absent:["r2"],
+     ratings:{ r1:{depth:5,clarity:5,nuance:4,mgmt:4,conf:5,note:""},
+               r3:{depth:4,clarity:5,nuance:5,mgmt:4,conf:4,note:"Best session so far this block."} }},
+    {id:uid(), title:"Mohs surgery", visual:1, covered:false, img:0, disc:0, absent:[], ratings:{}}
+  ]}];
+  const d3=ensureDay(dayBack(6),"PGY-3"); d3.logger="r3";
+  d3.sessions=[{id:uid(), type:"Journal club", topics:[
+    {id:uid(), title:"Keloids and hypertrophic scarring", visual:1, covered:true, img:1, disc:1, skin:"Fitzpatrick VI", absent:[],
+     ratings:{ r1:{depth:3,clarity:3,nuance:3,mgmt:2,conf:3,note:"No management pearls for darker skin at all."},
+               r2:{depth:3,clarity:4,nuance:2,mgmt:3,conf:3,note:""},
+               r3:{depth:4,clarity:3,nuance:3,mgmt:3,conf:2,note:""} }},
+    {id:uid(), title:"Psoriasis", visual:1, covered:true, img:1, disc:1, skin:"Mixed across IV–VI", absent:[],
+     ratings:{ r1:{depth:4,clarity:4,nuance:4,mgmt:4,conf:4,note:""},
+               r2:{depth:4,clarity:4,nuance:3,mgmt:4,conf:4,note:""} }}
+  ]}];
+  const c=ensureDay(dayBack(3),"PGY-2"); c.logger="r4";
+  c.sessions=[{id:uid(), type:"Lecture", topics:[
+    {id:uid(), title:"Atopic dermatitis", visual:1, covered:true, img:1, disc:1, skin:"Mixed across IV–VI", absent:[],
+     ratings:{ r4:{depth:4,clarity:3,nuance:3,mgmt:3,conf:3,note:""},
+               r5:{depth:3,clarity:3,nuance:3,mgmt:3,conf:3,note:"Erythema discussion was thin."},
+               r6:{depth:4,clarity:3,nuance:4,mgmt:3,conf:4,note:""} }}
+  ]}];
+})();
+
+/* Resident Engagement — the six-month remediation cycle */
+const FORMATS=["Peer-teaching module","SoC journal club","Digital repository case set"];
+const CYCLE={ start: dayBack(95), claims: [], assess:{baseline:{}, followup:{}} };
+/* Shared reading, attached to a condition rather than to a feed. Unlocks in the
+   remediation phase so it doesn't act as an intervention during baseline logging. */
+const RESOURCES=[
+  {id:uid(), title:"Vitiligo", by:"r2", source:"JAAD", url:"https://www.jaad.org",
+   takeaway:"Repigmentation patterns differ markedly in darker skin — perifollicular repigmentation is the pattern to look for.", date:dayBack(20)},
+  {id:uid(), title:"Keloids and hypertrophic scarring", by:"r1", source:"DermNet", url:"https://dermnetnz.org",
+   takeaway:"Intralesional steroid dosing and the risk of hypopigmentation at the injection site in Fitzpatrick V–VI.", date:dayBack(12)}
+];
+const resourcesFor=title=>RESOURCES.filter(r=>r.title.toLowerCase()===title.toLowerCase()
+  && res(r.by) && res(r.by).pgy===myPgy());
+const libraryOpen=()=>phase()>=3;
+/* Programs can pre-load the teaching timetable so the logger confirms rather than creates. */
+/* Part 8 · Program Contextual Profile — completed once by the program lead at setup,
+   read-only for residents, and exported alongside the data. */
+const PROGRAM={
+  name:"Wayne State University — Dermatology",
+  lead:"Program lead",
+  residents:8,
+  setting:"Urban academic centre, safety-net catchment",
+  patientMix:"Majority Fitzpatrick IV–VI in continuity clinic",
+  existingCurriculum:"No dedicated skin of color rotation; content distributed across didactics",
+  imageResources:"VisualDx institutional access; DermNet and Skin Deep open resources",
+  cycleStart:"Cycle 1"
+};
+const SCHEDULE={
+  "PGY-3": {1:[["Didactic","08:00"],["Clinic outpatient","13:00"]], 2:[["Grand round","07:30"]],
+            3:[["Lecture","08:00"]], 4:[["Journal club","12:00"]], 5:[["Lecture","08:00"],["Tumor board","15:00"]]},
+  "PGY-2": {1:[["Didactic","08:00"]], 2:[["Lecture","08:00"]], 3:[["Grand round","07:30"]],
+            4:[["Clinic inpatient","09:00"]], 5:[["Journal club","12:00"]]},
+  "PGY-4": {2:[["Grand round","07:30"]], 4:[["Tumor board","15:00"]]}
+};
+const scheduledFor=(date,p)=>{
+  const dow=new Date(date+"T00:00:00").getDay();
+  return (SCHEDULE[p]&&SCHEDULE[p][dow])||[];
+};
+const state={me:null, selDay:TODAY, draft:{}, editing:null, rating:null,
+             backTo:"s-today", period:"day", confirmDel:false, phaseView:null};
+
+const daysSince=d=>Math.floor((new Date(TODAY+"T00:00:00")-new Date(d+"T00:00:00"))/86400000);
+function truePhase(){
+  const n=daysSince(CYCLE.start);
+  if(n<90) return 1;
+  if(n<98) return 2;
+  if(n<180) return 3;
+  return 4;
+}
+const phase=()=>state.phaseView||truePhase();
+const cycleMonth=()=>Math.min(6, Math.floor(daysSince(CYCLE.start)/30)+1);
+/* topics in my cohort scoring below threshold — the priority educational needs */
+function priorityTopics(){
+  return myTopics().filter(x=>{
+    if(!x.t.covered) return false;
+    const sc=score(x.t); return sc && sc.overall<THRESH;
+  });
+}
+const claimsFor=title=>CYCLE.claims.filter(c=>c.title===title && res(c.res).pgy===myPgy());
+const myClaims=()=>CYCLE.claims.filter(c=>c.res===state.me);
+function assessMean(which){
+  const ids=cohort(myPgy()).map(r=>r.id).filter(id=>CYCLE.assess[which][id]!=null);
+  if(!ids.length) return null;
+  return {mean:ids.reduce((a,id)=>a+CYCLE.assess[which][id],0)/ids.length, n:ids.length};
+}
+function assessCard(which,label,desc){
+  const p=myPgy(), mine=CYCLE.assess[which][state.me], m=assessMean(which);
+  const other=which==="followup"?assessMean("baseline"):null;
+  return `<div class="card"><div class="row"><div><h3>${label}</h3>
+    <p class="muted" style="margin-top:4px">${desc}</p></div>
+    <span class="pill ${mine!=null?"":"off"}">${mine!=null?mine+"%":"Not taken"}</span></div>
+    ${m?`<div class="row" style="margin-top:14px;padding-top:12px;border-top:1px solid var(--line)">
+      <span class="muted">${p} mean · ${m.n} of ${cohort(p).length} taken</span>
+      <b style="font-family:'IBM Plex Mono',monospace">${m.mean.toFixed(1)}%${other?" (was "+other.mean.toFixed(1)+"%)":""}</b></div>`:""}
+    ${mine==null?`<label class="f" for="as-${which}">Your score (%)</label>
+      <input id="as-${which}" type="number" min="0" max="100" placeholder="0–100">
+      <button class="btn sm" data-assess="${which}">Record score</button>`:""}</div>`;
+}
+/* what the program needs to write the assessment */
+function blueprint(){
+  const pri=priorityTopics();
+  if(!pri.length) return "";
+  const rows=pri.map(x=>{
+    const sc=score(x.t);
+    const weak=DOM.slice().sort((a,b)=>sc.per[a.k]-sc.per[b.k]).slice(0,2).map(d=>d.n.toLowerCase());
+    return `<div style="padding:12px 0;border-top:1px solid var(--line)">
+      <div class="row"><div style="font-weight:700;font-size:14px">${x.t.title}</div>
+      <span class="pill flag">${sc.overall.toFixed(2)}</span></div>
+      <div class="muted" style="margin-top:3px">Weakest: ${weak.join(" and ")}</div></div>`;
+  }).join("");
+  return `<div class="card"><h3>Assessment blueprint</h3>
+    <p class="muted" style="margin-top:4px">Where the cohort scored lowest, to guide which questions get written.</p>
+    ${rows}
+    <div class="tapnote">Sample across the range, not only these — questions on well-taught topics give you the comparison that makes the weak scores interpretable.</div></div>`;
+}
+
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const res=id=>RES.find(r=>r.id===id);
+const myPgy=()=>res(state.me).pgy;
+const cohort=p=>RES.filter(r=>r.pgy===p);
+const myDays=()=>Object.values(DAYS).filter(d=>d.pgy===myPgy());
+const initials=n=>n.split(" ").map(w=>w[0]).join("").slice(0,2).toUpperCase();
+const codeInit=r=>r.code.split(" ")[1];
+const fmt=k=>new Date(k+"T00:00:00").toLocaleDateString(undefined,{weekday:"long", day:"numeric", month:"long"});
+const shortDate=k=>new Date(k+"T00:00:00").toLocaleDateString(undefined,{weekday:"short", day:"numeric", month:"short"});
+
+function score(t){
+  const ids=Object.keys(t.ratings||{});
+  if(!ids.length) return null;
+  const per={}; DOM.forEach(d=>{per[d.k]=ids.reduce((a,id)=>a+t.ratings[id][d.k],0)/ids.length});
+  return {per, overall:DOM.reduce((a,d)=>a+per[d.k],0)/DOM.length, n:ids.length, ids};
+}
+const myMean=v=>DOM.reduce((a,d)=>a+v[d.k],0)/DOM.length;
+/* A score is always the mean of whoever actually rated. Cohort size only tells you
+   how much weight it carries — under half the cohort, it's labelled provisional. */
+const provisional=sc=>sc && sc.n < cohort(myPgy()).length/2;
+const TONES=["Fitzpatrick IV","Fitzpatrick V","Fitzpatrick VI"];
+function tonesForTitle(title){
+  const seen=new Set();
+  myTopics().filter(x=>x.t.covered && x.t.title.toLowerCase()===title.toLowerCase())
+    .forEach(x=>{
+      if(x.t.skin==="Mixed across IV–VI") TONES.forEach(t=>seen.add(t));
+      else if(x.t.skin) seen.add(x.t.skin);
+    });
+  return seen;
+}
+function absence(t,date,p){
+  const declared=(t.absent||[]).filter(id=>res(id)&&res(id).pgy===p);
+  const nores = isOpen(date)? [] :
+    cohort(p).filter(r=>!t.ratings[r.id] && !declared.includes(r.id)).map(r=>r.id);
+  const waiting = isOpen(date)?
+    cohort(p).filter(r=>!t.ratings[r.id] && !declared.includes(r.id)).map(r=>r.id) : [];
+  return {declared, nores, all:[...declared,...nores], waiting};
+}
+function myTopics(from){
+  const out=[];
+  myDays().filter(d=>!from||d.date>=from).sort((a,b)=>b.date<a.date?-1:1)
+    .forEach(d=>d.sessions.forEach(s=>s.topics.forEach(t=>out.push({date:d.date, sess:s, t}))));
+  return out;
+}
+function findTopic(id){
+  for(const d of Object.values(DAYS)) for(const s of d.sessions) for(const t of s.topics)
+    if(t.id===id) return {date:d.date, day:d, sess:s, t};
+}
+function toast(m){const e=$("#toast"); e.textContent=m; e.classList.add("show"); setTimeout(()=>e.classList.remove("show"),2400)}
+function show(id){
+  $$(".screen").forEach(s=>s.classList.toggle("active", s.id===id));
+  $$(".scroll").forEach(s=>s.scrollTop=0);
+  ({"s-today":renderToday,"s-sum":renderSum,"s-team":renderTeam,"s-cases":renderCases,
+    "s-me":renderMe,"s-signin":renderSignin}[id]||(()=>{}))();
+}
+
+const TABS=[["s-today","Today"],["s-sum","Summary"],["s-cases","Cases"],["s-me","My info"],["s-team","Team"]];
+$$(".nav").forEach(n=>n.innerHTML=TABS.map(([id,l])=>
+  `<button data-go="${id}" class="${n.dataset.tab===id?"on":""}"><span class="ic"></span>${l}</button>`).join(""));
+document.addEventListener("click",e=>{const b=e.target.closest("[data-go]"); if(b) show(b.dataset.go)});
+$("#mission-back").onclick=()=>show(state.me?"s-today":"s-land");
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-guide]"); if(!b) return;
+  const g=document.getElementById("g-"+b.dataset.guide); if(!g) return;
+  if(!g.innerHTML) g.innerHTML=GUIDE[b.dataset.guide]||"";
+  g.classList.toggle("open"); b.classList.toggle("on", g.classList.contains("open"));
+});
+const HOWTO=[
+  ["Someone claims the logger, once a day","Whoever gets there first — it takes one tap. Having a single logger means the cohort never ends up with a conflicting yes and no on the same session."],
+  ["Capture topics in the room","The logger types just the topic name during the session — five seconds, one field. A notebook works just as well: jot the keywords as you go and finish in the app afterwards, while it's fresh."],
+  ["Answer the two criteria after the session","Was an image of Fitzpatrick IV–VI shown, and was skin of color explicitly discussed? Both must be true for the topic to count as covered. Talk it through with the residents who were there — the coverage call belongs to the room, and the logger records what you settle on together."],
+  ["Everyone rates what was covered","Covered topics appear for your cohort to score on the five items: the depth, the images, the diagnostic nuance, the management, and how ready you feel with the condition afterwards. Ratings stay open until 4am the next day."],
+  ["Say so if you weren't there","One tap. An absence is excluded from the average — never counted as a zero, and it never pulls a score down."],
+  ["Skip non-visual topics","Biostatistics, health policy, research methods and the like sit outside the framework. No need to register them at all."]
+];
+$("#how-intro").innerHTML=`
+  <p>Every day — in your didactics, lectures, grand rounds and clinics — the topics you're taught get registered here, along with whether each one covered skin of color, meaning Fitzpatrick IV–VI.</p>
+  <p>It happens in two parts.</p>
+  <div class="partcard"><div class="pl">Part 1 · the logger</div>
+    <p>One resident is the logger for the day. For each topic they answer whether it's visually relevant, and whether it meets both criteria to count as skin of color covered — an image of Fitzpatrick IV–VI, and explicit discussion of skin of color. The cohort talks these through together and the logger records the answer.</p></div>
+  <div class="partcard v"><div class="pl">Part 2 · everyone</div>
+    <p>If both criteria are yes, the topic opens for every resident who was there to rate on the five items. Those five ratings are averaged across the cohort, and topics falling below 3.5 become the priority list for the next remediation cycle.</p></div>`;
+$("#how-body").innerHTML=HOWTO.map(([t,d],i)=>
+  `<div class="howstep"><div class="num">${i+1}</div>
+   <div><h3>${t}</h3><p class="muted" style="margin-top:5px">${d}</p></div></div>`).join("")
+  +`<div class="advisory">The app records topics, never instructors. Nothing you log identifies who taught the session.</div>`;
+$("#how-back").onclick=()=>show(state.me?"s-today":"s-land");
+$("#how-done").onclick=()=>show(state.me?"s-today":"s-land");
+
+$("#deck").innerHTML=MISSION.map(([t,s,b,c],i)=>
+  `<div class="mcard ${c}"><div class="n">${String(i+1).padStart(2,"0")} / 07</div>
+   <h2>${t}</h2><div class="sub">${s}</div><p>${b}</p></div>`).join("");
+
+/* ---------- auth ---------- */
+function login(id){
+  state.me=id; state.selDay=TODAY; refreshDemo(); show("s-today");
+}
+function logout(){
+  state.me=null; refreshDemo();
+  $("#li-user").value=""; $("#li-pass").value="";
+  show("s-land"); toast("Logged out.");
+}
+/* Demo-only account switcher. There is no equivalent in the real app: switching
+   accounts means logging out and back in, and Supabase row-level security stops a
+   resident reading another cohort's rows even outside the interface. */
+function refreshDemo(){
+  if(!state.me){
+    $("#demolabel").textContent="Prototype · signed out";
+    $("#demoswitch").innerHTML=""; return;
+  }
+  $("#demolabel").textContent="Prototype";
+  $("#demoswitch").innerHTML=`<button id="demotoggle" class="demobtn">demo</button>
+    <span id="demopanel" style="display:none;align-items:center;gap:6px">
+      <select id="who"></select></span>`;
+  $("#who").innerHTML=["PGY-2","PGY-3","PGY-4"].map(p=>
+    `<optgroup label="${p}">`+cohort(p).map(r=>
+    `<option value="${r.id}" ${r.id===state.me?"selected":""}>${r.name}</option>`).join("")+`</optgroup>`).join("");
+  $("#demotoggle").onclick=()=>{
+    const el=$("#demopanel");
+    el.style.display = el.style.display==="none" ? "flex" : "none";
+  };
+  $("#who").onchange=e=>{
+    state.me=e.target.value;
+    const a=$(".screen.active").id;
+    show(["s-today","s-sum","s-team","s-cases","s-me"].includes(a)?a:"s-today");
+  };
+}
+refreshDemo();
+
+$("#su-go").onclick=()=>{
+  const err=$("#su-err"), fail=m=>{err.textContent=m; err.classList.add("show")};
+  const name=$("#su-name").value.trim(), user=$("#su-user").value.trim().toLowerCase();
+  const pass=$("#su-pass").value, email=$("#su-email").value.trim();
+  const prog=$("#su-prog").value, code=$("#su-code").value.trim().toUpperCase();
+  if(!name) return fail("Add your full name.");
+  if(!/^[a-z0-9._-]{3,}$/.test(user)) return fail("Pick a username of at least 3 characters, letters and numbers only.");
+  if(RES.some(r=>r.user===user)) return fail("That username is taken.");
+  if(pass.length<6) return fail("Password needs at least 6 characters.");
+  if(!email) return fail("Add your email.");
+  if(!prog) return fail("Choose your dermatology program.");
+  if(prog!=="Wayne State University") return fail(prog+" isn't part of the pilot yet.");
+  if(code!==CODE) return fail("That code doesn't match Wayne State. Ask your chief resident for the current one.");
+  if(!$("#su-pre").classList.contains("on")) return fail("Confirm you've completed the pre-course before joining.");
+  err.classList.remove("show");
+  const id=uid(); RES.push({id,name,pgy:$("#su-pgy").value,email,user,ph:digest(pass),code:"Resident ?"});
+  assignCodes(); login(id);
+  toast("Account created. You are "+res(id).code+".");
+};
+document.addEventListener("click",e=>{
+  const b=e.target.closest("[data-eye]"); if(!b) return;
+  const f=document.getElementById(b.dataset.eye);
+  const shown=f.type==="text";
+  f.type=shown?"password":"text"; b.textContent=shown?"show":"hide";
+});
+$("#forgot")&&($("#forgot").onclick=()=>toast("A reset link would be emailed to you."));
+$("#su-pre").onclick=()=>$("#su-pre").classList.toggle("on");
+$("#li-go").onclick=()=>{
+  const err=$("#li-err"), u=$("#li-user").value.trim().toLowerCase(), p=$("#li-pass").value;
+  const found=RES.find(r=>r.user===u);
+  if(!found||found.ph!==digest(p)){
+    err.textContent="Username or password doesn't match."; return err.classList.add("show");
+  }
+  err.classList.remove("show"); login(found.id);
+  toast("Welcome back, "+found.name.split(" ")[0]+".");
+};
+function renderSignin(){ /* no credential hints — the login screen shows nothing about who exists */ }
+
+/* ---------- today ---------- */
+function renderStrip(){
+  const days=[]; for(let i=9;i>=-2;i--) days.push(dayBack(i));
+  $("#strip").innerHTML=days.map(k=>{
+    const d=new Date(k+"T00:00:00"), has=DAYS[key(k,myPgy())]&&DAYS[key(k,myPgy())].sessions.length;
+    return `<div class="day ${k===state.selDay?"sel":""} ${k>TODAY?"future":""}" data-day="${k}">
+      <div class="dw">${d.toLocaleDateString(undefined,{weekday:"short"})}</div>
+      <div class="dn">${d.getDate()}</div>
+      <div class="dot" style="${has?"":"visibility:hidden"}"></div></div>`;
+  }).join("");
+  $$("[data-day]").forEach(el=>el.onclick=()=>{
+    if(el.dataset.day>TODAY) return toast("That day hasn't happened yet.");
+    state.selDay=el.dataset.day; renderToday();
+  });
+  const s=$(".day.sel"); if(s) s.scrollIntoView({block:"nearest",inline:"center"});
+}
+function renderToday(){
+  const k=state.selDay, p=myPgy(), day=ensureDay(k,p), me=state.me, open=isOpen(k);
+  $("#cal-month").textContent=new Date(k+"T00:00:00").toLocaleDateString(undefined,{month:"long",year:"numeric"})+" · "+p;
+  $("#cal-day").textContent=fmt(k).split(",")[0];
+  $("#cal-tag").textContent=open?(k===TODAY?"Today":"Still open"):"Closed";
+  $("#cal-tag").className="pill "+(open?"":"lock");
+  renderStrip();
+
+  const lc=$("#logger-card");
+  if(!day.logger){
+    lc.innerHTML=`<div class="row"><div><h3>Logger not claimed</h3>
+      <p class="muted" style="margin-top:4px">One ${p} resident registers the day's topics and marks SoC coverage. The rest rate.</p></div>
+      <span class="pill off">Open</span></div>
+      ${open?`<button class="btn sm" id="claim">Claim logger</button>`:`<div class="tapnote">This day closed without a logger.</div>`}`;
+    if(open) $("#claim").onclick=()=>{day.logger=me; toast("You're the logger for this day."); renderToday()};
+  }else{
+    const mine=day.logger===me;
+    lc.innerHTML=`<div class="row"><div style="display:flex;gap:12px;align-items:center">
+      <div class="avatar">${initials(res(day.logger).name)}</div>
+      <div><h3>${mine?"You are the logger":res(day.logger).name}</h3>
+      <div class="muted">${mine?"Register each topic as it happens.":"Marks SoC coverage for "+p}</div></div>
+      </div><span class="pill">Logger claimed</span></div>
+      ${mine&&open?`<div class="advisory">Before marking coverage, agree with the residents present on what was shown and discussed.</div>
+      <button class="btn sm" id="addtopic">Register a topic</button>`:""}`;
+    if(mine&&open) $("#addtopic").onclick=()=>openAddTopic();
+  }
+
+  /* scheduled sessions the logger hasn't opened yet */
+  const sched=scheduledFor(k,p).filter(([type])=>!day.sessions.some(s=>s.type===type));
+  const schedHTML = (day.logger===me && open && sched.length)?
+    `<div class="card"><div class="row"><div><h3>On today's timetable</h3>
+      <p class="muted" style="margin-top:4px">Tap one to start capturing into it.</p></div>
+      <span class="pill off">${sched.length}</span></div>
+      ${sched.map(([type,time])=>`<div class="row tapme" data-sched="${type}" style="padding:12px 0;border-top:1px solid var(--line)">
+        <div><div style="font-weight:700;font-size:14px">${type}</div><div class="muted">${time}</div></div>
+        <span class="pill vio">Open</span></div>`).join("")}</div>` : "";
+
+  /* Waiting-on-you and quick capture share one container. Build the whole string
+     first, assign innerHTML once, then bind — reassigning innerHTML afterwards
+     would replace the nodes and silently drop the handlers. */
+  const qc=$("#quick-capture");
+  let reminderHTML="";
+  if(open){
+    const waiting=[], unfinished=[];
+    day.sessions.forEach(s=>s.topics.forEach(t=>{
+      if(t.incomplete) unfinished.push(t);
+      else if(t.covered && !t.ratings[me] && !(t.absent||[]).includes(me)) waiting.push(t);
+    }));
+    const items=[...unfinished.map(t=>({t,kind:"finish"})), ...waiting.map(t=>({t,kind:"rate"}))];
+    if(items.length) reminderHTML=`<div class="reminder">
+      <div class="row"><b>Waiting on you</b><span class="rcount">closes ${closesAt(k)}</span></div>
+      ${items.map(({t,kind})=>`<div class="rrow" data-open="${t.id}">
+        <span>${t.title}</span><span class="rtag">${kind}</span></div>`).join("")}</div>`;
+  }
+
+  let captureHTML="";
+  if(day.logger===me && open){
+    captureHTML=`<div class="card"><div class="row"><div><h3>Quick capture</h3>
+      <p class="muted" style="margin-top:4px">Name it now, finish it later.</p></div>
+      <span class="pill vio">5 sec</span></div>
+      <label class="f" for="qc-sess">Session</label>
+      <select id="qc-sess">${day.sessions.map(x=>`<option value="${x.id}">${x.type}</option>`).join("")}
+        ${SETTINGS.map(x=>`<option value="new:${x}">＋ New ${x.toLowerCase()}</option>`).join("")}</select>
+      <label class="f" for="qc-topic">Topic name</label>
+      <input id="qc-topic" placeholder="e.g. Vitiligo" autocomplete="off">
+      <button class="btn sm" id="qc-add">Capture topic</button></div>`;
+  }
+
+  qc.innerHTML = reminderHTML + (day.logger===me && open ? schedHTML : "") + captureHTML;
+
+  $$("[data-sched]").forEach(el=>el.onclick=()=>{
+    day.sessions.push({id:uid(), type:el.dataset.sched, topics:[]});
+    toast(el.dataset.sched+" opened — capture topics as they come.");
+    renderToday();
+  });
+  const addBtn=$("#qc-add");
+  if(addBtn){
+    const capture=()=>{
+      const field=$("#qc-topic"), title=field.value.trim();
+      if(title.length<4) return toast("Write the full topic name, not an abbreviation.");
+      const v=$("#qc-sess").value;
+      let sess;
+      if(v.startsWith("new:")){ sess={id:uid(), type:v.slice(4), topics:[]}; day.sessions.push(sess); }
+      else sess=day.sessions.find(x=>x.id===v);
+      sess.topics.push({id:uid(), title, incomplete:true, visual:null, covered:false,
+        img:null, disc:null, skin:null, ratings:{}, absent:[]});
+      toast("Captured. Finish the coverage questions after the session.");
+      renderToday();
+      const next=$("#qc-topic"); if(next){ next.value=""; next.focus(); }
+    };
+    addBtn.onclick=capture;
+    $("#qc-topic").addEventListener("keydown",e=>{ if(e.key==="Enter") capture(); });
+  }
+
+  const body=$("#today-body");
+  if(!day.sessions.length){body.innerHTML=`<div class="card"><div class="empty">Nothing registered for this day yet.</div></div>`; return}
+  body.innerHTML=day.sessions.map(s=>sessionBlock(s,k,p,me)).join("");
+  bindTopics();
+}
+function sessionBlock(s,date,p,me){
+  const open=isOpen(date);
+  return `<div class="sess"><div class="sesshead"><span class="t">${s.type}</span>
+    <span class="pill ${open?"off":"lock"}">${open?s.topics.length+" topic"+(s.topics.length>1?"s":""):"Closed"}</span></div>
+    ${s.topics.map(t=>{
+      const sc=score(t), ab=absence(t,date,p), rated=t.ratings[me];
+      let right, meta;
+      if(t.incomplete){ right=`<span class="pill vio">Finish</span>`; meta="captured — coverage questions still needed"; }
+      else if(!t.covered){ right=`<span class="pill off">No SoC</span>`; meta=`image ${t.img?"yes":"no"} · discussed ${t.disc?"yes":"no"}`; }
+      else{
+        meta=`${sc?sc.n:0} of ${cohort(p).length} rated${ab.all.length?" · "+ab.all.length+" absent":""}`;
+        if(rated) right=`<span class="pill ${sc.overall<THRESH?"flag":""}">${sc.overall.toFixed(2)}</span>`;
+        else if(ab.all.includes(me)) right=`<span class="pill off">Absent</span>`;
+        else right=`<span class="pill vio">Rate now</span>`;
+      }
+      return `<div class="topic tapme" data-open="${t.id}">
+        <div><div class="tn">${t.title}</div><div class="tm">${meta}</div></div>${right}</div>`;
+    }).join("")}</div>`;
+}
+function bindTopics(){
+  const back=$(".screen.active").id;
+  $$("[data-open]").forEach(el=>el.onclick=()=>{
+    const {t,date,day}=findTopic(el.dataset.open), p=myPgy();
+    if(t.incomplete){
+      if(day.logger===state.me && isOpen(date)){ state.selDay=date; return openAddTopic(t.id) }
+      return toast("The logger hasn't finished this entry yet.");
+    }
+    const canRate=t.visual&&t.covered&&isOpen(date)&&!t.ratings[state.me]&&!absence(t,date,p).all.includes(state.me);
+    if(canRate) openRate(el.dataset.open, back); else openTopic(el.dataset.open, back);
+  });
+}
+
+/* ---------- add / edit topic ---------- */
+function openAddTopic(editId){
+  const day=ensureDay(state.selDay,myPgy());
+  state.editing=editId||null; state.confirmDel=false;
+  $("#at-back").onclick=()=>show(editId?"s-topic":"s-today");
+  $("#at-err").classList.remove("show");
+  $$("#s-addtopic .guide").forEach(g=>g.classList.remove("open"));
+  $$("#s-addtopic .info").forEach(b=>b.classList.remove("on"));
+  $("#at-delete").style.display=editId?"block":"none";
+  $("#at-delete").textContent="Delete this topic";
+  if(editId){
+    const {t,sess}=findTopic(editId);
+    $("#at-eyebrow").textContent="Part 1 · edit"; $("#at-title").textContent="Edit topic";
+    $("#at-save").textContent="Save changes";
+    $("#at-sess").innerHTML=day.sessions.map(s=>`<option value="${s.id}" ${s.id===sess.id?"selected":""}>${s.type}</option>`).join("")
+      +SETTINGS.map(s=>`<option value="new:${s}">＋ New ${s.toLowerCase()}</option>`).join("");
+    $("#at-topic").value=t.title;
+    state.draft={visual:t.visual, img:t.img, disc:t.disc, skin:t.skin};
+  }else{
+    $("#at-eyebrow").textContent="Part 1 · logger only"; $("#at-title").textContent="Register a topic";
+    $("#at-save").textContent="Register topic";
+    $("#at-sess").innerHTML=day.sessions.map(s=>`<option value="${s.id}">${s.type} (existing)</option>`).join("")
+      +SETTINGS.map(s=>`<option value="new:${s}">＋ New ${s.toLowerCase()}</option>`).join("");
+    $("#at-topic").value=""; state.draft={visual:null, img:null, disc:null, skin:null};
+  }
+  $$("#seg-vis button").forEach(b=>b.classList.toggle("on", +b.dataset.v===state.draft.visual));
+  renderRest(); show("s-addtopic");
+}
+$$("#seg-vis button").forEach(b=>b.onclick=()=>{
+  $$("#seg-vis button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); state.draft.visual=+b.dataset.v;
+  if(state.draft.visual===0){state.draft.img=null; state.draft.disc=null}
+  $("#at-save").textContent = state.draft.visual===0 ? "Skip this topic"
+    : (state.editing?"Save changes":"Register topic");
+  renderRest();
+});
+function renderRest(){
+  const el=$("#at-rest"), {visual,img,disc}=state.draft;
+  if(visual==null){el.innerHTML=""; $("#at-cover").innerHTML=""; return}
+  if(visual===0){
+    el.innerHTML=`<div class="card"><div class="row"><div><h3>No need to register this</h3>
+      <p class="muted" style="margin-top:4px">Non-visual topics sit outside SoC-TEQ. Skip it and carry on with the day — nothing is lost.</p></div>
+      <span class="pill off">Skip</span></div></div>`;
+    $("#at-cover").innerHTML=""; return;
+  }
+  el.innerHTML=`
+    <div class="flabel"><span>Was an image of Fitzpatrick IV–VI shown?</span><button class="info" data-guide="img">i</button></div>
+    <div class="guide" id="g-img"></div>
+    <div class="seg" id="seg-img"><button data-v="1" class="${img===1?"on":""}">Yes</button><button data-v="0" class="${img===0?"on":""}">No</button></div>
+    <div class="flabel"><span>Was skin of color explicitly discussed?</span><button class="info" data-guide="disc">i</button></div>
+    <div class="guide" id="g-disc"></div>
+    <div class="seg" id="seg-disc"><button data-v="1" class="${disc===1?"on":""}">Yes</button><button data-v="0" class="${disc===0?"on":""}">No</button></div>`;
+  [["#seg-img","img"],["#seg-disc","disc"]].forEach(([sel,f])=>{
+    $$(sel+" button").forEach(b=>b.onclick=()=>{
+      $$(sel+" button").forEach(x=>x.classList.remove("on"));
+      b.classList.add("on"); state.draft[f]=+b.dataset.v; renderCover();
+    });
+  });
+  renderCover();
+}
+function renderCover(){
+  const {img,disc,skin}=state.draft, el=$("#at-cover");
+  if(img==null||disc==null){el.innerHTML=""; return}
+  const cov=img===1&&disc===1;
+  el.innerHTML=`<div class="card"><div class="row"><div>
+    <h3 style="display:flex;align-items:center;gap:7px">Skin of color ${cov?"covered":"not covered"}
+    <button class="info" data-guide="covered">i</button></h3>
+    <p class="muted" style="margin-top:4px">${cov?"Your cohort can rate it now.":"Counts as a visually relevant topic that wasn't covered."}</p></div>
+    <span class="pill ${cov?"":"off"}">${cov?"Yes":"No"}</span></div>
+    <div class="guide" id="g-covered"></div>
+    ${cov?`<label class="f" for="at-skin">Skin type shown</label>
+    <select id="at-skin">${SKINS.map(s=>`<option ${s===skin?"selected":""}>${s}</option>`).join("")}</select>
+    `:""}</div>`;
+}
+$("#at-save").onclick=()=>{
+  const err=$("#at-err"), title=$("#at-topic").value.trim(), {visual,img,disc}=state.draft;
+  if(!title){err.textContent="Give the topic a name."; return err.classList.add("show")}
+  if(title.length<4){err.textContent="Write the full topic name, not an abbreviation."; return err.classList.add("show")}
+  if(visual==null){err.textContent="Say whether this is a visually relevant topic."; return err.classList.add("show")}
+  if(visual===0){
+    if(state.editing){
+      const f=findTopic(state.editing);
+      f.sess.topics=f.sess.topics.filter(x=>x.id!==state.editing);
+      f.day.sessions=f.day.sessions.filter(x=>x.topics.length);
+    }
+    toast("Skipped — non-visual topics aren't part of the framework."); return show("s-today");
+  }
+  if(img==null||disc==null){err.textContent="Answer both coverage questions."; return err.classList.add("show")}
+  err.classList.remove("show");
+  const day=ensureDay(state.selDay,myPgy()), v=$("#at-sess").value;
+  const cov=visual===1&&img===1&&disc===1;
+  let sess;
+  if(v.startsWith("new:")){ sess={id:uid(), type:v.slice(4), topics:[]}; day.sessions.push(sess); }
+  else sess=day.sessions.find(s=>s.id===v);
+  if(state.editing){
+    const found=findTopic(state.editing), t=found.t;
+    t.title=title; t.visual=visual; t.img=visual?img:0; t.disc=visual?disc:0; t.covered=cov;
+    t.skin=cov?$("#at-skin").value:null; delete t.incomplete;
+    if(!cov){ t.ratings={}; t.absent=[]; }
+    if(found.sess.id!==sess.id){
+      found.sess.topics=found.sess.topics.filter(x=>x.id!==t.id);
+      sess.topics.push(t); day.sessions=day.sessions.filter(s=>s.topics.length);
+    }
+    toast("Topic updated.");
+  }else{
+    sess.topics.push({id:uid(), title, visual, covered:cov, img:visual?img:0, disc:visual?disc:0,
+      skin:cov?$("#at-skin").value:null, ratings:{}, absent:[]});
+    toast(cov?"Registered — your cohort can rate it until "+closesAt(state.selDay)+"."
+             :(visual?"Registered as not covered.":"Registered as non-visual — excluded."));
+  }
+  show("s-today");
+};
+$("#at-delete").onclick=()=>{
+  if(!state.confirmDel){state.confirmDel=true; $("#at-delete").textContent="Tap again to delete permanently"; return}
+  const found=findTopic(state.editing);
+  found.sess.topics=found.sess.topics.filter(x=>x.id!==state.editing);
+  found.day.sessions=found.day.sessions.filter(s=>s.topics.length);
+  toast("Topic deleted."); show("s-today");
+};
+
+/* ---------- rate ---------- */
+function openRate(tid, back){
+  const {t,sess,date}=findTopic(tid), existing=t.ratings[state.me];
+  state.rating={tid, vals:{}, back:back||"s-today"};
+  $("#rate-back").onclick=()=>show(state.rating.back);
+  $("#rate-eyebrow").textContent=existing?"Part 2 · revisit your rating":"Part 2 · your rating";
+  $("#rate-save").textContent=existing?"Update my rating":"Submit my rating";
+  $("#rate-absent").style.display=existing?"none":"block";
+  $("#rate-topic").textContent=t.title;
+  $("#rate-meta").textContent=`${sess.type} · ${fmt(date)} · closes ${closesAt(date)}`;
+  $("#rate-note").value=existing?existing.note||"":"";
+  $("#rate-err").classList.remove("show");
+  if(existing) DOM.forEach(d=>state.rating.vals[d.k]=existing[d.k]);
+  $("#rate-body").innerHTML=DOM.map(d=>{
+    const set=!!existing;
+    return `<div class="rm"><div class="rmhead">
+      <span class="rmname">${d.n}<button class="info" data-guide="${d.k}">i</button></span>
+      <span class="rmval ${set?"":"un"}" id="rv-${d.k}">${set?existing[d.k]:"—"}</span></div>
+      <div class="rmq">${d.q}</div>
+      <div class="guide" id="g-${d.k}"></div>
+      <input type="range" min="1" max="5" step="1" value="${set?existing[d.k]:3}" data-k="${d.k}"
+        class="${set?"":"untouched"}" aria-label="${d.n}">
+      <div class="anchors"><span>Strongly disagree</span><span>Strongly agree</span></div></div>`;
+  }).join("")+
+  `${existing?"":'<div class="tapnote">Tap anywhere on a scale to set it. Nothing is pre-selected. Tap the i for what each item means.</div>'}
+   <div class="meanbox grey" id="rmean"><div><div class="lab">My score</div>
+   <div class="subnote" id="rnote">Set all five items.</div></div><div class="num" id="rnum">—</div></div>`;
+  $$("#rate-body input[type=range]").forEach(r=>{
+    const commit=()=>{
+      r.classList.remove("untouched");
+      state.rating.vals[r.dataset.k]=+r.value;
+      const l=$("#rv-"+r.dataset.k); l.textContent=r.value; l.classList.remove("un");
+      paintMean();
+    };
+    r.addEventListener("input",commit); r.addEventListener("click",commit);
+  });
+  paintMean(); show("s-rate");
+}
+function paintMean(){
+  const v=Object.values(state.rating.vals), box=$("#rmean");
+  if(!box) return;
+  if(v.length<DOM.length){
+    box.className="meanbox grey"; $("#rnum").textContent="—";
+    $("#rnote").textContent=`${v.length} of ${DOM.length} items set.`; return;
+  }
+  const m=v.reduce((a,b)=>a+b,0)/DOM.length;
+  $("#rnum").textContent=m.toFixed(2);
+  box.className="meanbox"+(m<THRESH?" flag":"");
+  $("#rnote").textContent=m<THRESH?"Below 3.5 on your rating.":"At or above 3.5.";
+}
+$("#rate-save").onclick=()=>{
+  const {tid,vals,back}=state.rating||{};
+  if(Object.keys(vals||{}).length<DOM.length){
+    $("#rate-err").textContent="Set all five items before submitting.";
+    return $("#rate-err").classList.add("show");
+  }
+  const {t,date}=findTopic(tid);
+  if(!isOpen(date)){toast("This day is closed — ratings are final."); return show(back)}
+  t.ratings[state.me]={...vals, note:$("#rate-note").value.trim()};
+  t.absent=(t.absent||[]).filter(id=>id!==state.me);
+  toast("Rating saved. Locks "+closesAt(date)+"."); show(back);
+};
+$("#rate-absent").onclick=()=>{
+  const {tid,back}=state.rating, {t}=findTopic(tid);
+  t.absent=[...new Set([...(t.absent||[]), state.me])];
+  delete t.ratings[state.me];
+  toast("Marked absent — excluded from this topic's average."); show(back);
+};
+
+function readingCard(title){
+  const list=resourcesFor(title);
+  if(!libraryOpen() && !list.length) return "";
+  return `<div class="card"><div class="row"><h3>Shared reading</h3>
+    <span class="pill ${list.length?"":"off"}">${list.length}</span></div>
+    ${list.length? list.map(r=>`<div style="padding:13px 0;border-top:1px solid var(--line)">
+      <div class="row"><a href="${r.url}" target="_blank" rel="noopener" class="rlink">${r.source}</a>
+      <span class="muted">${res(r.by).code} · ${shortDate(r.date)}</span></div>
+      <p class="muted" style="margin-top:6px">${r.takeaway}</p></div>`).join("")
+     : `<p class="muted" style="margin-top:6px">Nothing shared for this condition yet.</p>`}
+    ${libraryOpen()?`<div id="add-${title.replace(/[^a-z0-9]/gi,"")}">
+      <button class="btn ghost btn-sm-share" data-share="${title}">Share what you found</button></div>`
+     :`<div class="tapnote">Opens in the remediation phase, months 4–6.</div>`}</div>`;
+}
+function bindShare(afterFn){
+  $$("[data-share]").forEach(b=>b.onclick=()=>{
+    const title=b.dataset.share, box=b.parentElement;
+    box.innerHTML=`<label class="f" for="sh-src">Where it's from</label>
+      <input id="sh-src" placeholder="e.g. JAAD, DermNet, Skin Deep">
+      <label class="f" for="sh-url">Link</label>
+      <input id="sh-url" placeholder="https://…" autocapitalize="none">
+      <label class="f" for="sh-take">What you took from it</label>
+      <textarea id="sh-take" placeholder="The one thing a co-resident should know."></textarea>
+      <button class="btn" id="sh-save">Add to this condition</button>`;
+    $("#sh-save").onclick=()=>{
+      const source=$("#sh-src").value.trim(), url=$("#sh-url").value.trim(), takeaway=$("#sh-take").value.trim();
+      if(!source||!takeaway) return toast("Add where it's from and what you took from it.");
+      RESOURCES.push({id:uid(), title, by:state.me, source, url:url||"#", takeaway, date:TODAY});
+      toast("Shared with your cohort."); afterFn();
+    };
+  });
+}
+
+/* ---------- topic detail ---------- */
+function openTopic(tid, back){
+  state.backTo=back||"s-sum";
+  const {t,sess,date,day}=findTopic(tid), p=myPgy(), sc=score(t), ab=absence(t,date,p);
+  const mine=t.ratings[state.me], open=isOpen(date), isLogger=day.logger===state.me;
+  $("#topic-back").onclick=()=>show(state.backTo);
+  $("#topic-body").innerHTML=`
+    <div class="eyebrow">${sess.type} · ${p}</div>
+    <h1 style="margin-top:8px">${t.title}</h1>
+    <p>${fmt(date)} · ${t.covered?(t.skin||"skin type not set"):(t.visual?"skin of color not covered":"non-visual topic")}
+       · <b>${open?"open until "+closesAt(date):"closed"}</b></p>
+    ${!t.visual?`<div class="card"><div class="row"><div><h3>Excluded from the framework</h3>
+      <p class="muted" style="margin-top:4px">Non-visual topics are recorded for completeness but don't count toward teaching exposure and aren't rated.</p></div>
+      <span class="pill off">Non-visual</span></div></div>`
+    :!t.covered?`<div class="card"><div class="row"><div><h3>Not covered</h3>
+      <p class="muted" style="margin-top:4px">Image of Fitzpatrick IV–VI: ${t.img?"yes":"no"} · Explicitly discussed: ${t.disc?"yes":"no"}</p></div>
+      <span class="pill off">No rating</span></div></div>`
+    :(!sc?`<div class="card"><div class="empty">No one has rated this yet.</div></div>`:`
+    <div class="meanbox ${sc.overall<THRESH?"flag":"teal"}">
+      <div><div class="lab">Team score</div>
+      <div class="subnote">${sc.n} of ${cohort(p).length} residents rated${provisional(sc)?" · provisional":""}</div></div>
+      <div class="num">${sc.overall.toFixed(2)}</div></div>
+    <div class="card"><h3>Item averages</h3>
+      ${DOM.map(d=>`<div class="bar"><div class="bl"><span>${d.n}</span><b>${sc.per[d.k].toFixed(2)}</b></div>
+      <div class="track"><div class="fill ${sc.per[d.k]<THRESH?"low":""}" style="width:${(sc.per[d.k]/5*100).toFixed(0)}%"></div></div></div>`).join("")}</div>
+    <div class="card"><h3>Individual ratings</h3>
+      ${sc.ids.map(id=>{const v=t.ratings[id], m=myMean(v), r=res(id);
+        return `<div style="padding:12px 0; border-top:1px solid var(--line)">
+          <div class="row"><div style="display:flex;gap:11px;align-items:center">
+          <div class="avatar v">${codeInit(r)}</div>
+          <div><div style="font-weight:700;font-size:14px">${r.code}${id===state.me?" · you":""}</div>
+          <div class="muted" style="font-family:'IBM Plex Mono',monospace">${DOM.map(d=>v[d.k]).join(" · ")}</div></div></div>
+          <span class="pill ${m<THRESH?"flag":""}">${m.toFixed(2)}</span></div>
+          ${v.note?`<div class="note">${v.note}</div>`:""}</div>`}).join("")}</div>`)}
+    ${t.covered?`<div class="card"><div class="row"><h3>Skin types shown</h3>
+      <span class="pill ${tonesForTitle(t.title).size<TONES.length?"flag":""}">${tonesForTitle(t.title).size}/3</span></div>
+      <div class="tonechips">${TONES.map(x=>
+        `<span class="${tonesForTitle(t.title).has(x)?"has":""}">${x.replace("Fitzpatrick ","")}</span>`).join("")}</div>
+      <p class="muted" style="margin-top:10px">${(()=>{
+        const seen=tonesForTitle(t.title), miss=TONES.filter(x=>!seen.has(x));
+        return miss.length? "This session showed "+(t.skin||"an unspecified type")+
+          ". Across every session on this condition, "+miss.map(m=>m.replace("Fitzpatrick ","type ")).join(" and ")+
+          " ha"+(miss.length>1?"ve":"s")+" not been taught yet."
+        : "This condition has been taught across Fitzpatrick IV–VI.";
+      })()}</p></div>`:""}
+    ${t.covered?`<div class="card"><div class="row"><h3>Who's counted</h3>
+      <span class="pill off">${sc?sc.n:0} / ${cohort(p).length}</span></div>
+      <p class="muted" style="margin-top:6px">${[
+        ab.declared.length?ab.declared.length+" absent":"",
+        ab.nores.length?ab.nores.length+" no response":"",
+        ab.waiting.length?ab.waiting.length+" still to respond":""
+      ].filter(Boolean).join(" · ")||"Everyone responded"} — absences are excluded, never counted as zero.</p></div>`:""}
+    ${t.covered?readingCard(t.title):""}
+    ${t.covered&&open&&!ab.all.includes(state.me)?`<button class="btn plum" id="topic-rate">${mine?"Revisit my rating":"Rate this topic"}</button>`:""}
+    ${isLogger&&open?`<button class="btn ghost" id="topic-edit">Edit or delete this topic</button>`:""}
+    ${!open?`<div class="tapnote" style="margin-top:16px">This day closed at ${CLOSE_HOUR}:00am. Scores and entries are final.</div>`:""}`;
+  const rb=$("#topic-rate"); if(rb) rb.onclick=()=>openRate(tid, state.backTo);
+  const eb=$("#topic-edit"); if(eb) eb.onclick=()=>{state.selDay=date; openAddTopic(tid)};
+  bindShare(()=>openTopic(tid, state.backTo));
+  show("s-topic");
+}
+
+/* ---------- summary ---------- */
+$$("#sum-tabs button").forEach(b=>b.onclick=()=>{
+  $$("#sum-tabs button").forEach(x=>x.classList.remove("on"));
+  b.classList.add("on"); state.period=b.dataset.p; renderSum();
+});
+function statBlock(list){
+  const visual=list.filter(x=>x.t.visual&&!x.t.incomplete);
+  const cov=visual.filter(x=>x.t.covered);
+  const scored=cov.map(x=>score(x.t)).filter(Boolean);
+  const avg=scored.length? scored.reduce((a,s)=>a+s.overall,0)/scored.length : null;
+  const gaps=cov.filter(x=>{const s=score(x.t); return s&&s.overall<THRESH});
+  return {visual, cov, avg, gaps, pct: visual.length? Math.round(cov.length/visual.length*100):0};
+}
+function responseBlock(list){
+  const p=myPgy(); let rated=0, dec=0, nores=0, wait=0;
+  list.filter(x=>x.t.covered).forEach(x=>{
+    const ab=absence(x.t,x.date,p);
+    rated+=Object.keys(x.t.ratings).length; dec+=ab.declared.length; nores+=ab.nores.length; wait+=ab.waiting.length;
+  });
+  const tot=rated+dec+nores+wait;
+  if(!tot) return "";
+  const w=n=>(n/tot*100).toFixed(1)+"%";
+  return `<div class="card"><h3>Response record</h3>
+
+    <div class="stack">
+      <div style="width:${w(rated)};background:var(--teal)"></div>
+      <div style="width:${w(dec)};background:var(--sage)"></div>
+      <div style="width:${w(nores)};background:var(--amber)"></div>
+      <div style="width:${w(wait)};background:#C9D3D2"></div></div>
+    <div class="legend">
+      <span><i class="dotk" style="background:var(--teal)"></i>Rated ${rated}</span>
+      <span><i class="dotk" style="background:var(--sage)"></i>Absent, declared ${dec}</span>
+      <span><i class="dotk" style="background:var(--amber)"></i>No response ${nores}</span>
+      ${wait?`<span><i class="dotk" style="background:#C9D3D2"></i>Still open ${wait}</span>`:""}
+    </div>
+    <p class="muted" style="margin-top:12px">Response rate ${(rated/(rated+dec+nores||1)*100).toFixed(0)}%.</p></div>`;
+}
+function itemBars(list){
+  const scored=list.filter(x=>x.t.covered).map(x=>score(x.t)).filter(Boolean);
+  if(!scored.length) return "";
+  const per={}; DOM.forEach(d=>per[d.k]=scored.reduce((a,s)=>a+s.per[d.k],0)/scored.length);
+  return `<div class="card"><h3>Item averages</h3>
+    ${DOM.map(d=>`<div class="bar"><div class="bl"><span>${d.n}</span><b>${per[d.k].toFixed(2)}</b></div>
+    <div class="track"><div class="fill ${per[d.k]<THRESH?"low":""}" style="width:${(per[d.k]/5*100).toFixed(0)}%"></div></div></div>`).join("")}</div>`;
+}
+function renderSum(){
+  const p=myPgy(), body=$("#sum-body");
+  $("#sum-eyebrow").textContent="Summary · "+p;
+  if(state.period==="cycle"){ renderCycle(); return }
+  if(state.period==="day"){
+    const days=myDays().filter(d=>d.sessions.length).sort((a,b)=>b.date<a.date?-1:1);
+    if(!days.length){body.innerHTML=`<div class="card"><div class="empty">Nothing logged for ${p} yet.</div></div>`; return}
+    body.innerHTML=days.map(d=>{
+      const list=[]; d.sessions.forEach(s=>s.topics.forEach(t=>list.push({t, date:d.date})));
+      const {avg,cov}=statBlock(list);
+      return `<div class="cohort">${fmt(d.date)} · ${cov.length} SoC topic${cov.length===1?"":"s"}${avg?" · mean "+avg.toFixed(2):""}${isOpen(d.date)?" · open":""}</div>
+      ${d.sessions.map(s=>sessionBlock(s,d.date,p,state.me)).join("")}`;
+    }).join("");
+    bindTopics(); return;
+  }
+  const from = state.period==="week" ? dayBack(6) : TODAY.slice(0,8)+"01";
+  const label = state.period==="week" ? "Last 7 days"
+    : new Date(TODAY+"T00:00:00").toLocaleDateString(undefined,{month:"long", year:"numeric"});
+  const list=myTopics(from);
+  if(!list.length){body.innerHTML=`<div class="card"><div class="empty">Nothing logged in this period.</div></div>`; return}
+  const {avg,pct,gaps,cov,visual}=statBlock(list);
+  body.innerHTML=`<div class="card"><div class="row" style="text-align:center">
+      <div style="flex:1"><h2>${visual.length}</h2><div class="muted">Visually relevant topics</div></div>
+      <div style="flex:1"><h2>${pct}%</h2><div class="muted">Teaching exposure</div></div>
+      <div style="flex:1"><h2 style="color:${avg&&avg<THRESH?"var(--amber)":"var(--teal)"}">${avg?avg.toFixed(2):"—"}</h2><div class="muted">Mean RM</div></div>
+      </div><p class="muted" style="margin-top:12px">${label} · ${cov.length} of ${visual.length} visually relevant topics fully SoC-covered${list.length-visual.length?", "+(list.length-visual.length)+" non-visual excluded":""}. ${gaps.length} flagged below ${THRESH}.</p></div>`
+    +itemBars(list)+responseBlock(list)
+    +(gaps.length?`<div class="card"><h3>Priority educational needs <span class="muted">· below ${THRESH}</span></h3>
+      ${gaps.map(x=>`<div class="row tapme" data-open="${x.t.id}" style="padding:12px 0;border-top:1px solid var(--line)">
+      <div><div style="font-weight:700;font-size:14px">${x.t.title}</div>
+      <div class="muted">${x.sess.type} · ${shortDate(x.date)}</div></div>
+      <span class="pill flag">${score(x.t).overall.toFixed(2)}</span></div>`).join("")}</div>`:"")
+    +(state.period==="month"? brief(list,label) : "");
+  bindTopics();
+}
+function renderCycle(){
+  const body=$("#sum-body"), p=myPgy(), ph=phase(), pri=priorityTopics();
+  const claimedTitles=[...new Set(CYCLE.claims.filter(c=>res(c.res).pgy===p).map(c=>c.title))];
+  const responsiveness=pri.length? Math.round(claimedTitles.length/pri.length*100):0;
+  const cohortClaims=CYCLE.claims.filter(c=>res(c.res).pgy===p);
+  const delivered=cohortClaims.filter(c=>c.status==="delivered");
+  const scholarly=cohortClaims.filter(c=>c.scholarly);
+
+  const phaseCard=(n,title,months,desc)=>`<div class="phasecard ${ph===n?"now":ph>n?"done":""}">
+    <div class="row"><div><div class="pn">Phase ${n} · months ${months}</div><h3>${title}</h3></div>
+    <span class="pill ${ph===n?"":"off"}">${ph===n?"Now":ph>n?"Done":"Ahead"}</span></div>
+    <p class="muted" style="margin-top:6px">${desc}</p></div>`;
+
+  let action="";
+  if(ph===1){
+    const cov=myTopics().filter(x=>x.t.covered).length;
+    action=`<div class="card"><h3>Keep logging</h3>
+      <p class="muted" style="margin-top:6px">${cov} skin of color topic${cov===1?"":"s"} logged so far this cycle.
+      At the end of month 3 everything scoring below ${THRESH} becomes your cohort's priority list.</p></div>`;
+  }
+  if(ph===2){
+    action=`<div class="card"><h3>Priority educational needs</h3>
+      <p class="muted" style="margin-top:6px">Claim the ones you'll build something on over months 4–6.</p>
+      ${pri.length? pri.map(x=>{
+        const sc=score(x.t), cl=claimsFor(x.t.title), mine=cl.find(c=>c.res===state.me);
+        return `<div style="padding:13px 0;border-top:1px solid var(--line)">
+          <div class="row"><div><div style="font-weight:700;font-size:14.5px">${x.t.title}</div>
+          <div class="muted">${x.sess.type} · ${shortDate(x.date)}${cl.length?" · claimed by "+cl.length+" resident"+(cl.length>1?"s":""):""}</div></div>
+          <span class="pill flag">${sc.overall.toFixed(2)}</span></div>
+          ${mine? `<div class="note">You claimed this — ${mine.format}.</div>
+            <button class="btn quiet" data-unclaim="${mine.id}" style="text-align:left">Release this topic</button>`
+          : `<select class="fmt" data-fmt="${x.t.title}" style="margin-top:10px">${FORMATS.map(f=>`<option>${f}</option>`).join("")}</select>
+             <button class="btn sm" data-claim="${x.t.title}">Claim this topic</button>`}
+        </div>`}).join("")
+      : `<div class="empty">Nothing scored below ${THRESH} this cycle.</div>`}</div>
+      ${pri.length? brief(myTopics(), "cycle 1, months 1–3") : ""}
+      ${assessCard("baseline","Baseline assessment","Taken now, before remediation begins.")}
+      ${blueprint()}`;
+  }
+  if(ph===3){
+    const mine=myClaims();
+    action=`<div class="card"><h3>What you committed to</h3>
+      ${mine.length? mine.map(c=>`<div style="padding:13px 0;border-top:1px solid var(--line)">
+        <div class="row"><div><div style="font-weight:700;font-size:14.5px">${c.title}</div>
+        <div class="muted">${c.format}</div></div>
+        <span class="pill ${c.status==="delivered"?"":"off"}">${c.status==="delivered"?"Delivered":"Planned"}</span></div>
+        <div class="btnrow" style="display:flex;gap:10px">
+        ${c.status==="delivered"?"":`<button class="btn sm" data-deliver="${c.id}">Mark delivered</button>`}
+        ${c.status==="delivered"&&!c.scholarly?`<button class="btn sm ghost" data-schol="${c.id}">Became scholarly work</button>`:""}
+        ${c.scholarly?`<div class="note" style="flex:1">Carried into formal scholarly work.</div>`:""}
+        </div>
+        <div class="row" style="margin-top:10px"><span class="muted">${resourcesFor(c.title).length} shared reading on this condition</span>
+        <button class="btn sm ghost" data-share="${c.title}" style="width:auto;margin:0;padding:9px 13px">Share a paper</button></div>
+        </div>`).join("")
+      : `<div class="empty">You didn't claim any topics this cycle.</div>`}</div>`;
+  }
+  if(ph===4){
+    const b=assessMean("baseline"), f=assessMean("followup");
+    action=`${assessCard("followup","Follow-up assessment","Same format as the baseline, six months on.")}
+      ${b&&f?`<div class="meanbox ${f.mean>=b.mean?"teal":"flag"}">
+        <div><div class="lab">Change since baseline</div>
+        <div class="subnote">${b.mean.toFixed(1)}% → ${f.mean.toFixed(1)}% · ${f.n} of ${cohort(p).length} taken</div></div>
+        <div class="num">${f.mean>=b.mean?"+":""}${(f.mean-b.mean).toFixed(1)}</div></div>`:""}
+      <div class="card"><h3>What was claimed this cycle</h3>
+        ${cohortClaims.length? cohortClaims.map(c=>`<div class="row" style="padding:12px 0;border-top:1px solid var(--line)">
+          <div><div style="font-weight:700;font-size:14px">${c.title}</div><div class="muted">${c.format}</div></div>
+          <span class="pill ${c.status==="delivered"?"":"off"}">${c.status==="delivered"?"Delivered":"Not delivered"}</span></div>`).join("")
+        : `<div class="empty">No topics were claimed this cycle.</div>`}</div>`;
+  }
+
+  body.innerHTML=`
+    <div class="card"><div class="row"><div><h3>Cycle 1</h3>
+      <div class="muted">Month ${cycleMonth()} of 6 · started ${shortDate(CYCLE.start)}</div></div>
+      <span class="pill">Phase ${ph}</span></div>
+      <div class="track" style="margin-top:14px"><div class="fill" style="width:${Math.min(100,daysSince(CYCLE.start)/180*100).toFixed(0)}%"></div></div></div>
+
+    <div class="card"><h3>Resident engagement</h3>
+      <div class="row" style="text-align:center;margin-top:10px">
+        <div style="flex:1"><h2>${responsiveness}%</h2><div class="muted">Gap responsiveness</div></div>
+        <div style="flex:1"><h2>${delivered.length}</h2><div class="muted">Sessions delivered</div></div>
+        <div style="flex:1"><h2>${scholarly.length}</h2><div class="muted">Scholarly output</div></div>
+      </div>
+      </div>
+
+    ${action}
+
+    ${phaseCard(1,"Baseline logging","1–3","Log routine teaching encounters and rate instructional quality.")}
+    ${phaseCard(2,"Identification and baseline","end of 3","Topics averaging below "+THRESH+" are flagged as priority educational needs, and a baseline knowledge assessment is taken.")}
+    ${phaseCard(3,"Resident-led remediation","4–6","Claimed gaps become peer-teaching modules, journal clubs or case repositories.")}
+    ${phaseCard(4,"Impact evaluation","end of 6","A follow-up assessment checks whether the learning held.")}
+
+    <div class="cohort">Prototype only</div>
+    <div class="tabs" id="phase-preview">
+      ${[1,2,3,4].map(n=>`<button data-ph="${n}" class="${ph===n?"on":""}">Phase ${n}</button>`).join("")}
+    </div>
+    <div class="tapnote">In the live app the phase follows the calendar.</div>`;
+
+  $$("#phase-preview button").forEach(b=>b.onclick=()=>{state.phaseView=+b.dataset.ph; renderCycle()});
+  $$("[data-claim]").forEach(b=>b.onclick=()=>{
+    const title=b.dataset.claim;
+    const fmt=document.querySelector(`[data-fmt="${CSS.escape(title)}"]`).value;
+    CYCLE.claims.push({id:uid(), res:state.me, title, format:fmt, status:"planned", scholarly:false});
+    toast("Claimed — you'll build this over months 4–6."); renderCycle();
+  });
+  $$("[data-unclaim]").forEach(b=>b.onclick=()=>{
+    CYCLE.claims=CYCLE.claims.filter(c=>c.id!==b.dataset.unclaim);
+    toast("Released."); renderCycle();
+  });
+  $$("[data-deliver]").forEach(b=>b.onclick=()=>{
+    const c=CYCLE.claims.find(c=>c.id===b.dataset.deliver); c.status="delivered";
+    toast("Recorded as delivered."); renderCycle();
+  });
+  $$("[data-schol]").forEach(b=>b.onclick=()=>{
+    const c=CYCLE.claims.find(c=>c.id===b.dataset.schol); c.scholarly=true;
+    toast("Recorded as scholarly output."); renderCycle();
+  });
+  bindShare(renderCycle);
+  $$("[data-assess]").forEach(b=>b.onclick=()=>{
+    const w=b.dataset.assess, v=+$("#as-"+w).value;
+    if(!(v>=0&&v<=100)) return toast("Enter a score between 0 and 100.");
+    CYCLE.assess[w][state.me]=v; toast("Score recorded."); renderCycle();
+  });
+}
+
+function brief(list,label){
+  const cov=list.filter(x=>x.t.covered);
+  const scored=cov.map(x=>({x, s:score(x.t)})).filter(o=>o.s);
+  if(!scored.length) return "";
+  const per={}; DOM.forEach(d=>per[d.k]=scored.reduce((a,o)=>a+o.s.per[d.k],0)/scored.length);
+  const weakest=DOM.slice().sort((a,b)=>per[a.k]-per[b.k])[0];
+  const strongest=DOM.slice().sort((a,b)=>per[b.k]-per[a.k])[0];
+  const gaps=scored.filter(o=>o.s.overall<THRESH).map(o=>o.x.t.title);
+  const uncovered=list.filter(x=>x.t.visual&&!x.t.covered).map(x=>x.t.title);
+  return `<div class="brief"><div class="lab">Monthly brief · ${label}</div>
+    <h3 style="margin-top:8px">What to work on next</h3>
+    <p>Across ${cov.length} skin of color topic${cov.length===1?"":"s"} this month, your cohort scored
+    ${weakest.n.toLowerCase()} lowest (${per[weakest.k].toFixed(2)}) and ${strongest.n.toLowerCase()} highest (${per[strongest.k].toFixed(2)}).</p>
+    <ul>${gaps.length?`<li>Priority needs: ${gaps.join(", ")} — below ${THRESH}.</li>`:`<li>No topic fell below ${THRESH} this month.</li>`}
+    <li>Weakest item is ${weakest.n.toLowerCase()}. ${weakest.q}</li>
+    ${uncovered.length?`<li>Visually relevant but not SoC-covered: ${uncovered.join(", ")}.</li>`:""}</ul>
+    <p style="font-size:11.5px; opacity:.7; margin-top:14px">Draft example, generated from your data. In phase 2 this section is written by AI.</p></div>`;
+}
+
+/* ---------- track my info ---------- */
+function renderMe(){
+  const p=myPgy(), r=res(state.me), cov=myTopics().filter(x=>x.t.covered);
+  const mineList=cov.filter(x=>x.t.ratings[state.me]);
+  const declared=cov.filter(x=>(x.t.absent||[]).includes(state.me));
+  const nores=cov.filter(x=>!x.t.ratings[state.me] && !(x.t.absent||[]).includes(state.me) && !isOpen(x.date));
+  const openNow=cov.filter(x=>!x.t.ratings[state.me] && !(x.t.absent||[]).includes(state.me) && isOpen(x.date));
+  const loggerDays=myDays().filter(d=>d.logger===state.me).length;
+  const myAvg=mineList.length? mineList.reduce((a,x)=>a+myMean(x.t.ratings[state.me]),0)/mineList.length : null;
+  const teamAvg=mineList.length? mineList.reduce((a,x)=>a+score(x.t).overall,0)/mineList.length : null;
+  const myPer={}, coPer={};
+  if(mineList.length) DOM.forEach(d=>{
+    myPer[d.k]=mineList.reduce((a,x)=>a+x.t.ratings[state.me][d.k],0)/mineList.length;
+    coPer[d.k]=mineList.reduce((a,x)=>a+score(x.t).per[d.k],0)/mineList.length;
+  });
+  $("#me-body").innerHTML=`
+    <div style="display:flex; gap:14px; align-items:center; margin-top:10px">
+      <div class="avatar lg">${initials(r.name)}</div>
+      <div><h1 style="font-size:24px">${r.name}</h1>
+      <div class="muted">${p} · @${r.user} · you appear as <b>${r.code}</b> in all data</div></div></div>
+    ${openNow.length?`<div class="advisory">${openNow.length} topic${openNow.length===1?"":"s"} still waiting on your rating. If you don't respond before close you'll be recorded absent.</div>`:""}
+    <div class="card"><div class="row" style="text-align:center">
+      <div style="flex:1"><h2>${mineList.length}</h2><div class="muted">Rated</div></div>
+      <div style="flex:1"><h2>${declared.length}</h2><div class="muted">Absent</div></div>
+      <div style="flex:1"><h2>${nores.length}</h2><div class="muted">No response</div></div>
+      <div style="flex:1"><h2>${loggerDays}</h2><div class="muted">Logged</div></div>
+    </div><p class="muted" style="margin-top:12px">Both are excluded from averages. "No response" just means a day closed without you.</p></div>
+    ${myAvg?`<div class="meanbox teal"><div><div class="lab">Your mean RM</div>
+      <div class="subnote">Across ${mineList.length} topic${mineList.length===1?"":"s"} · cohort mean ${teamAvg.toFixed(2)}</div></div>
+      <div class="num">${myAvg.toFixed(2)}</div></div>
+    <div class="card"><h3>You vs your cohort</h3>
+      <p class="muted" style="margin-top:4px">Purple is your average. The line is the cohort average on the same topics.</p>
+      ${DOM.map(d=>`<div class="bar"><div class="bl"><span>${d.n}</span>
+        <b>${myPer[d.k].toFixed(2)} <span style="color:var(--ink3)">/ ${coPer[d.k].toFixed(2)}</span></b></div>
+        <div class="track"><div class="fill me" style="width:${(myPer[d.k]/5*100).toFixed(0)}%"></div>
+        <div class="mark" style="left:${(coPer[d.k]/5*100).toFixed(0)}%"></div></div></div>`).join("")}</div>
+    <div class="card"><h3>Topics you rated</h3>
+      ${mineList.map(x=>{const m=myMean(x.t.ratings[state.me]), s=score(x.t).overall;
+        return `<div class="row tapme" data-open="${x.t.id}" style="padding:12px 0;border-top:1px solid var(--line)">
+          <div><div style="font-weight:700;font-size:14px">${x.t.title}</div>
+          <div class="muted">${x.sess.type} · ${shortDate(x.date)} · team ${s.toFixed(2)}</div></div>
+          <span class="pill ${m<THRESH?"flag":"vio"}">${m.toFixed(2)}</span></div>`}).join("")}</div>`
+    :`<div class="card"><div class="empty">You haven't rated anything yet.</div></div>`}
+    <div class="cohort">Export</div>
+    <button class="btn ghost" id="export-topic">Export topic data (CSV)</button>
+    <div class="tapnote">One row per topic. No rater identities — this is the analysis file.</div>
+    <button class="btn ghost" id="export-rater">Export rating-level data (CSV)</button>
+    <div class="tapnote">One row per rating, resident codes only. Needed for inter-rater reliability.</div>
+    <div class="cohort">Help</div>
+    <button class="btn ghost" data-go="s-how">How to use SoC-TEQ</button>
+    <button class="btn danger" id="logout" style="margin-top:26px">Log out</button>`;
+  bindTopics();
+  $("#export-topic").onclick=()=>exportCSV("topic");
+  $("#export-rater").onclick=()=>exportCSV("rater");
+  $("#logout").onclick=logout;
+}
+
+/* ---------- CSV ---------- */
+function exportCSV(mode){
+  const p=myPgy(); let head, rows=[];
+  if(mode==="topic"){
+    head=["date","pgy","session","topic","visually_relevant","image_soc","discussed_soc","soc_covered","skin_type",
+      ...DOM.map(d=>d.k+"_mean"),"rm_mean","n_rated","n_absent_declared","n_no_response","cohort_size","flagged"];
+    myDays().sort((a,b)=>a.date<b.date?-1:1).forEach(d=>d.sessions.forEach(s=>s.topics.forEach(t=>{
+      const sc=score(t), ab=absence(t,d.date,p);
+      rows.push([d.date,d.pgy,s.type,t.title,t.visual,t.img,t.disc,t.covered?1:0,t.skin||"",
+        ...DOM.map(dd=>sc?sc.per[dd.k].toFixed(2):""),
+        sc?sc.overall.toFixed(2):"", sc?sc.n:0, ab.declared.length, ab.nores.length, cohort(p).length,
+        sc?(sc.overall<THRESH?1:0):""]);
+    })));
+  }else{
+    head=["date","pgy","session","topic","soc_covered","skin_type","rater_code","status",
+      ...DOM.map(d=>d.k),"rater_mean","team_mean","n_rated","flagged","note"];
+    myDays().sort((a,b)=>a.date<b.date?-1:1).forEach(d=>d.sessions.forEach(s=>s.topics.forEach(t=>{
+      if(!t.covered) return;
+      const sc=score(t), ab=absence(t,d.date,p);
+      cohort(p).forEach(r=>{
+        const v=t.ratings[r.id];
+        const status=v?"rated":ab.declared.includes(r.id)?"absent_declared":ab.nores.includes(r.id)?"no_response":"pending";
+        rows.push([d.date,d.pgy,s.type,t.title,1,t.skin||"",r.code,status,
+          ...DOM.map(dd=>v?v[dd.k]:""), v?myMean(v).toFixed(2):"",
+          sc?sc.overall.toFixed(2):"", sc?sc.n:0, sc?(sc.overall<THRESH?1:0):"", v?v.note||"":""]);
+      });
+    })));
+  }
+  const csv=[head,...rows].map(r=>r.map(c=>{
+    const s=String(c==null?"":c);
+    return /[",\n]/.test(s)? '"'+s.replace(/"/g,'""')+'"' : s;
+  }).join(",")).join("\n");
+  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=`soc-teq_${mode}_${p.replace("-","")}_${TODAY}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+  toast(mode==="topic"?"Topic-level CSV downloaded.":"Rating-level CSV downloaded — codes only.");
+}
+
+/* ---------- team ---------- */
+function renderTeam(){
+  const p=myPgy();
+  $("#team-title").textContent="Wayne State · "+p;
+  $("#team-sub").textContent="Your cohort only. Other PGY years keep separate directories and separate data.";
+  const prof=`<div class="card"><div class="row"><h3>Program profile</h3><span class="pill off">Setup</span></div>
+    ${[["Setting",PROGRAM.setting],["Patient mix",PROGRAM.patientMix],
+       ["Existing curriculum",PROGRAM.existingCurriculum],["Image resources",PROGRAM.imageResources]]
+      .map(([k,v])=>`<div style="padding:11px 0;border-top:1px solid var(--line)">
+        <div class="muted" style="font-size:11px;text-transform:uppercase;letter-spacing:.08em">${k}</div>
+        <div style="font-size:13.5px;margin-top:3px">${v}</div></div>`).join("")}
+    <div class="tapnote">Completed once by the program lead. Exports with your data.</div></div>`;
+  $("#team-body").innerHTML=prof+cohort(p).map(r=>{
+    const rated=myTopics().filter(x=>x.t.ratings[r.id]).length;
+    const logged=myDays().filter(d=>d.logger===r.id).length;
+    return `<div class="card"><div class="row"><div style="display:flex;gap:12px;align-items:center">
+      <div class="avatar">${initials(r.name)}</div>
+      <div><h3>${r.name}${r.id===state.me?" (you)":""}</h3><div class="muted">${r.email}</div></div></div></div>
+      <div class="row" style="margin-top:12px;padding-top:12px;border-top:1px solid var(--line)">
+      <span class="muted">${rated} topic${rated===1?"":"s"} rated</span>
+      <span class="pill off">${logged} day${logged===1?"":"s"} as logger</span></div></div>`;
+  }).join("")+`<div class="tapnote">Names appear here so you know who's in your cohort. They never appear next to a rating or in exported data.</div>`;
+}
+
+/* ---------- cases ---------- */
+function renderCases(){
+  const p=myPgy();
+  $("#cases-sub").textContent=`Which skin types each condition has actually been taught in.`;
+  const cov=myTopics().filter(x=>x.t.covered);
+  if(!cov.length){$("#cases-body").innerHTML=`<div class="card"><div class="empty">Nothing here yet.</div></div>`; return}
+  const titles=[...new Set(cov.map(x=>x.t.title))];
+  const thin=titles.filter(t=>tonesForTitle(t).size<TONES.length);
+  $("#cases-body").innerHTML=
+    `<div class="card"><div class="row"><h3>Tone coverage</h3>
+      <span class="pill ${thin.length?"flag":""}">${titles.length-thin.length}/${titles.length} complete</span></div>
+      <p class="muted" style="margin-top:6px">${thin.length? thin.length+" condition"+(thin.length===1?" has":"s have")+" only been shown in some of Fitzpatrick IV–VI."
+        :"Every condition has been shown across IV–VI."}</p></div>`
+    + titles.map(title=>{
+        const inst=cov.filter(x=>x.t.title===title);
+        const seen=tonesForTitle(title);
+        const last=inst[0], sc=score(last.t);
+        return `<div class="card"><div class="row tapme" data-open="${last.t.id}">
+          <div><h3>${title}</h3><div class="muted">${inst.length} session${inst.length>1?"s":""} · ${last.sess.type} · ${shortDate(last.date)}</div></div>
+          <span class="pill ${sc&&sc.overall<THRESH?"flag":""}">${sc?sc.overall.toFixed(2):"—"}</span></div>
+          <div class="tonechips">${TONES.map(t=>
+            `<span class="${seen.has(t)?"has":""}">${t.replace("Fitzpatrick ","")}</span>`).join("")}</div>
+          ${seen.size<TONES.length?`<div class="tapnote">Not yet taught in ${TONES.filter(t=>!seen.has(t)).map(t=>t.replace("Fitzpatrick ","type ")).join(", ")}.</div>`:""}
+          ${resourcesFor(title).length?`<div class="tapnote">${resourcesFor(title).length} shared reading${resourcesFor(title).length>1?"s":""} on this condition.</div>`:""}
+        </div>`;
+      }).join("");
+  bindTopics();
+}
+</script>
+</body>
+</html>
