@@ -28,8 +28,8 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
     setTimeout(() => setToast(""), 2400);
   }
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (isInitial = false) => {
+    if (isInitial) setLoading(true);
 
     let { data: dayRow } = await supabase
       .from("days")
@@ -88,7 +88,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
   }, [resident.program_id, resident.pgy, date]);
 
   useEffect(() => {
-    load();
+    load(true);
   }, [load]);
 
   async function claimLogger() {

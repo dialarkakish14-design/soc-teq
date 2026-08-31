@@ -15,6 +15,10 @@ dist-ssr
 .env.local
 .env.*.local
 
+# Credentials saved locally — never commit these
+SMTP key.pdf
+*.pdf
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
