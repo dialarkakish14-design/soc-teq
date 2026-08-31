@@ -67,6 +67,16 @@ export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: (
         return;
       }
 
+      // Supabase won't say "email already registered" outright (that would
+      // let anyone mass-check which emails exist) — instead it silently
+      // no-ops and returns an empty identities array for an existing email,
+      // versus one identity for a genuinely new signup. That's the only way
+      // to tell the two cases apart on this end.
+      if (signUpData.user && signUpData.user.identities?.length === 0) {
+        setError("An account with that email already exists. Try logging in, or use \"Forgot your password?\" if you don't remember it.");
+        return;
+      }
+
       if (!signUpData.session) {
         setPendingConfirmation(true);
         return;
