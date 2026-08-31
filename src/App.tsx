@@ -5,6 +5,7 @@ import { Login } from "./pages/Login";
 import { Today } from "./pages/Today";
 import { FinishSignUp } from "./pages/FinishSignUp";
 import { supabase } from "./lib/supabase";
+import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
 
 type Screen = "signup" | "login";
 
@@ -15,40 +16,25 @@ function App() {
   const [autoAttempted, setAutoAttempted] = useState(false);
 
   // If "Confirm email" is on, signUp() returns no session and complete_signup
-  // never ran. Try to finish it automatically using the form data stashed
-  // before signup — but a confirmation link can open in a different
-  // browser/tab than the one that stashed it, so this can't be relied on.
-  // Either way, once attempted, fall through to a manual form below instead
-  // of ever dead-ending.
+  // never ran. The profile fields travel in the confirmation link's query
+  // params (see lib/pendingSignup.ts), so they're available here regardless
+  // of which device/browser the link was opened on. Falls through to a
+  // manual form below if that data isn't present for any reason.
   useEffect(() => {
     if (!session || resident || finishingSignup || autoAttempted) return;
-    const raw = localStorage.getItem("socteq_pending_signup");
-    if (!raw) {
-      setAutoAttempted(true);
-      return;
-    }
-    const pending = JSON.parse(raw);
-    if (pending.email !== session.user.email) {
+    const pending = readPendingSignupFromUrl();
+    if (!pending) {
       setAutoAttempted(true);
       return;
     }
 
     setFinishingSignup(true);
-    supabase
-      .rpc("complete_signup", {
-        p_program_id: pending.p_program_id,
-        p_pgy: pending.p_pgy,
-        p_full_name: pending.p_full_name,
-        p_username: pending.p_username,
-        p_access_code: pending.p_access_code,
-        p_precourse: pending.p_precourse,
-      })
-      .then(({ error }) => {
-        if (!error) localStorage.removeItem("socteq_pending_signup");
-        setFinishingSignup(false);
-        setAutoAttempted(true);
-        refreshResident();
-      });
+    supabase.rpc("complete_signup", pending).then(({ error }) => {
+      if (!error) clearPendingSignupFromUrl();
+      setFinishingSignup(false);
+      setAutoAttempted(true);
+      refreshResident();
+    });
   }, [session, resident, finishingSignup, autoAttempted, refreshResident]);
 
   if (loading) {

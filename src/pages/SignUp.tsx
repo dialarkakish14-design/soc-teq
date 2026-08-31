@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { buildEmailRedirectUrl } from "../lib/pendingSignup";
 import type { Pgy, ProgramPublic } from "../types";
 
 const PGY_LEVELS: Pgy[] = ["PGY-2", "PGY-3", "PGY-4"];
@@ -43,7 +44,6 @@ export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: (
     setBusy(true);
     try {
       const pending = {
-        email: email.trim(),
         p_program_id: programId,
         p_pgy: pgy,
         p_full_name: fullName.trim(),
@@ -51,15 +51,16 @@ export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: (
         p_access_code: accessCode.trim(),
         p_precourse: precourse,
       };
-      // Stashed so App.tsx can finish creating the residents row after email
-      // confirmation, if the project has "Confirm email" switched on — that
-      // means no session (and no complete_signup call) until they follow the
-      // link and log in for the first time.
-      localStorage.setItem("socteq_pending_signup", JSON.stringify(pending));
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-        email: pending.email,
+        email: email.trim(),
         password,
+        options: {
+          // Carries the profile fields through the confirmation link itself,
+          // so completing the join works regardless of which device/browser
+          // the resident opens the email on.
+          emailRedirectTo: buildEmailRedirectUrl(pending),
+        },
       });
       if (signUpError) {
         setError(signUpError.message);
@@ -71,19 +72,11 @@ export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: (
         return;
       }
 
-      const { error: rpcError } = await supabase.rpc("complete_signup", {
-        p_program_id: pending.p_program_id,
-        p_pgy: pending.p_pgy,
-        p_full_name: pending.p_full_name,
-        p_username: pending.p_username,
-        p_access_code: pending.p_access_code,
-        p_precourse: pending.p_precourse,
-      });
+      const { error: rpcError } = await supabase.rpc("complete_signup", pending);
       if (rpcError) {
         setError(rpcError.message);
         return;
       }
-      localStorage.removeItem("socteq_pending_signup");
 
       onDone();
     } finally {

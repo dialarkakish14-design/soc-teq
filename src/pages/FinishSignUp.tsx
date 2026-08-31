@@ -52,7 +52,6 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
       setError(rpcError.message);
       return;
     }
-    localStorage.removeItem("socteq_pending_signup");
     onDone();
   }
 
