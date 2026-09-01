@@ -1,9 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { todayLocalDate, isDayOpen, closesAtLabel, scoreTopic, isBelowThreshold } from "../lib/domain";
+import { todayLocalDate, isDayOpen, closesAtLabel } from "../lib/domain";
 import { SESSION_TYPES, type Absence, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
 import { CoverageModal } from "../components/CoverageModal";
 import { RateModal } from "../components/RateModal";
+import { TopicDetail } from "../components/TopicDetail";
+import { TopicRow } from "../components/TopicRow";
 
 type TopicWithRatings = Topic & { ratings: Rating[]; absences: Absence[] };
 type SessionWithTopics = Session & { topics: TopicWithRatings[] };
@@ -161,7 +163,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
   }
 
   return (
-    <div className="mx-auto min-h-dvh max-w-md pb-10">
+    <div className="mx-auto min-h-dvh max-w-md pb-24">
       <div className="flex items-center justify-between px-5 pt-6">
         <div>
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
@@ -310,7 +312,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
       </div>
 
       {toast && (
-        <div className="fixed bottom-6 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-[#0E1A1C] px-4 py-3.5 text-sm font-semibold text-white shadow-lg">
+        <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-[#0E1A1C] px-4 py-3.5 text-sm font-semibold text-white shadow-lg">
           {toast}
         </div>
       )}
@@ -345,116 +347,4 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
   );
 }
 
-function TopicRow({
-  topic,
-  residentId,
-  onOpen,
-}: {
-  topic: TopicWithRatings;
-  residentId: string;
-  onOpen: () => void;
-}) {
-  const mine = topic.ratings.find((r) => r.resident_id === residentId);
-  const mineAbsent = topic.absences.find((a) => a.resident_id === residentId);
-  const sc = scoreTopic(topic.ratings);
 
-  let meta: string;
-  let badge: React.ReactNode;
-  if (topic.incomplete) {
-    meta = "captured — coverage questions still needed";
-    badge = <Pill tone="violet">Finish</Pill>;
-  } else if (!topic.soc_covered) {
-    meta = `image ${topic.image_soc ? "yes" : "no"} · discussed ${topic.discussed_soc ? "yes" : "no"}`;
-    badge = <Pill tone="off">No SoC</Pill>;
-  } else {
-    meta = `${sc ? sc.n : 0} rated`;
-    if (mine && sc) badge = <Pill tone={isBelowThreshold(sc.overall) ? "flag" : "default"}>{sc.overall.toFixed(2)}</Pill>;
-    else if (mineAbsent) badge = <Pill tone="off">Absent</Pill>;
-    else badge = <Pill tone="violet">Rate now</Pill>;
-  }
-
-  return (
-    <button
-      onClick={onOpen}
-      className="flex w-full items-center justify-between gap-3 border-t border-[#E2EAE9] px-4 py-3.5 text-left active:bg-[#F7FAFA]"
-    >
-      <div>
-        <div className="text-[14.5px] font-bold text-[#0E1A1C]">{topic.title}</div>
-        <div className="mt-0.5 text-[11.5px] text-[#8A999D]">{meta}</div>
-      </div>
-      {badge}
-    </button>
-  );
-}
-
-function Pill({ tone, children }: { tone: "default" | "off" | "violet" | "flag"; children: React.ReactNode }) {
-  const styles = {
-    default: "bg-[#DCEFEB] text-[#064B45]",
-    off: "bg-[#EAEFEE] text-[#8A999D]",
-    violet: "bg-[#EEE7F3] text-[#5E3F73]",
-    flag: "bg-[#FAEBD4] text-[#8F5205]",
-  }[tone];
-  return (
-    <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${styles}`}>
-      {children}
-    </span>
-  );
-}
-
-function TopicDetail({ topic, onClose }: { topic: TopicWithRatings; onClose: () => void }) {
-  const sc = scoreTopic(topic.ratings);
-  return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
-      <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F2F6F5] p-5 sm:rounded-3xl">
-        <button onClick={onClose} className="text-sm font-bold text-[#0E7C72]">
-          ‹ Back
-        </button>
-        <h1 className="mt-2 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
-        {!topic.soc_covered ? (
-          <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
-            <h3 className="font-bold text-[#0E1A1C]">Not covered</h3>
-            <p className="mt-1 text-[13.5px] text-[#414F52]">
-              Image of Fitzpatrick IV–VI: {topic.image_soc ? "yes" : "no"} · Explicitly discussed:{" "}
-              {topic.discussed_soc ? "yes" : "no"}
-            </p>
-          </div>
-        ) : !sc ? (
-          <div className="mt-4 rounded-2xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
-            No one has rated this yet.
-          </div>
-        ) : (
-          <>
-            <div
-              className={`mt-4 flex items-center justify-between rounded-2xl px-4 py-3.5 ${
-                isBelowThreshold(sc.overall) ? "bg-[#8F5205] text-[#FBF1E1]" : "bg-[#064B45] text-[#DCEEEB]"
-              }`}
-            >
-              <div>
-                <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Team score</div>
-                <div className="mt-0.5 text-[11px] opacity-90">{sc.n} resident{sc.n === 1 ? "" : "s"} rated</div>
-              </div>
-              <div className="font-mono text-3xl font-semibold">{sc.overall.toFixed(2)}</div>
-            </div>
-            <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">Item averages</h3>
-              {Object.entries(sc.perItem).map(([k, v]) => (
-                <div key={k} className="mt-2.5">
-                  <div className="flex justify-between text-[12.5px] font-semibold">
-                    <span className="capitalize">{k}</span>
-                    <span className="font-mono">{v.toFixed(2)}</span>
-                  </div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
-                    <div
-                      className={`h-full rounded-full ${v < 3.5 ? "bg-[#8F5205]" : "bg-[#0E7C72]"}`}
-                      style={{ width: `${(v / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </>
-        )}
-      </div>
-    </div>
-  );
-}

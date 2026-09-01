@@ -3,15 +3,18 @@ import { useAuth } from "./hooks/useAuth";
 import { SignUp } from "./pages/SignUp";
 import { Login } from "./pages/Login";
 import { Today } from "./pages/Today";
+import { Summary } from "./pages/Summary";
 import { FinishSignUp } from "./pages/FinishSignUp";
 import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
+import { BottomNav, type NavScreen } from "./components/BottomNav";
 
 type Screen = "signup" | "login";
 
 function App() {
   const { session, resident, loading, refreshResident } = useAuth();
   const [screen, setScreen] = useState<Screen>("login");
+  const [navScreen, setNavScreen] = useState<NavScreen>("today");
   const [finishingSignup, setFinishingSignup] = useState(false);
   const [autoAttempted, setAutoAttempted] = useState(false);
 
@@ -42,7 +45,13 @@ function App() {
   }
 
   if (session && resident) {
-    return <Today resident={resident} onLogout={() => supabase.auth.signOut()} />;
+    return (
+      <>
+        {navScreen === "today" && <Today resident={resident} onLogout={() => supabase.auth.signOut()} />}
+        {navScreen === "summary" && <Summary resident={resident} />}
+        <BottomNav active={navScreen} onChange={setNavScreen} />
+      </>
+    );
   }
 
   if (session && !resident) {
