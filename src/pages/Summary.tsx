@@ -265,7 +265,7 @@ function PeriodTab({
             tone={stats.avgScore != null && stats.avgScore < THRESHOLD ? "amber" : "teal"}
           />
         </div>
-        <p className="mt-3 text-[12.5px] text-[#414F52]">
+        <p className="mt-3 text-[12.5px] text-[#2E3A3D]">
           {label} · {stats.coveredCount} of {stats.visualCount} visually relevant topics fully SoC-covered.{" "}
           {stats.gaps.length} flagged below {THRESHOLD}.
         </p>
@@ -300,13 +300,13 @@ function PeriodTab({
             {response.noResponse > 0 && <div style={{ width: `${(response.noResponse / response.total) * 100}%` }} className="bg-[#8F5205]" />}
             {response.waiting > 0 && <div style={{ width: `${(response.waiting / response.total) * 100}%` }} className="bg-[#C9D3D2]" />}
           </div>
-          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] text-[#414F52]">
+          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] text-[#2E3A3D]">
             <Legend color="#0E7C72" label={`Rated ${response.rated}`} />
             <Legend color="#3D6B49" label={`Absent, declared ${response.declared}`} />
             <Legend color="#8F5205" label={`No response ${response.noResponse}`} />
             {response.waiting > 0 && <Legend color="#C9D3D2" label={`Still open ${response.waiting}`} />}
           </div>
-          <p className="mt-3 text-[12.5px] text-[#414F52]">Response rate {response.responseRatePct}%.</p>
+          <p className="mt-3 text-[12.5px] text-[#2E3A3D]">Response rate {response.responseRatePct}%.</p>
         </div>
       )}
 

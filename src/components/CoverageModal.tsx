@@ -79,7 +79,7 @@ export function CoverageModal({
         {visual === false && (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">No need to register this</h3>
-            <p className="mt-1 text-[13.5px] text-[#414F52]">
+            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
               Non-visual topics sit outside SoC-TEQ. Skip it and carry on with the day — nothing is
               lost.
             </p>
@@ -105,7 +105,7 @@ export function CoverageModal({
                     <h3 className="font-bold text-[#0E1A1C]">
                       Skin of color {covered ? "covered" : "not covered"}
                     </h3>
-                    <p className="mt-1 text-[13.5px] text-[#414F52]">
+                    <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
                       {covered ? "Your cohort can rate it now." : "Counts as a visually relevant topic that wasn't covered."}
                     </p>
                   </div>
@@ -168,7 +168,7 @@ function SegButtons({
           key={String(v)}
           onClick={() => onChange(v)}
           className={`flex-1 rounded-2xl border-[1.5px] py-3 text-sm font-bold ${
-            value === v ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9] bg-white text-[#414F52]"
+            value === v ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9] bg-white text-[#2E3A3D]"
           }`}
         >
           {v ? "Yes" : "No"}

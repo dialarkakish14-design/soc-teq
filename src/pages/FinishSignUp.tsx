@@ -58,7 +58,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
   return (
     <div className="mx-auto min-h-dvh max-w-md px-5 py-8">
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Finish joining</h1>
-      <p className="mt-2 text-sm text-[#414F52]">
+      <p className="mt-2 text-sm text-[#2E3A3D]">
         Your email ({email}) is confirmed. Finish setting up your resident profile to continue.
       </p>
 
@@ -114,7 +114,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
         <button
           type="button"
           onClick={() => setPrecourse((v) => !v)}
-          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#414F52] shadow-sm"
+          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#2E3A3D] shadow-sm"
         >
           <span
             className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${

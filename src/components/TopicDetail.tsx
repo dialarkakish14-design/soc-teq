@@ -22,14 +22,14 @@ export function TopicDetail({ topic, onClose }: { topic: DetailTopic; onClose: (
         {topic.incomplete ? (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">Not finished</h3>
-            <p className="mt-1 text-[13.5px] text-[#414F52]">
+            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
               Captured, but the coverage questions were never answered.
             </p>
           </div>
         ) : !topic.soc_covered ? (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">Not covered</h3>
-            <p className="mt-1 text-[13.5px] text-[#414F52]">
+            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
               Image of Fitzpatrick IV–VI: {topic.image_soc ? "yes" : "no"} · Explicitly discussed:{" "}
               {topic.discussed_soc ? "yes" : "no"}
             </p>

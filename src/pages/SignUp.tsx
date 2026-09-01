@@ -106,7 +106,7 @@ export function SignUp({
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6 text-center">
         <h1 className="text-2xl font-bold text-[#0E1A1C]">Check your email</h1>
-        <p className="text-sm text-[#414F52]">
+        <p className="text-sm text-[#2E3A3D]">
           We sent a confirmation link to {email}. Confirm it, then log in to finish joining your
           program.
         </p>
@@ -126,7 +126,7 @@ export function SignUp({
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Create your account</h1>
-      <p className="mt-2 text-sm text-[#414F52]">You'll need your program's access code to join.</p>
+      <p className="mt-2 text-sm text-[#2E3A3D]">You'll need your program's access code to join.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <Field label="Full name">
@@ -214,7 +214,7 @@ export function SignUp({
         <button
           type="button"
           onClick={() => setPrecourse((v) => !v)}
-          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#414F52] shadow-sm"
+          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#2E3A3D] shadow-sm"
         >
           <span
             className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${

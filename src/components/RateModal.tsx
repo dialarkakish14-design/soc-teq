@@ -90,7 +90,7 @@ export function RateModal({
                     {set ? vals[d.key] : "—"}
                   </span>
                 </div>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-[#414F52]">{d.statement}</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">{d.statement}</p>
                 <input
                   type="range"
                   min={1}
@@ -120,7 +120,7 @@ export function RateModal({
 
         <div
           className={`mt-5 flex items-center justify-between rounded-2xl px-4 py-3.5 ${
-            mean == null ? "bg-[#DFE6E5] text-[#414F52]" : mean < THRESHOLD ? "bg-[#8F5205] text-[#FBF1E1]" : "bg-[#5E3F73] text-[#F0E9F5]"
+            mean == null ? "bg-[#DFE6E5] text-[#2E3A3D]" : mean < THRESHOLD ? "bg-[#8F5205] text-[#FBF1E1]" : "bg-[#5E3F73] text-[#F0E9F5]"
           }`}
         >
           <div>

@@ -32,7 +32,7 @@ export function Mission({ onBack }: { onBack: () => void }) {
                 <div className="mt-1.5 text-[12.5px] font-bold" style={{ color: style.text }}>
                   {c.title}
                 </div>
-                <p className="mt-3 text-[14px] leading-relaxed text-[#414F52]">{c.body}</p>
+                <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>
               </div>
             );
           })}

@@ -191,7 +191,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-[#0E1A1C]">Logger not claimed</h3>
-                  <p className="mt-1 text-[12.5px] text-[#414F52]">
+                  <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
                     One {resident.pgy} resident registers the day's topics and marks SoC coverage. The
                     rest rate.
                   </p>
@@ -220,7 +220,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
                   </div>
                   <div>
                     <h3 className="font-bold text-[#0E1A1C]">{iAmLogger ? "You are the logger" : logger?.full_name}</h3>
-                    <div className="text-xs text-[#414F52]">
+                    <div className="text-xs text-[#2E3A3D]">
                       {iAmLogger ? "Register each topic as it happens." : `Marks SoC coverage for ${resident.pgy}`}
                     </div>
                   </div>
@@ -245,7 +245,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-[#0E1A1C]">Quick capture</h3>
-                <p className="mt-1 text-[12.5px] text-[#414F52]">Name it now, finish it later.</p>
+                <p className="mt-1 text-[12.5px] text-[#2E3A3D]">Name it now, finish it later.</p>
               </div>
               <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
                 5 sec

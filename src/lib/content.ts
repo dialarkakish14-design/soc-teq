@@ -45,7 +45,7 @@ export const MISSION_CARDS: MissionCard[] = [
   },
   {
     eyebrow: "Clinical excellence",
-    title: "High-fidelity training",
+    title: "High-quality training",
     subtitle: "",
     body: "We evaluate morphologic nuance, pitfalls and skin of color management, then re-test after three months to check the learning held.",
     tone: "sage",

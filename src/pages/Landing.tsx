@@ -27,8 +27,7 @@ export function Landing({
           through data-driven feedback loops.
         </p>
         <p className="mt-3.5 text-[13px] leading-relaxed text-[#9FCFC7]">
-          This app is a direct translation of the published framework. Teaching exposure is measured
-          as the share of visually relevant topics that are fully covered for skin of color.
+          This app is a direct translation of the published SoC-TEQ framework.
         </p>
 
         <div className="mt-5 flex flex-wrap gap-2.5 pb-8">

@@ -62,7 +62,7 @@ export function Login({
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Log in</h1>
-      <p className="mt-2 text-sm text-[#414F52]">Use the username and password you signed up with.</p>
+      <p className="mt-2 text-sm text-[#2E3A3D]">Use the username and password you signed up with.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">
