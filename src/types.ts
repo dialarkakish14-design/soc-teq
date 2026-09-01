@@ -109,4 +109,11 @@ export interface Rating {
   note: string | null;
 }
 
+export interface Absence {
+  id: string;
+  topic_id: string;
+  resident_id: string;
+  reason: "declared" | "no_response";
+}
+
 export const THRESHOLD = 3.5;

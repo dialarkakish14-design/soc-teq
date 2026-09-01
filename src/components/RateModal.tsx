@@ -51,6 +51,21 @@ export function RateModal({
     onSaved();
   }
 
+  async function markAbsent() {
+    setBusy(true);
+    setError("");
+    const { error: insertError } = await supabase
+      .from("absences")
+      .insert({ topic_id: topic.id, resident_id: residentId, reason: "declared" });
+    setBusy(false);
+    // 23505 = already declared absent for this topic — treat as success.
+    if (insertError && insertError.code !== "23505") {
+      setError(insertError.message);
+      return;
+    }
+    onSaved();
+  }
+
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
       <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F2F6F5] p-5 sm:rounded-3xl">
@@ -141,6 +156,13 @@ export function RateModal({
           className="mt-4 w-full rounded-2xl bg-[#5E3F73] py-4 font-bold text-white shadow-lg shadow-[#5E3F73]/25 disabled:opacity-60"
         >
           {busy ? "Saving…" : "Submit my rating"}
+        </button>
+        <button
+          onClick={markAbsent}
+          disabled={busy}
+          className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#8A999D] disabled:opacity-60"
+        >
+          I wasn't at this session
         </button>
         <button onClick={onClose} className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#8A999D]">
           Cancel

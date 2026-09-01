@@ -1,11 +1,11 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { todayLocalDate, isDayOpen, closesAtLabel, scoreTopic, isBelowThreshold } from "../lib/domain";
-import { SESSION_TYPES, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
+import { SESSION_TYPES, type Absence, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
 import { CoverageModal } from "../components/CoverageModal";
 import { RateModal } from "../components/RateModal";
 
-type TopicWithRatings = Topic & { ratings: Rating[] };
+type TopicWithRatings = Topic & { ratings: Rating[]; absences: Absence[] };
 type SessionWithTopics = Session & { topics: TopicWithRatings[] };
 
 export function Today({ resident, onLogout }: { resident: Resident; onLogout: () => void }) {
@@ -76,7 +76,7 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
     if (dayRow) {
       const { data: sessionRows } = await supabase
         .from("sessions")
-        .select("*, topics(*, ratings(*))")
+        .select("*, topics(*, ratings(*), absences(*))")
         .eq("day_id", dayRow.id)
         .order("created_at", { ascending: true });
       setSessions((sessionRows as SessionWithTopics[] | null) ?? []);
@@ -148,7 +148,8 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
       return;
     }
     const mine = t.ratings.find((r) => r.resident_id === resident.id);
-    if (!mine && open) {
+    const mineAbsent = t.absences.find((a) => a.resident_id === resident.id);
+    if (!mine && !mineAbsent && open) {
       setModal({ kind: "rate", topic: t });
     } else {
       setModal({ kind: "detail", topic: t });
@@ -354,6 +355,7 @@ function TopicRow({
   onOpen: () => void;
 }) {
   const mine = topic.ratings.find((r) => r.resident_id === residentId);
+  const mineAbsent = topic.absences.find((a) => a.resident_id === residentId);
   const sc = scoreTopic(topic.ratings);
 
   let meta: string;
@@ -367,6 +369,7 @@ function TopicRow({
   } else {
     meta = `${sc ? sc.n : 0} rated`;
     if (mine && sc) badge = <Pill tone={isBelowThreshold(sc.overall) ? "flag" : "default"}>{sc.overall.toFixed(2)}</Pill>;
+    else if (mineAbsent) badge = <Pill tone="off">Absent</Pill>;
     else badge = <Pill tone="violet">Rate now</Pill>;
   }
 
