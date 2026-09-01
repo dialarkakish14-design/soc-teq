@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "./hooks/useAuth";
+import { Landing } from "./pages/Landing";
+import { Mission } from "./pages/Mission";
+import { HowToUse } from "./pages/HowToUse";
 import { SignUp } from "./pages/SignUp";
 import { Login } from "./pages/Login";
 import { Today } from "./pages/Today";
@@ -9,11 +12,11 @@ import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
 import { BottomNav, type NavScreen } from "./components/BottomNav";
 
-type Screen = "signup" | "login";
+type Screen = "landing" | "signup" | "login" | "mission" | "how";
 
 function App() {
   const { session, resident, loading, refreshResident } = useAuth();
-  const [screen, setScreen] = useState<Screen>("login");
+  const [screen, setScreen] = useState<Screen>("landing");
   const [navScreen, setNavScreen] = useState<NavScreen>("today");
   const [finishingSignup, setFinishingSignup] = useState(false);
   const [autoAttempted, setAutoAttempted] = useState(false);
@@ -61,10 +64,33 @@ function App() {
     return <FinishSignUp email={session.user.email ?? ""} onDone={refreshResident} />;
   }
 
-  return screen === "signup" ? (
-    <SignUp onDone={refreshResident} onGoLogin={() => setScreen("login")} />
-  ) : (
-    <Login onDone={refreshResident} onGoSignUp={() => setScreen("signup")} />
+  if (screen === "mission") return <Mission onBack={() => setScreen("landing")} />;
+  if (screen === "how") return <HowToUse onDone={() => setScreen("landing")} onBack={() => setScreen("landing")} />;
+  if (screen === "signup") {
+    return (
+      <SignUp
+        onDone={refreshResident}
+        onGoLogin={() => setScreen("login")}
+        onBack={() => setScreen("landing")}
+      />
+    );
+  }
+  if (screen === "login") {
+    return (
+      <Login
+        onDone={refreshResident}
+        onGoSignUp={() => setScreen("signup")}
+        onBack={() => setScreen("landing")}
+      />
+    );
+  }
+  return (
+    <Landing
+      onSignUp={() => setScreen("signup")}
+      onLogin={() => setScreen("login")}
+      onMission={() => setScreen("mission")}
+      onHow={() => setScreen("how")}
+    />
   );
 }
 

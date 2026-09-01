@@ -5,7 +5,15 @@ import type { Pgy, ProgramPublic } from "../types";
 
 const PGY_LEVELS: Pgy[] = ["PGY-2", "PGY-3", "PGY-4"];
 
-export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: () => void }) {
+export function SignUp({
+  onDone,
+  onGoLogin,
+  onBack,
+}: {
+  onDone: () => void;
+  onGoLogin: () => void;
+  onBack: () => void;
+}) {
   const [programs, setPrograms] = useState<ProgramPublic[]>([]);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -114,6 +122,9 @@ export function SignUp({ onDone, onGoLogin }: { onDone: () => void; onGoLogin: (
 
   return (
     <div className="mx-auto min-h-dvh max-w-md px-5 py-8">
+      <button onClick={onBack} className="mb-2 text-sm font-bold text-[#0E7C72]">
+        ‹ Back
+      </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Create your account</h1>
       <p className="mt-2 text-sm text-[#414F52]">You'll need your program's access code to join.</p>
 

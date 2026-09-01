@@ -1,7 +1,15 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 
-export function Login({ onDone, onGoSignUp }: { onDone: () => void; onGoSignUp: () => void }) {
+export function Login({
+  onDone,
+  onGoSignUp,
+  onBack,
+}: {
+  onDone: () => void;
+  onGoSignUp: () => void;
+  onBack: () => void;
+}) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -50,6 +58,9 @@ export function Login({ onDone, onGoSignUp }: { onDone: () => void; onGoSignUp: 
 
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-5 py-8">
+      <button onClick={onBack} className="mb-2 self-start text-sm font-bold text-[#0E7C72]">
+        ‹ Back
+      </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Log in</h1>
       <p className="mt-2 text-sm text-[#414F52]">Use the username and password you signed up with.</p>
 
