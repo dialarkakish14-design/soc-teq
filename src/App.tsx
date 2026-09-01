@@ -5,6 +5,7 @@ import { Mission } from "./pages/Mission";
 import { HowToUse } from "./pages/HowToUse";
 import { SignUp } from "./pages/SignUp";
 import { Login } from "./pages/Login";
+import { ResetPassword } from "./pages/ResetPassword";
 import { Today } from "./pages/Today";
 import { Summary } from "./pages/Summary";
 import { FinishSignUp } from "./pages/FinishSignUp";
@@ -13,11 +14,13 @@ import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendi
 import { BottomNav, type NavScreen } from "./components/BottomNav";
 
 type Screen = "landing" | "signup" | "login" | "mission" | "how";
+type InfoOverlay = "mission" | "how" | null;
 
 function App() {
-  const { session, resident, loading, refreshResident } = useAuth();
+  const { session, resident, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } = useAuth();
   const [screen, setScreen] = useState<Screen>("landing");
   const [navScreen, setNavScreen] = useState<NavScreen>("today");
+  const [infoOverlay, setInfoOverlay] = useState<InfoOverlay>(null);
   const [finishingSignup, setFinishingSignup] = useState(false);
   const [autoAttempted, setAutoAttempted] = useState(false);
 
@@ -47,11 +50,29 @@ function App() {
     return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
   }
 
+  // A recovery link's session takes priority over everything else — even a
+  // signed-in resident should land on "choose a new password," not Today.
+  if (isPasswordRecovery) {
+    return <ResetPassword onDone={clearPasswordRecovery} />;
+  }
+
   if (session && resident) {
+    if (infoOverlay === "mission") {
+      return <Mission onBack={() => setInfoOverlay(null)} onHow={() => setInfoOverlay("how")} />;
+    }
+    if (infoOverlay === "how") {
+      return <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />;
+    }
     return (
       <>
-        {navScreen === "today" && <Today resident={resident} onLogout={() => supabase.auth.signOut()} />}
-        {navScreen === "summary" && <Summary resident={resident} />}
+        {navScreen === "today" && (
+          <Today
+            resident={resident}
+            onLogout={() => supabase.auth.signOut()}
+            onAbout={() => setInfoOverlay("mission")}
+          />
+        )}
+        {navScreen === "summary" && <Summary resident={resident} onAbout={() => setInfoOverlay("mission")} />}
         <BottomNav active={navScreen} onChange={setNavScreen} />
       </>
     );

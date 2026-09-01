@@ -126,12 +126,18 @@ create policy days_select on days for select
 create policy days_insert on days for insert
   with check (program_id = my_program_id() and pgy = my_pgy());
 
+-- Also allows releasing a claim (logger_id back to null) so someone else
+-- can pick it up mid-day — only the current logger (or an unclaimed day)
+-- ever reaches this branch at all, per the USING clause above.
 create policy days_update on days for update
   using (
     program_id = my_program_id() and pgy = my_pgy()
     and (logger_id is null or logger_id = auth.uid())
   )
-  with check (program_id = my_program_id() and pgy = my_pgy() and logger_id = auth.uid());
+  with check (
+    program_id = my_program_id() and pgy = my_pgy()
+    and (logger_id = auth.uid() or logger_id is null)
+  );
 
 -- sessions: cohort-scoped read. Only the day's logger may create/edit them,
 -- and only while the day is still open.

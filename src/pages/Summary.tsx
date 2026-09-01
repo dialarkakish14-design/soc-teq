@@ -26,7 +26,7 @@ type TopicFull = Topic & {
 
 type Tab = "day" | "week" | "month";
 
-export function Summary({ resident }: { resident: Resident }) {
+export function Summary({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
   const [tab, setTab] = useState<Tab>("day");
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohortSize, setCohortSize] = useState(0);
@@ -97,12 +97,19 @@ export function Summary({ resident }: { resident: Resident }) {
 
   return (
     <div className="mx-auto min-h-dvh max-w-md pb-24">
-      <div className="px-5 pt-6">
-        <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
-          Summary · {resident.pgy}
+      <div className="flex items-start justify-between px-5 pt-6">
+        <div>
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
+            Summary · {resident.pgy}
+          </div>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Cohort record</h1>
         </div>
-        <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Cohort record</h1>
+        <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
+          SoC-TEQ
+        </button>
+      </div>
 
+      <div className="px-5">
         <div className="mt-4 flex gap-1.5 rounded-2xl bg-[#E6ECEB] p-1">
           {(["day", "week", "month"] as Tab[]).map((t) => (
             <button

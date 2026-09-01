@@ -10,7 +10,15 @@ import { TopicRow } from "../components/TopicRow";
 type TopicWithRatings = Topic & { ratings: Rating[]; absences: Absence[] };
 type SessionWithTopics = Session & { topics: TopicWithRatings[] };
 
-export function Today({ resident, onLogout }: { resident: Resident; onLogout: () => void }) {
+export function Today({
+  resident,
+  onLogout,
+  onAbout,
+}: {
+  resident: Resident;
+  onLogout: () => void;
+  onAbout: () => void;
+}) {
   const date = todayLocalDate();
   const open = isDayOpen(date);
 
@@ -102,6 +110,14 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
     await load();
   }
 
+  async function releaseLogger() {
+    if (!day) return;
+    const { error } = await supabase.from("days").update({ logger_id: null }).eq("id", day.id);
+    if (error) return flash(error.message);
+    flash("Released — anyone else can claim it. Nothing you've logged is affected.");
+    await load();
+  }
+
   async function capture() {
     if (!day) return;
     const title = quickTitle.trim();
@@ -174,9 +190,14 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
             {new Date(date + "T00:00:00").toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long" })}
           </h1>
         </div>
-        <button onClick={onLogout} className="text-xs font-bold text-[#8A999D]">
-          Log out
-        </button>
+        <div className="flex flex-col items-end gap-1.5">
+          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+            SoC-TEQ
+          </button>
+          <button onClick={onLogout} className="text-xs font-bold text-[#8A999D]">
+            Log out
+          </button>
+        </div>
       </div>
 
       <div className="px-5">
@@ -230,10 +251,18 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
                 </span>
               </div>
               {iAmLogger && open && (
-                <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
-                  Before marking coverage, agree with the residents present on what was shown and
-                  discussed.
-                </div>
+                <>
+                  <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
+                    Before marking coverage, agree with the residents present on what was shown and
+                    discussed.
+                  </div>
+                  <button
+                    onClick={releaseLogger}
+                    className="mt-3 w-full rounded-2xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#2E3A3D]"
+                  >
+                    Release logger — wrong tap, or had to leave
+                  </button>
+                </>
               )}
             </>
           )}

@@ -15,6 +15,7 @@ export function Login({
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [forgotMode, setForgotMode] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -42,18 +43,8 @@ export function Login({
     }
   }
 
-  async function handleForgot() {
-    if (!username.trim()) {
-      setError("Enter your username first, then tap forgot password.");
-      return;
-    }
-    const { data: email } = await supabase.rpc("get_email_for_username", {
-      p_username: username.trim(),
-    });
-    if (email) {
-      await supabase.auth.resetPasswordForEmail(email);
-    }
-    setError("If that account exists, a reset link has been emailed to it.");
+  if (forgotMode) {
+    return <ForgotPassword onBack={() => setForgotMode(false)} />;
   }
 
   return (
@@ -98,7 +89,7 @@ export function Login({
 
         <button
           type="button"
-          onClick={handleForgot}
+          onClick={() => setForgotMode(true)}
           className="-mt-1 self-start text-sm font-semibold text-[#0E7C72] underline underline-offset-2"
         >
           Forgot your password?
@@ -124,6 +115,72 @@ export function Login({
           className="mt-1 text-sm font-semibold text-[#0E7C72]"
         >
           Need an account? Sign up
+        </button>
+      </form>
+    </div>
+  );
+}
+
+function ForgotPassword({ onBack }: { onBack: () => void }) {
+  const [email, setEmail] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!email.trim()) return;
+    setBusy(true);
+    await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: `${window.location.origin}/`,
+    });
+    setBusy(false);
+    // Always shows the same message regardless of whether the email is
+    // actually registered — otherwise this becomes a way to check which
+    // emails have accounts.
+    setSent(true);
+  }
+
+  if (sent) {
+    return (
+      <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6 text-center">
+        <h1 className="text-2xl font-bold text-[#0E1A1C]">Check your email</h1>
+        <p className="text-sm text-[#2E3A3D]">
+          If an account exists for {email}, a reset link has been sent to it.
+        </p>
+        <button onClick={onBack} className="mt-2 rounded-2xl bg-[#0E7C72] py-3 font-semibold text-white">
+          Back to log in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-5 py-8">
+      <button onClick={onBack} className="mb-2 self-start text-sm font-bold text-[#0E7C72]">
+        ‹ Back
+      </button>
+      <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Reset your password</h1>
+      <p className="mt-2 text-sm text-[#2E3A3D]">Enter the email you signed up with — not your username.</p>
+
+      <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
+        <label className="block">
+          <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Email</div>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="you@med.wayne.edu"
+            autoCapitalize="none"
+            className="input"
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={busy}
+          className="mt-2 rounded-2xl bg-[#0E7C72] py-4 font-bold text-white shadow-lg shadow-[#0E7C72]/25 disabled:opacity-60"
+        >
+          {busy ? "Sending…" : "Send reset link"}
         </button>
       </form>
     </div>

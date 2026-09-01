@@ -8,7 +8,7 @@ const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
   sage: { bg: "#E3EFE5", text: "#3D6B49" },
 };
 
-export function Mission({ onBack }: { onBack: () => void }) {
+export function Mission({ onBack, onHow }: { onBack: () => void; onHow?: () => void }) {
   return (
     <div className="mx-auto min-h-dvh max-w-md">
       <div className="flex items-center px-4 pt-3.5">
@@ -37,6 +37,14 @@ export function Mission({ onBack }: { onBack: () => void }) {
             );
           })}
         </div>
+        {onHow && (
+          <button
+            onClick={onHow}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-[#0E7C72] shadow-sm"
+          >
+            How to use it <i className="not-italic">›</i>
+          </button>
+        )}
       </div>
     </div>
   );
