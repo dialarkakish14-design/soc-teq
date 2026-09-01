@@ -42,7 +42,7 @@ export function Summary({ resident }: { resident: Resident }) {
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const [{ data: topicRows }, { count }] = await Promise.all([
+    const [{ data: topicRows, error: topicsError }, { count }] = await Promise.all([
       supabase
         .from("topics")
         .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
@@ -54,6 +54,7 @@ export function Summary({ resident }: { resident: Resident }) {
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
     ]);
+    if (topicsError) flash(topicsError.message);
 
     setRows((topicRows as TopicFull[] | null) ?? []);
     setCohortSize(count ?? 0);

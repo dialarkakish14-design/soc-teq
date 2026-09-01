@@ -76,11 +76,12 @@ export function Today({ resident, onLogout }: { resident: Resident; onLogout: ()
     }
 
     if (dayRow) {
-      const { data: sessionRows } = await supabase
+      const { data: sessionRows, error: sessionsError } = await supabase
         .from("sessions")
         .select("*, topics(*, ratings(*), absences(*))")
         .eq("day_id", dayRow.id)
         .order("created_at", { ascending: true });
+      if (sessionsError) flash(sessionsError.message);
       setSessions((sessionRows as SessionWithTopics[] | null) ?? []);
     } else {
       setSessions([]);
