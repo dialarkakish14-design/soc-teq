@@ -80,18 +80,22 @@ export function RateModal({
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
         <p className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[13.5px] font-semibold leading-relaxed text-[#064B45]">
-          Your honest experience is exactly what's useful here — there's no need to soften it. This is never tied
-          to your name for anyone in a position over you, so just tell it like it was.
+          Be as honest as you can here — that's what makes this useful. Your rating is never linked to your name,
+          so there's no need to hold back.
         </p>
 
-        <div className="mt-2 flex flex-col divide-y divide-[#E2EAE9]">
+        <div className="mt-3 flex flex-col gap-3">
           {RATING_DOMAINS.map((d) => {
             const set = d.key in vals;
             return (
-              <div key={d.key} className="py-4 first:pt-2">
+              <div key={d.key} className="rounded-3xl bg-white p-4 shadow-sm">
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] font-extrabold text-[#0E1A1C]">{d.name}</span>
-                  <span className={`font-mono text-base font-semibold ${set ? "text-[#5E3F73]" : "text-[#5C6B6F]"}`}>
+                  <span
+                    className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-sm font-bold ${
+                      set ? "bg-[#F0E9F5] text-[#5E3F73]" : "bg-[#F5F8F7] text-[#5C6B6F]"
+                    }`}
+                  >
                     {set ? vals[d.key] : "—"}
                   </span>
                 </div>
@@ -102,7 +106,7 @@ export function RateModal({
                   max={5}
                   step={1}
                   defaultValue={3}
-                  className={set ? "mt-2 w-full" : "mt-2 w-full untouched"}
+                  className={set ? "mt-3 w-full" : "mt-3 w-full untouched"}
                   onInput={(e) => {
                     const v = +(e.target as HTMLInputElement).value;
                     setVals((prev) => ({ ...prev, [d.key]: v }));

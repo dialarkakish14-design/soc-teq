@@ -57,10 +57,10 @@ input[type="range"]::-moz-range-thumb {
   cursor: pointer;
 }
 input[type="range"].untouched::-webkit-slider-runnable-track {
-  background: #e3e9e8;
+  background: linear-gradient(90deg, #ecdad6, #f2ecd9, #dee9e2);
 }
 input[type="range"].untouched::-moz-range-track {
-  background: #e3e9e8;
+  background: linear-gradient(90deg, #ecdad6, #f2ecd9, #dee9e2);
 }
 input[type="range"].untouched::-webkit-slider-thumb {
   opacity: 0;
