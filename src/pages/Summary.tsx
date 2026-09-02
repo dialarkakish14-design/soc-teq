@@ -239,6 +239,15 @@ function DayTab({
 }) {
   const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>("all");
   const [openSessions, setOpenSessions] = useState<Set<string>>(new Set());
+  const [openTones, setOpenTones] = useState<Set<string>>(new Set());
+  function toggleTone(key: string) {
+    setOpenTones((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
   function toggleSession(sid: string) {
     setOpenSessions((prev) => {
       const next = new Set(prev);
@@ -320,11 +329,11 @@ function DayTab({
         for (const s of sessMap.values()) {
           sessionTypeCounts.set(s.type, (sessionTypeCounts.get(s.type) ?? 0) + 1);
         }
-        const toneCounts: Record<string, number> = Object.fromEntries(FITZPATRICK_TONES.map((t) => [t, 0]));
+        const toneTopics: Record<string, string[]> = Object.fromEntries(FITZPATRICK_TONES.map((t) => [t, []]));
         for (const t of covered) {
           if (!t.skin_type) continue;
-          if (t.skin_type === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((tone) => toneCounts[tone]++);
-          else if (t.skin_type in toneCounts) toneCounts[t.skin_type]++;
+          if (t.skin_type === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((tone) => toneTopics[tone].push(t.title));
+          else if (t.skin_type in toneTopics) toneTopics[t.skin_type].push(t.title);
         }
 
         return (
@@ -354,18 +363,31 @@ function DayTab({
                   Fitzpatrick tones shown
                 </div>
                 <div className="mt-2 flex gap-1.5">
-                  {FITZPATRICK_TONES.map((t) => (
-                    <span
-                      key={t}
-                      className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold ${
-                        toneCounts[t] ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
-                      }`}
-                    >
-                      {t.replace("Fitzpatrick ", "")}
-                      {toneCounts[t] ? ` · ${toneCounts[t]}` : ""}
-                    </span>
-                  ))}
+                  {FITZPATRICK_TONES.map((t) => {
+                    const key = `${date}:${t}`;
+                    const isOpen = openTones.has(key);
+                    const count = toneTopics[t].length;
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => count > 0 && toggleTone(key)}
+                        disabled={count === 0}
+                        className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold transition-colors ${
+                          count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
+                        } ${isOpen ? "ring-2 ring-[#0E7C72]" : ""}`}
+                      >
+                        {t.replace("Fitzpatrick ", "")}
+                        {count ? ` · ${count}` : ""}
+                      </button>
+                    );
+                  })}
                 </div>
+                {FITZPATRICK_TONES.filter((t) => openTones.has(`${date}:${t}`) && toneTopics[t].length > 0).map((t) => (
+                  <div key={t} className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] leading-relaxed text-[#2E3A3D]">
+                    <span className="font-semibold">{t} shown in:</span>{" "}
+                    {toneTopics[t].join(", ")}
+                  </div>
+                ))}
               </div>
             </div>
 
