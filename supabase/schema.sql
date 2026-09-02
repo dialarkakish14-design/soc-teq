@@ -565,6 +565,21 @@ $$;
 
 grant execute on function update_program_profile(text, text, text, text) to authenticated;
 
+-- ---------- feedback ----------
+-- See supabase/patch_feedback.sql for the full commentary.
+
+create table feedback (
+  id uuid primary key default gen_random_uuid(),
+  resident_id uuid not null references residents (id),
+  message text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table feedback enable row level security;
+
+create policy feedback_insert on feedback for insert
+  with check (resident_id = auth.uid());
+
 -- ---------- seed: the Wayne State pilot program ----------
 
 insert into programs (name, access_code, profile_complete)

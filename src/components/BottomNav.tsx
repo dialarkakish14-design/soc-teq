@@ -1,4 +1,4 @@
-export type NavScreen = "today" | "summary" | "cases" | "me" | "team";
+export type NavScreen = "today" | "summary" | "cases" | "me" | "team" | "faq";
 
 const TABS: { id: NavScreen; label: string }[] = [
   { id: "today", label: "Today" },
@@ -6,6 +6,7 @@ const TABS: { id: NavScreen; label: string }[] = [
   { id: "cases", label: "Cases" },
   { id: "me", label: "My info" },
   { id: "team", label: "Team" },
+  { id: "faq", label: "FAQ" },
 ];
 
 export function BottomNav({ active, onChange }: { active: NavScreen; onChange: (s: NavScreen) => void }) {

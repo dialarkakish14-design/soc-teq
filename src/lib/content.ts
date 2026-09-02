@@ -114,3 +114,46 @@ export const HOWTO_STEPS: { title: string; body: string }[] = [
     body: "Biostatistics, health policy, research methods and the like sit outside the framework. No need to register them at all.",
   },
 ];
+
+export const FAQ_ITEMS: { question: string; answer: string }[] = [
+  {
+    question: "Why does this only focus on images — what about skin of color topics that aren't about how something looks?",
+    answer:
+      "The specific gap this framework targets is diagnostic: skin of color images make up only about 4.5% of medical textbooks, and that gap is directly linked to missed or delayed diagnoses. \"Was an image shown, was it explicitly discussed\" gives a clean, comparable measure of that one problem. It doesn't mean other differences — pathophysiology, epidemiology, how a condition responds to treatment — don't matter. They do. They're just outside what this tool measures right now.",
+  },
+  {
+    question: "What about content that's skin-of-color relevant but not visual?",
+    answer:
+      "A real gap, and not one we've decided doesn't matter — it's just not tracked yet. Right now, if a topic isn't visually relevant it's skipped entirely, even when there's genuinely important non-visual skin of color content in it. It's something actively being thought through, not something dismissed.",
+  },
+  {
+    question: "What's planned for future versions?",
+    answer:
+      "A few ideas being explored: quizzes on topics you've logged, linking or sharing articles directly to a condition (the shared-reading feature already does a version of this during remediation), resources automatically suggested for whatever your cohort is scoring low on, a \"did you know\" or myth-busting section, and even recording a quick voice note that gets transcribed and organized automatically. None of this is built yet — what actually gets built next partly depends on what residents say would help.",
+  },
+  {
+    question: "What if there's genuinely no gap between SoC and non-SoC teaching for a condition?",
+    answer:
+      "That's a completely valid outcome, and useful data on its own. The point of rating isn't to manufacture a gap where none exists — it's to check systematically instead of assuming. A condition that consistently scores well with no coverage gap is evidence the teaching is working, not a problem with the tool.",
+  },
+  {
+    question: "Is my identity really anonymous? Does the app store my password?",
+    answer:
+      "Yes, and no — in the direction that protects you. Every rating is tied to a resident code like \"Resident A,\" never your name. Your real name only ever appears in the Team screen's cohort directory, never next to a rating or a note. And the app never stores your password in any form — sign-in is handled entirely by Supabase's own authentication system, separate from this app's data.",
+  },
+  {
+    question: "Can a program director or faculty member see my individual ratings?",
+    answer:
+      "No. A program lead can edit the program's shared profile card, but they're deliberately locked out of individual ratings — that's enforced in the database itself, not just hidden in the app.",
+  },
+  {
+    question: "What happens if I forget to rate something?",
+    answer:
+      "Ratings stay open until 4am the following morning. If you haven't rated and haven't marked yourself absent by then, you're recorded as \"no response\" — a record that you weren't reached, never treated as a bad score.",
+  },
+  {
+    question: "Can I change a rating after I submit it?",
+    answer:
+      "Yes, right up until the day closes at 4am. After that it locks permanently, so a topic's data reflects what people actually thought in the moment, not a later second-guess.",
+  },
+];

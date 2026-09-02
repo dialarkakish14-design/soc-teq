@@ -11,6 +11,7 @@ import { Summary } from "./pages/Summary";
 import { Cases } from "./pages/Cases";
 import { TrackMyInfo } from "./pages/TrackMyInfo";
 import { Team } from "./pages/Team";
+import { FAQ } from "./pages/FAQ";
 import { FinishSignUp } from "./pages/FinishSignUp";
 import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
@@ -89,6 +90,9 @@ function App() {
         </div>
         <div style={{ display: navScreen === "team" ? "contents" : "none" }}>
           <Team resident={resident} active={navScreen === "team"} onAbout={() => setInfoOverlay("mission")} />
+        </div>
+        <div style={{ display: navScreen === "faq" ? "contents" : "none" }}>
+          <FAQ resident={resident} onAbout={() => setInfoOverlay("mission")} />
         </div>
         <BottomNav active={navScreen} onChange={setNavScreen} />
         {infoOverlay && (
