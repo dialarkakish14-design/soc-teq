@@ -83,7 +83,7 @@ export function RateModal({
         <div className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[#064B45]">
           <button onClick={() => setShowReminder((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
             <span className="text-[14px] font-extrabold leading-snug">Your answers make a difference.</span>
-            <span className={`shrink-0 text-xs transition-transform ${showReminder ? "rotate-180" : ""}`}>▾</span>
+            <span className={`shrink-0 text-xl font-extrabold transition-transform ${showReminder ? "rotate-180" : ""}`}>▾</span>
           </button>
           {showReminder && (
             <p className="mt-1.5 text-[13px] leading-relaxed">
