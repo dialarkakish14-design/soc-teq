@@ -47,7 +47,7 @@ export function TopicRow({
     >
       <div>
         <div className="text-[14.5px] font-bold text-[#0E1A1C]">{topic.title}</div>
-        <div className="mt-0.5 text-[11.5px] text-[#8A999D]">{meta}</div>
+        <div className="mt-0.5 text-[11.5px] text-[#5C6B6F]">{meta}</div>
       </div>
       {badge}
     </button>

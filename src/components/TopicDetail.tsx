@@ -35,7 +35,7 @@ export function TopicDetail({ topic, onClose }: { topic: DetailTopic; onClose: (
             </p>
           </div>
         ) : !sc ? (
-          <div className="mt-4 rounded-2xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+          <div className="mt-4 rounded-2xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
             No one has rated this yet.
           </div>
         ) : (

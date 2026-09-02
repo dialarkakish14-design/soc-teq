@@ -165,7 +165,7 @@ export function SignUp({
               {showPassword ? "hide" : "show"}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-[#8A999D]">Forgotten passwords are reset by email.</div>
+          <div className="mt-1.5 text-xs text-[#5C6B6F]">Forgotten passwords are reset by email.</div>
         </Field>
 
         <Field label="Email">
@@ -240,7 +240,7 @@ export function SignUp({
           {busy ? "Creating…" : "Create account"}
         </button>
 
-        <div className="text-xs text-[#8A999D]">
+        <div className="text-xs text-[#5C6B6F]">
           Your name is visible to your cohort. It never appears next to a rating or in exported
           data.
         </div>

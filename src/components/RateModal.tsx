@@ -86,7 +86,7 @@ export function RateModal({
               <div key={d.key} className="py-4 first:pt-2">
                 <div className="flex items-center justify-between">
                   <span className="text-[15px] font-extrabold text-[#0E1A1C]">{d.name}</span>
-                  <span className={`font-mono text-base font-semibold ${set ? "text-[#5E3F73]" : "text-[#8A999D]"}`}>
+                  <span className={`font-mono text-base font-semibold ${set ? "text-[#5E3F73]" : "text-[#5C6B6F]"}`}>
                     {set ? vals[d.key] : "—"}
                   </span>
                 </div>
@@ -103,7 +103,7 @@ export function RateModal({
                     setVals((prev) => ({ ...prev, [d.key]: v }));
                   }}
                 />
-                <div className="mt-1 flex justify-between text-[10.5px] text-[#8A999D]">
+                <div className="mt-1 flex justify-between text-[10.5px] text-[#5C6B6F]">
                   <span>Strongly disagree</span>
                   <span>Strongly agree</span>
                 </div>
@@ -113,7 +113,7 @@ export function RateModal({
         </div>
 
         {!complete && (
-          <div className="text-[11px] text-[#8A999D]">
+          <div className="text-[11px] text-[#5C6B6F]">
             Tap anywhere on a scale to set it. Nothing is pre-selected.
           </div>
         )}
@@ -134,7 +134,7 @@ export function RateModal({
 
         <label className="mt-4 block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">
-            Note <span className="font-normal text-[#8A999D]">· optional</span>
+            Note <span className="font-normal text-[#5C6B6F]">· optional</span>
           </div>
           <textarea
             value={note}
@@ -160,11 +160,11 @@ export function RateModal({
         <button
           onClick={markAbsent}
           disabled={busy}
-          className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#8A999D] disabled:opacity-60"
+          className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#5C6B6F] disabled:opacity-60"
         >
           I wasn't at this session
         </button>
-        <button onClick={onClose} className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#8A999D]">
+        <button onClick={onClose} className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#5C6B6F]">
           Cancel
         </button>
       </div>

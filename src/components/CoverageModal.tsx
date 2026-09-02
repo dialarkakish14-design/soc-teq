@@ -111,7 +111,7 @@ export function CoverageModal({
                   </div>
                   <span
                     className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
+                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#5C6B6F]"
                     }`}
                   >
                     {covered ? "Yes" : "No"}

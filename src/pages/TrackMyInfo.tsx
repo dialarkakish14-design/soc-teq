@@ -61,7 +61,7 @@ export function TrackMyInfo({
   }, [load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
   const covered = rows.filter((r) => r.soc_covered);
@@ -198,7 +198,7 @@ export function TrackMyInfo({
           </div>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-[#0E1A1C]">{resident.full_name}</h1>
-            <div className="text-xs text-[#8A999D]">
+            <div className="text-xs text-[#5C6B6F]">
               {resident.pgy} · @{resident.username} · you appear as <b className="text-[#0E1A1C]">{resident.resident_code}</b> in all
               data
             </div>
@@ -246,7 +246,7 @@ export function TrackMyInfo({
                   <div className="flex justify-between text-[12.5px] font-semibold">
                     <span>{d.name}</span>
                     <span className="font-mono">
-                      {myPer[d.key].toFixed(2)} <span className="text-[#8A999D]">/ {coPer[d.key].toFixed(2)}</span>
+                      {myPer[d.key].toFixed(2)} <span className="text-[#5C6B6F]">/ {coPer[d.key].toFixed(2)}</span>
                     </span>
                   </div>
                   <div className="relative mt-1.5 h-2 rounded-full bg-[#EAEFEE]">
@@ -275,7 +275,7 @@ export function TrackMyInfo({
                   >
                     <div>
                       <div className="text-[14px] font-bold text-[#0E1A1C]">{r.title}</div>
-                      <div className="text-[11.5px] text-[#8A999D]">
+                      <div className="text-[11.5px] text-[#5C6B6F]">
                         {r.sessions!.type} · {formatDateShort(r.sessions!.days.date)} · team {sc?.overall.toFixed(2)}
                       </div>
                     </div>
@@ -292,22 +292,22 @@ export function TrackMyInfo({
             </div>
           </>
         ) : (
-          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
             You haven't rated anything yet.
           </div>
         )}
 
-        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#8A999D]">Export</div>
+        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">Export</div>
         <button onClick={exportTopicCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export topic data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#8A999D]">
+        <div className="mt-1.5 text-[11px] text-[#5C6B6F]">
           One row per topic. No rater identities — this is the analysis file.
         </div>
         <button onClick={exportRaterCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export rating-level data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#8A999D]">
+        <div className="mt-1.5 text-[11px] text-[#5C6B6F]">
           One row per rating, resident codes only. Needed for inter-rater reliability.
         </div>
 
@@ -328,7 +328,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-2xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#8A999D]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#5C6B6F]">{label}</div>
     </div>
   );
 }

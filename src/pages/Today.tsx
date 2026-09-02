@@ -192,7 +192,7 @@ export function Today({
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
   return (
@@ -210,14 +210,14 @@ export function Today({
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
-          <button onClick={onLogout} className="text-xs font-bold text-[#8A999D]">
+          <button onClick={onLogout} className="text-xs font-bold text-[#5C6B6F]">
             Log out
           </button>
         </div>
       </div>
 
       <div className="px-5">
-        <div className="mt-2 text-xs text-[#8A999D]">
+        <div className="mt-2 text-xs text-[#5C6B6F]">
           You are <b className="text-[#0E1A1C]">{resident.resident_code}</b> · {open ? `open until ${closesAtLabel(date)}` : "closed"}
         </div>
 
@@ -233,7 +233,7 @@ export function Today({
                     rest rate.
                   </p>
                 </div>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8A999D]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
                   Open
                 </span>
               </div>
@@ -245,7 +245,7 @@ export function Today({
                   Claim logger
                 </button>
               ) : (
-                <div className="mt-2 text-[11px] text-[#8A999D]">This day closed without a logger.</div>
+                <div className="mt-2 text-[11px] text-[#5C6B6F]">This day closed without a logger.</div>
               )}
             </>
           ) : (
@@ -337,7 +337,7 @@ export function Today({
         {/* sessions & topics */}
         <div className="mt-4 flex flex-col gap-3">
           {sessions.length === 0 && (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
               Nothing registered for this day yet.
             </div>
           )}
@@ -347,11 +347,11 @@ export function Today({
                 <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
                   <span
                     className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#8A999D" }}
+                    style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#5C6B6F" }}
                   />
                   {s.type}
                 </span>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8A999D]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
                   {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                 </span>
               </div>

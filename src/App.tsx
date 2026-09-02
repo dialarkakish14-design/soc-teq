@@ -50,7 +50,7 @@ function App() {
   }, [session, resident, finishingSignup, autoAttempted, refreshResident]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
   // A recovery link's session takes priority over everything else — even a
@@ -104,7 +104,7 @@ function App() {
 
   if (session && !resident) {
     if (!autoAttempted || finishingSignup) {
-      return <div className="p-8 text-center text-sm text-[#8A999D]">Finishing your sign-up…</div>;
+      return <div className="p-8 text-center text-sm text-[#5C6B6F]">Finishing your sign-up…</div>;
     }
     return <FinishSignUp email={session.user.email ?? ""} onDone={refreshResident} />;
   }

@@ -47,7 +47,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
 
         <div className="mt-7 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#E2EAE9]" />
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#8A999D]">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
             The daily flow
           </span>
           <div className="h-px flex-1 bg-[#E2EAE9]" />

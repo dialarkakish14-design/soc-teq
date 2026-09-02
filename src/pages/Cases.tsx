@@ -65,7 +65,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
   }, [load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
   const titleKey = (t: string) => t.trim().toLowerCase();
@@ -112,7 +112,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
 
       <div className="px-5">
         {conditions.length === 0 ? (
-          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
             Nothing here yet.
           </div>
         ) : (
@@ -147,7 +147,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
                     <div className="flex items-center justify-between gap-3">
                       <div>
                         <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-                        <div className="mt-0.5 text-xs text-[#8A999D]">
+                        <div className="mt-0.5 text-xs text-[#5C6B6F]">
                           {c.instances.length} session{c.instances.length > 1 ? "s" : ""} · {c.latest.sessionType} ·{" "}
                           {formatDateShort(c.latest.date)}
                         </div>
@@ -165,7 +165,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
                         <span
                           key={t}
                           className={`flex-1 rounded-lg py-1.5 text-center font-mono text-[10.5px] font-semibold ${
-                            c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#8A999D]"
+                            c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
                           }`}
                         >
                           {t.replace("Fitzpatrick ", "")}
@@ -173,7 +173,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
                       ))}
                     </div>
                     {missing.length > 0 && (
-                      <div className="mt-2 text-[11px] text-[#8A999D]">
+                      <div className="mt-2 text-[11px] text-[#5C6B6F]">
                         Not yet taught in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
                       </div>
                     )}

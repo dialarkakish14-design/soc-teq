@@ -89,7 +89,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#8A999D]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
   const mine = rows.filter((r) => r.sessions?.days);
@@ -124,7 +124,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 rounded-xl py-2.5 text-[13px] font-bold capitalize ${
-                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#8A999D]"
+                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#5C6B6F]"
               }`}
             >
               {t}
@@ -199,7 +199,7 @@ function SessionDot({ type }: { type: string }) {
   return (
     <span
       className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
-      style={{ background: SESSION_TYPE_COLOR[type] ?? "#8A999D" }}
+      style={{ background: SESSION_TYPE_COLOR[type] ?? "#5C6B6F" }}
     />
   );
 }
@@ -250,7 +250,7 @@ function DayTab({
       </div>
 
       {days.length === 0 && (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
           {filterDate ? "Nothing logged on that day." : "Nothing logged yet."}
         </div>
       )}
@@ -260,7 +260,7 @@ function DayTab({
         const covered = topics.filter((t) => t.soc_covered);
         return (
           <div key={date}>
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#8A999D]">
+            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
               {isDayOpen(date) ? " · open" : ""}
             </div>
@@ -272,7 +272,7 @@ function DayTab({
                       <SessionDot type={s.type} />
                       {s.type}
                     </span>
-                    <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8A999D]">
+                    <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
                       {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                     </span>
                   </div>
@@ -364,7 +364,7 @@ function PeriodTab({
       </div>
 
       {!entries.length ? (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
           Nothing logged in this period.
         </div>
       ) : (
@@ -405,7 +405,7 @@ function PeriodContent({
             <h2 className={`text-2xl font-extrabold ${stats.avgScore != null && stats.avgScore < THRESHOLD ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>
               {stats.avgScore ? stats.avgScore.toFixed(2) : "—"}
             </h2>
-            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#8A999D]">
+            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#5C6B6F]">
               Mean RM
               <span className={`flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-bold ${showRmInfo ? "bg-[#0E7C72] text-white" : "bg-[#DCEFEB] text-[#064B45]"}`}>
                 i
@@ -466,7 +466,7 @@ function PeriodContent({
       {stats.gaps.length > 0 && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">
-            Priority educational needs <span className="font-normal text-[#8A999D]">· below {THRESHOLD}</span>
+            Priority educational needs <span className="font-normal text-[#5C6B6F]">· below {THRESHOLD}</span>
           </h3>
           {stats.gaps.map(({ entry, score }) => {
             const full = byId.get(entry.id);
@@ -478,7 +478,7 @@ function PeriodContent({
               >
                 <div>
                   <div className="text-[14px] font-bold text-[#0E1A1C]">{entry.title}</div>
-                  <div className="text-[11.5px] text-[#8A999D]">
+                  <div className="text-[11.5px] text-[#5C6B6F]">
                     {entry.sessionType} · {formatDateShort(entry.date)}
                   </div>
                 </div>
@@ -504,7 +504,7 @@ function Stat({ n, label, tone }: { n: string | number; label: string; tone?: "t
   return (
     <div className="flex-1">
       <h2 className={`text-2xl font-extrabold ${tone === "amber" ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#8A999D]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#5C6B6F]">{label}</div>
     </div>
   );
 }

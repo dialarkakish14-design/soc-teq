@@ -107,7 +107,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   if (loading || !cycle) {
-    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">Loading…</div>;
+    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">Loading…</div>;
   }
 
   const phase = cyclePhase(cycle.start_date);
@@ -178,7 +178,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-[#0E1A1C]">Cycle 1</h3>
-            <div className="text-xs text-[#8A999D]">
+            <div className="text-xs text-[#5C6B6F]">
               Month {month} of 6 · started {formatDateShort(cycle.start_date)}
             </div>
           </div>
@@ -234,7 +234,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[10.5px] text-[#8A999D]">{label}</div>
+      <div className="mt-0.5 text-[10.5px] text-[#5C6B6F]">{label}</div>
     </div>
   );
 }
@@ -275,7 +275,7 @@ function Phase2({
         <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
         <p className="mt-1 text-[12.5px] text-[#2E3A3D]">Claim the ones you'll build something on over months 4–6.</p>
         {priority.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#8A999D]">Nothing scored below {THRESHOLD} this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#5C6B6F]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
           priority.map((p) => {
             const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
@@ -285,7 +285,7 @@ function Phase2({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                    <div className="text-xs text-[#8A999D]">
+                    <div className="text-xs text-[#5C6B6F]">
                       {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
                     </div>
                   </div>
@@ -298,7 +298,7 @@ function Phase2({
                     <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#2E3A3D]">
                       You claimed this — {mine.format}.
                     </div>
-                    <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#8A999D]">
+                    <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#5C6B6F]">
                       Release this topic
                     </button>
                   </>
@@ -355,18 +355,18 @@ function Phase3({
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
       {mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#8A999D]">You didn't claim any topics this cycle.</div>
+        <div className="mt-3 text-center text-sm text-[#5C6B6F]">You didn't claim any topics this cycle.</div>
       ) : (
         mine.map((c) => (
           <div key={c.id} className="border-t border-[#E2EAE9] py-3">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#8A999D]">{c.format}</div>
+                <div className="text-xs text-[#5C6B6F]">{c.format}</div>
               </div>
               <span
                 className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
+                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#5C6B6F]"
                 }`}
               >
                 {c.status === "delivered" ? "Delivered" : "Planned"}
@@ -481,17 +481,17 @@ function Phase4({
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <h3 className="font-bold text-[#0E1A1C]">What was claimed this cycle</h3>
         {claims.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#8A999D]">No topics were claimed this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#5C6B6F]">No topics were claimed this cycle.</div>
         ) : (
           claims.map((c) => (
             <div key={c.id} className="flex items-center justify-between border-t border-[#E2EAE9] py-3">
               <div>
                 <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#8A999D]">{c.format}</div>
+                <div className="text-xs text-[#5C6B6F]">{c.format}</div>
               </div>
               <span
                 className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
+                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#5C6B6F]"
                 }`}
               >
                 {c.status === "delivered" ? "Delivered" : "Not delivered"}
@@ -529,11 +529,11 @@ function AssessmentCard({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{label}</h3>
-          <p className="mt-0.5 text-[12.5px] text-[#8A999D]">{desc}</p>
+          <p className="mt-0.5 text-[12.5px] text-[#5C6B6F]">{desc}</p>
         </div>
         <span
           className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
+            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#5C6B6F]"
           }`}
         >
           {mine ? `${mine.score}%` : "Not taken"}
@@ -598,7 +598,7 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
             </div>
             <span
               className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
+                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#5C6B6F]"
               }`}
             >
               {phase === c.n ? "Now" : phase > c.n ? "Done" : "Ahead"}
