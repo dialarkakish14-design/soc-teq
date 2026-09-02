@@ -1,18 +1,21 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import {
-  dayBack,
   formatDateLong,
   formatDateShort,
+  formatMonthLabel,
   isDayOpen,
   isBelowThreshold,
   itemAverages,
   monthlyBrief,
   responseRecord,
+  shiftDate,
+  shiftMonth,
   summaryStats,
   todayLocalDate,
   type TopicEntry,
 } from "../lib/domain";
+import { SESSION_TYPE_COLOR } from "../lib/content";
 import { THRESHOLD, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
@@ -33,6 +36,10 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<{ kind: "rate" | "detail"; topic: TopicFull } | null>(null);
+
+  const [dayFilter, setDayFilter] = useState<string | null>(null);
+  const [weekAnchor, setWeekAnchor] = useState(todayLocalDate());
+  const [monthAnchor, setMonthAnchor] = useState(todayLocalDate().slice(0, 7));
 
   function flash(msg: string) {
     setToast(msg);
@@ -126,15 +133,38 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
 
         <div className="mt-4">
           {tab === "day" && (
-            <DayTab rows={mine} residentId={resident.id} onOpenTopic={openTopic} />
+            <DayTab
+              rows={mine}
+              residentId={resident.id}
+              onOpenTopic={openTopic}
+              filterDate={dayFilter}
+              onFilterDateChange={setDayFilter}
+            />
           )}
-          {(tab === "week" || tab === "month") && (
+          {tab === "week" && (
             <PeriodTab
               rows={mine}
               toEntry={toEntry}
-              period={tab}
+              period="week"
               cohortSize={cohortSize}
               onOpenTopic={openTopic}
+              weekAnchor={weekAnchor}
+              onWeekAnchorChange={setWeekAnchor}
+              monthAnchor={monthAnchor}
+              onMonthAnchorChange={setMonthAnchor}
+            />
+          )}
+          {tab === "month" && (
+            <PeriodTab
+              rows={mine}
+              toEntry={toEntry}
+              period="month"
+              cohortSize={cohortSize}
+              onOpenTopic={openTopic}
+              weekAnchor={weekAnchor}
+              onWeekAnchorChange={setWeekAnchor}
+              monthAnchor={monthAnchor}
+              onMonthAnchorChange={setMonthAnchor}
             />
           )}
         </div>
@@ -163,14 +193,27 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
   );
 }
 
+function SessionDot({ type }: { type: string }) {
+  return (
+    <span
+      className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
+      style={{ background: SESSION_TYPE_COLOR[type] ?? "#8A999D" }}
+    />
+  );
+}
+
 function DayTab({
   rows,
   residentId,
   onOpenTopic,
+  filterDate,
+  onFilterDateChange,
 }: {
   rows: TopicFull[];
   residentId: string;
   onOpenTopic: (t: TopicFull) => void;
+  filterDate: string | null;
+  onFilterDateChange: (d: string | null) => void;
 }) {
   const byDate = new Map<string, Map<string, { type: SessionType; topics: TopicFull[] }>>();
   for (const r of rows) {
@@ -181,18 +224,35 @@ function DayTab({
     if (!sessMap.has(sid)) sessMap.set(sid, { type: r.sessions!.type, topics: [] });
     sessMap.get(sid)!.topics.push(r);
   }
-  const days = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
-
-  if (!days.length) {
-    return (
-      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
-        Nothing logged yet.
-      </div>
-    );
-  }
+  const allDays = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
+  const days = filterDate ? allDays.filter(([date]) => date === filterDate) : allDays;
 
   return (
     <div className="flex flex-col gap-4">
+      <div className="flex items-center gap-2 rounded-3xl bg-white p-3 shadow-sm">
+        <input
+          type="date"
+          value={filterDate ?? ""}
+          max={todayLocalDate()}
+          onChange={(e) => onFilterDateChange(e.target.value || null)}
+          className="input flex-1"
+        />
+        {filterDate && (
+          <button
+            onClick={() => onFilterDateChange(null)}
+            className="whitespace-nowrap rounded-xl bg-[#EAEFEE] px-3 py-3 text-xs font-bold text-[#2E3A3D]"
+          >
+            Show all
+          </button>
+        )}
+      </div>
+
+      {days.length === 0 && (
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+          {filterDate ? "Nothing logged on that day." : "Nothing logged yet."}
+        </div>
+      )}
+
       {days.map(([date, sessMap]) => {
         const topics = [...sessMap.values()].flatMap((s) => s.topics);
         const covered = topics.filter((t) => t.soc_covered);
@@ -206,7 +266,10 @@ function DayTab({
               {[...sessMap.entries()].map(([sid, s]) => (
                 <div key={sid} className="overflow-hidden rounded-3xl bg-white shadow-sm">
                   <div className="flex items-center justify-between px-4 py-3.5">
-                    <span className="text-[15.5px] font-extrabold text-[#0E1A1C]">{s.type}</span>
+                    <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                      <SessionDot type={s.type} />
+                      {s.type}
+                    </span>
                     <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8A999D]">
                       {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                     </span>
@@ -230,38 +293,107 @@ function PeriodTab({
   period,
   cohortSize,
   onOpenTopic,
+  weekAnchor,
+  onWeekAnchorChange,
+  monthAnchor,
+  onMonthAnchorChange,
 }: {
   rows: TopicFull[];
   toEntry: (r: TopicFull) => TopicEntry;
   period: "week" | "month";
   cohortSize: number;
   onOpenTopic: (t: TopicFull) => void;
+  weekAnchor: string;
+  onWeekAnchorChange: (d: string) => void;
+  monthAnchor: string;
+  onMonthAnchorChange: (m: string) => void;
 }) {
-  const from = period === "week" ? dayBack(6) : todayLocalDate().slice(0, 8) + "01";
-  const label =
-    period === "week"
-      ? "Last 7 days"
-      : new Date(todayLocalDate() + "T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  const today = todayLocalDate();
+  const rangeStart = period === "week" ? shiftDate(weekAnchor, -6) : monthAnchor + "-01";
+  const rangeEndExclusive = period === "week" ? shiftDate(weekAnchor, 1) : shiftMonth(monthAnchor, 1) + "-01";
+  const label = period === "week" ? `${formatDateShort(rangeStart)} – ${formatDateShort(weekAnchor)}` : formatMonthLabel(monthAnchor);
 
-  const inRange = rows.filter((r) => r.sessions!.days.date >= from);
+  const inRange = rows.filter((r) => {
+    const d = r.sessions!.days.date;
+    return d >= rangeStart && d < rangeEndExclusive;
+  });
   const entries = inRange.map(toEntry);
   const byId = new Map(inRange.map((r) => [r.id, r]));
 
-  if (!entries.length) {
-    return (
-      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
-        Nothing logged in this period.
-      </div>
-    );
-  }
+  const atPresent = period === "week" ? weekAnchor >= today : monthAnchor >= today.slice(0, 7);
 
+  return (
+    <div className="flex flex-col gap-3">
+      <div className="flex items-center gap-2 rounded-3xl bg-white p-3 shadow-sm">
+        <button
+          onClick={() =>
+            period === "week" ? onWeekAnchorChange(shiftDate(weekAnchor, -7)) : onMonthAnchorChange(shiftMonth(monthAnchor, -1))
+          }
+          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#2E3A3D]"
+        >
+          ‹
+        </button>
+        {period === "week" ? (
+          <input
+            type="date"
+            value={weekAnchor}
+            max={today}
+            onChange={(e) => onWeekAnchorChange(e.target.value || today)}
+            className="input flex-1"
+          />
+        ) : (
+          <input
+            type="month"
+            value={monthAnchor}
+            max={today.slice(0, 7)}
+            onChange={(e) => onMonthAnchorChange(e.target.value || today.slice(0, 7))}
+            className="input flex-1"
+          />
+        )}
+        <button
+          onClick={() =>
+            period === "week" ? onWeekAnchorChange(shiftDate(weekAnchor, 7)) : onMonthAnchorChange(shiftMonth(monthAnchor, 1))
+          }
+          disabled={atPresent}
+          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#2E3A3D] disabled:opacity-40"
+        >
+          ›
+        </button>
+      </div>
+
+      {!entries.length ? (
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#8A999D] shadow-sm">
+          Nothing logged in this period.
+        </div>
+      ) : (
+        <PeriodContent entries={entries} byId={byId} period={period} label={label} cohortSize={cohortSize} onOpenTopic={onOpenTopic} />
+      )}
+    </div>
+  );
+}
+
+function PeriodContent({
+  entries,
+  byId,
+  period,
+  label,
+  cohortSize,
+  onOpenTopic,
+}: {
+  entries: TopicEntry[];
+  byId: Map<string, TopicFull>;
+  period: "week" | "month";
+  label: string;
+  cohortSize: number;
+  onOpenTopic: (t: TopicFull) => void;
+}) {
   const stats = summaryStats(entries);
   const response = responseRecord(entries, cohortSize);
   const perItem = itemAverages(entries);
   const brief = period === "month" ? monthlyBrief(entries) : null;
 
   return (
-    <div className="flex flex-col gap-3">
+    <>
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <div className="flex text-center">
           <Stat n={stats.visualCount} label="Visually relevant topics" />
@@ -350,7 +482,7 @@ function PeriodTab({
       )}
 
       {brief && <MonthlyBriefCard brief={brief} label={label} />}
-    </div>
+    </>
   );
 }
 

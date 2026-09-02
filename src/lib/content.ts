@@ -2,6 +2,20 @@
 // steps, ported verbatim from the prototype (build spec section 1: match the
 // wording, don't rewrite it).
 
+// A small color accent per session type, so a stack of session cards scans
+// at a glance instead of reading as identical white blocks. Kept to a dot
+// next to the label rather than tinting the whole card, so topic content
+// stays on a neutral background.
+export const SESSION_TYPE_COLOR: Record<string, string> = {
+  Lecture: "#0E7C72",
+  Didactic: "#5E3F73",
+  "Grand round": "#8F5205",
+  "Clinic outpatient": "#3D6B49",
+  "Clinic inpatient": "#93393E",
+  "Journal club": "#2B5F8A",
+  "Tumor board": "#6B5B95",
+};
+
 export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";
 
 export type MissionTone = "teal" | "rose" | "plum" | "amber" | "sage";

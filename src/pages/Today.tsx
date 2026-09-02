@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { todayLocalDate, isDayOpen, closesAtLabel } from "../lib/domain";
+import { SESSION_TYPE_COLOR } from "../lib/content";
 import { SESSION_TYPES, type Absence, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
 import { CoverageModal } from "../components/CoverageModal";
 import { RateModal } from "../components/RateModal";
@@ -328,7 +329,13 @@ export function Today({
           {sessions.map((s) => (
             <div key={s.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
               <div className="flex items-center justify-between px-4 py-3.5">
-                <span className="text-[15.5px] font-extrabold text-[#0E1A1C]">{s.type}</span>
+                <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                  <span
+                    className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
+                    style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#8A999D" }}
+                  />
+                  {s.type}
+                </span>
                 <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8A999D]">
                   {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                 </span>

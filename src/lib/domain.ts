@@ -41,6 +41,23 @@ export function dayBack(n: number): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
+export function shiftDate(date: string, days: number): string {
+  const d = new Date(date + "T00:00:00");
+  d.setDate(d.getDate() + days);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// Month anchors are "YYYY-MM" strings (native <input type="month"> format).
+export function shiftMonth(yearMonth: string, months: number): string {
+  const [y, m] = yearMonth.split("-").map(Number);
+  const d = new Date(y, m - 1 + months, 1);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+export function formatMonthLabel(yearMonth: string): string {
+  return new Date(yearMonth + "-01T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
+}
+
 export interface TopicScore {
   perItem: Record<string, number>;
   overall: number;

@@ -160,7 +160,7 @@ function ForgotPassword({ onBack }: { onBack: () => void }) {
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Reset your password</h1>
-      <p className="mt-2 text-sm text-[#2E3A3D]">Enter the email you signed up with — not your username.</p>
+      <p className="mt-2 text-sm text-[#2E3A3D]">Enter the email you signed up with.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">
