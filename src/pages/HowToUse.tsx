@@ -1,6 +1,17 @@
+import { useState } from "react";
 import { HOWTO_STEPS } from "../lib/content";
 
 export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () => void }) {
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  function toggle(i: number) {
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
   return (
     <div className="mx-auto min-h-dvh max-w-md">
       <div className="flex items-center px-4 pt-3.5">
@@ -54,17 +65,23 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
         </div>
 
         <div className="mt-3 flex flex-col gap-3">
-          {HOWTO_STEPS.map((s, i) => (
-            <div key={s.title} className="flex gap-3.5 rounded-2xl bg-white p-4 shadow-sm">
-              <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#DCEFEB] text-[13px] font-extrabold text-[#064B45]">
-                {i + 1}
+          {HOWTO_STEPS.map((s, i) => {
+            const isOpen = open.has(i);
+            return (
+              <div key={s.title} className="rounded-2xl bg-white p-4 shadow-sm">
+                <button onClick={() => toggle(i)} className="flex w-full items-center gap-3.5 text-left">
+                  <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-[10px] bg-[#DCEFEB] text-[13px] font-extrabold text-[#064B45]">
+                    {i + 1}
+                  </div>
+                  <h3 className="flex-1 text-[15px] font-bold text-[#0E1A1C]">{s.title}</h3>
+                  <span className={`shrink-0 text-xl font-extrabold text-[#5C6B6F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                    ▾
+                  </span>
+                </button>
+                {isOpen && <p className="mt-2 pl-[42px] text-[13px] leading-relaxed text-[#2E3A3D]">{s.body}</p>}
               </div>
-              <div>
-                <h3 className="text-[15px] font-bold text-[#0E1A1C]">{s.title}</h3>
-                <p className="mt-1 text-[13px] leading-relaxed text-[#2E3A3D]">{s.body}</p>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">

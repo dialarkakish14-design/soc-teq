@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { MISSION_CARDS, type MissionTone } from "../lib/content";
 
 const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
@@ -9,6 +10,16 @@ const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
 };
 
 export function Mission({ onBack, onHow }: { onBack: () => void; onHow?: () => void }) {
+  const [open, setOpen] = useState<Set<number>>(new Set());
+  function toggle(i: number) {
+    setOpen((prev) => {
+      const next = new Set(prev);
+      if (next.has(i)) next.delete(i);
+      else next.add(i);
+      return next;
+    });
+  }
+
   return (
     <div className="mx-auto min-h-dvh max-w-md">
       <div className="flex items-center px-4 pt-3.5">
@@ -23,16 +34,27 @@ export function Mission({ onBack, onHow }: { onBack: () => void; onHow?: () => v
         <div className="mt-3 flex flex-col gap-3.5">
           {MISSION_CARDS.map((c, i) => {
             const style = TONE_STYLES[c.tone];
+            const isOpen = open.has(i);
             return (
               <div key={c.title} className="rounded-[22px] p-[22px]" style={{ background: style.bg }}>
-                <div className="font-mono text-[11px] font-semibold" style={{ color: style.text }}>
-                  {String(i + 1).padStart(2, "0")} / {String(MISSION_CARDS.length).padStart(2, "0")}
-                </div>
-                <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#0E1A1C]">{c.eyebrow}</h2>
-                <div className="mt-1.5 text-[12.5px] font-bold" style={{ color: style.text }}>
-                  {c.title}
-                </div>
-                <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>
+                <button onClick={() => toggle(i)} className="flex w-full items-start justify-between gap-3 text-left">
+                  <div>
+                    <div className="font-mono text-[11px] font-semibold" style={{ color: style.text }}>
+                      {String(i + 1).padStart(2, "0")} / {String(MISSION_CARDS.length).padStart(2, "0")}
+                    </div>
+                    <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#0E1A1C]">{c.eyebrow}</h2>
+                    <div className="mt-1.5 text-[12.5px] font-bold" style={{ color: style.text }}>
+                      {c.title}
+                    </div>
+                  </div>
+                  <span
+                    className={`mt-3 shrink-0 text-2xl font-extrabold transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    style={{ color: style.text }}
+                  >
+                    ▾
+                  </span>
+                </button>
+                {isOpen && <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>}
               </div>
             );
           })}
