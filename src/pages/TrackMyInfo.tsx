@@ -281,7 +281,7 @@ export function TrackMyInfo({
                     </div>
                     <span
                       className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                        isBelowThreshold(m) ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#EEE7F3] text-[#5E3F73]"
+                        isBelowThreshold(m) ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#DCEFEB] text-[#064B45]"
                       }`}
                     >
                       {m.toFixed(2)}
