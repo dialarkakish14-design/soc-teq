@@ -19,17 +19,24 @@ interface CaseTopic {
   sessionType: SessionType;
 }
 
-export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
+export function Cases({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [rows, setRows] = useState<CaseTopic[]>([]);
+  const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<CaseTopic | null>(null);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
-      .from("topics")
-      .select("id, title, skin_type, soc_covered, incomplete, image_soc, discussed_soc, ratings(*), sessions(type, days(date))")
-      .eq("soc_covered", true)
-      .order("created_at", { ascending: false });
+    const [{ data }, { data: cohortRows }] = await Promise.all([
+      supabase
+        .from("topics")
+        .select("id, title, skin_type, soc_covered, incomplete, image_soc, discussed_soc, ratings(*), sessions(type, days(date))")
+        .eq("soc_covered", true)
+        .order("created_at", { ascending: false }),
+      supabase.from("residents").select("id, resident_code").eq("program_id", resident.program_id).eq("pgy", resident.pgy),
+    ]);
+    setCodeById(
+      Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
+    );
 
     const mapped: CaseTopic[] = ((data as unknown as {
       id: string;
@@ -63,6 +70,13 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
   useEffect(() => {
     load();
   }, [load]);
+
+  // See Today.tsx for why this exists — every screen preloads once at
+  // login for instant tab switches, so it needs its own silent revalidate
+  // whenever it becomes the active tab or it'll show stale data.
+  useEffect(() => {
+    if (active) load();
+  }, [active, load]);
 
   if (loading) {
     return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
@@ -185,7 +199,7 @@ export function Cases({ resident, onAbout }: { resident: Resident; onAbout: () =
         )}
       </div>
 
-      {selected && <TopicDetail topic={selected} onClose={() => setSelected(null)} />}
+      {selected && <TopicDetail topic={selected} codeById={codeById} onClose={() => setSelected(null)} />}
     </div>
   );
 }

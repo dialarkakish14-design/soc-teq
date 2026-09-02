@@ -24,6 +24,7 @@ export function TopicRow({
   const mine = topic.ratings.find((r) => r.resident_id === residentId);
   const mineAbsent = topic.absences.find((a) => a.resident_id === residentId);
   const sc = scoreTopic(topic.ratings);
+  const hasNotes = topic.ratings.some((r) => r.note?.trim());
 
   let meta: string;
   let badge: React.ReactNode;
@@ -46,10 +47,30 @@ export function TopicRow({
       className="flex w-full items-center justify-between gap-3 border-t border-[#E2EAE9] px-4 py-3.5 text-left active:bg-[#F7FAFA]"
     >
       <div>
-        <div className="text-[14.5px] font-bold text-[#0E1A1C]">{topic.title}</div>
+        <div className="flex items-center gap-1.5">
+          <div className="text-[14.5px] font-bold text-[#0E1A1C]">{topic.title}</div>
+          {hasNotes && <NoteIcon />}
+        </div>
         <div className="mt-0.5 text-[11.5px] text-[#5C6B6F]">{meta}</div>
       </div>
       {badge}
     </button>
+  );
+}
+
+// Marks a topic that has at least one resident's note attached, so it's
+// visible from the list without opening every topic to check.
+function NoteIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" className="shrink-0" aria-label="Has a note">
+      <path
+        d="M3 2.5h7.5L13 5v8.5a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-10a1 1 0 0 1 1-1Z"
+        stroke="#0E7C72"
+        strokeWidth="1.3"
+        strokeLinejoin="round"
+      />
+      <path d="M10 2.5V5a1 1 0 0 0 1 1h2" stroke="#0E7C72" strokeWidth="1.3" strokeLinejoin="round" />
+      <path d="M4.5 8.5h6M4.5 11h4" stroke="#0E7C72" strokeWidth="1.3" strokeLinecap="round" />
+    </svg>
   );
 }

@@ -13,10 +13,12 @@ type SessionWithTopics = Session & { topics: TopicWithRatings[] };
 
 export function Today({
   resident,
+  active,
   onLogout,
   onAbout,
 }: {
   resident: Resident;
+  active: boolean;
   onLogout: () => void;
   onAbout: () => void;
 }) {
@@ -26,6 +28,7 @@ export function Today({
   const [day, setDay] = useState<Day | null>(null);
   const [sessions, setSessions] = useState<SessionWithTopics[]>([]);
   const [logger, setLogger] = useState<Resident | null>(null);
+  const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<{ kind: "coverage" | "rate" | "detail"; topic: TopicWithRatings } | null>(null);
@@ -41,6 +44,15 @@ export function Today({
 
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
+
+    const { data: cohortRows } = await supabase
+      .from("residents")
+      .select("id, resident_code")
+      .eq("program_id", resident.program_id)
+      .eq("pgy", resident.pgy);
+    setCodeById(
+      Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
+    );
 
     let { data: dayRow } = await supabase
       .from("days")
@@ -102,6 +114,14 @@ export function Today({
   useEffect(() => {
     load(true);
   }, [load]);
+
+  // Every screen preloads once at login for instant tab switches, but that
+  // means data goes stale the moment something changes on another tab —
+  // re-fetch (silently, no spinner) each time this tab becomes the active
+  // one so a resident coming back from Today/Summary/etc. sees current data.
+  useEffect(() => {
+    if (active) load();
+  }, [active, load]);
 
   async function claimLogger() {
     if (!day) return;
@@ -393,7 +413,7 @@ export function Today({
         />
       )}
       {modal?.kind === "detail" && (
-        <TopicDetail topic={modal.topic} onClose={() => setModal(null)} />
+        <TopicDetail topic={modal.topic} codeById={codeById} onClose={() => setModal(null)} />
       )}
     </div>
   );

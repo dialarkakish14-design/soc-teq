@@ -68,25 +68,27 @@ function App() {
         <div style={{ display: navScreen === "today" ? "contents" : "none" }}>
           <Today
             resident={resident}
+            active={navScreen === "today"}
             onLogout={() => supabase.auth.signOut()}
             onAbout={() => setInfoOverlay("mission")}
           />
         </div>
         <div style={{ display: navScreen === "summary" ? "contents" : "none" }}>
-          <Summary resident={resident} onAbout={() => setInfoOverlay("mission")} />
+          <Summary resident={resident} active={navScreen === "summary"} onAbout={() => setInfoOverlay("mission")} />
         </div>
         <div style={{ display: navScreen === "cases" ? "contents" : "none" }}>
-          <Cases resident={resident} onAbout={() => setInfoOverlay("mission")} />
+          <Cases resident={resident} active={navScreen === "cases"} onAbout={() => setInfoOverlay("mission")} />
         </div>
         <div style={{ display: navScreen === "me" ? "contents" : "none" }}>
           <TrackMyInfo
             resident={resident}
+            active={navScreen === "me"}
             onAbout={() => setInfoOverlay("mission")}
             onLogout={() => supabase.auth.signOut()}
           />
         </div>
         <div style={{ display: navScreen === "team" ? "contents" : "none" }}>
-          <Team resident={resident} onAbout={() => setInfoOverlay("mission")} />
+          <Team resident={resident} active={navScreen === "team"} onAbout={() => setInfoOverlay("mission")} />
         </div>
         <BottomNav active={navScreen} onChange={setNavScreen} />
         {infoOverlay && (

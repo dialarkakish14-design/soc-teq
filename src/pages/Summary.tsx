@@ -30,10 +30,11 @@ type TopicFull = Topic & {
 
 type Tab = "day" | "week" | "month" | "cycle";
 
-export function Summary({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
+export function Summary({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [tab, setTab] = useState<Tab>("day");
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohortSize, setCohortSize] = useState(0);
+  const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<{ kind: "rate" | "detail"; topic: TopicFull } | null>(null);
@@ -50,7 +51,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const [{ data: topicRows, error: topicsError }, { count }] = await Promise.all([
+    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }] = await Promise.all([
       supabase
         .from("topics")
         .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
@@ -58,7 +59,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
         .order("created_at", { ascending: false }),
       supabase
         .from("residents")
-        .select("id", { count: "exact", head: true })
+        .select("id, resident_code", { count: "exact" })
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
     ]);
@@ -66,12 +67,22 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
 
     setRows((topicRows as TopicFull[] | null) ?? []);
     setCohortSize(count ?? 0);
+    setCodeById(
+      Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
+    );
     setLoading(false);
   }, [resident.program_id, resident.pgy]);
 
   useEffect(() => {
     load(true);
   }, [load]);
+
+  // See Today.tsx for why this exists — every screen preloads once at
+  // login for instant tab switches, so it needs its own silent revalidate
+  // whenever it becomes the active tab or it'll show stale data.
+  useEffect(() => {
+    if (active) load();
+  }, [active, load]);
 
   function openTopic(t: TopicFull) {
     if (t.incomplete || !t.soc_covered || !t.sessions?.days) {
@@ -190,7 +201,9 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
           }}
         />
       )}
-      {modal?.kind === "detail" && <TopicDetail topic={modal.topic} onClose={() => setModal(null)} />}
+      {modal?.kind === "detail" && (
+        <TopicDetail topic={modal.topic} codeById={codeById} onClose={() => setModal(null)} />
+      )}
     </div>
   );
 }

@@ -10,8 +10,17 @@ export interface DetailTopic {
   ratings: Rating[];
 }
 
-export function TopicDetail({ topic, onClose }: { topic: DetailTopic; onClose: () => void }) {
+export function TopicDetail({
+  topic,
+  codeById = {},
+  onClose,
+}: {
+  topic: DetailTopic;
+  codeById?: Record<string, string>;
+  onClose: () => void;
+}) {
   const sc = scoreTopic(topic.ratings);
+  const notes = topic.ratings.filter((r) => r.note?.trim());
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
       <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F2F6F5] p-5 sm:rounded-3xl">
@@ -68,6 +77,19 @@ export function TopicDetail({ topic, onClose }: { topic: DetailTopic; onClose: (
                 </div>
               ))}
             </div>
+            {notes.length > 0 && (
+              <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="font-bold text-[#0E1A1C]">Notes</h3>
+                {notes.map((r) => (
+                  <div key={r.id} className="border-t border-[#E2EAE9] py-2.5 first:border-t-0 first:pt-0">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+                      {codeById[r.resident_id] ?? "Resident"}
+                    </div>
+                    <p className="mt-0.5 text-[13.5px] leading-relaxed text-[#2E3A3D]">{r.note}</p>
+                  </div>
+                ))}
+              </div>
+            )}
           </>
         )}
       </div>

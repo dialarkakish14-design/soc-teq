@@ -19,10 +19,12 @@ interface CohortResident {
 
 export function TrackMyInfo({
   resident,
+  active,
   onAbout,
   onLogout,
 }: {
   resident: Resident;
+  active: boolean;
   onAbout: () => void;
   onLogout: () => void;
 }) {
@@ -60,10 +62,18 @@ export function TrackMyInfo({
     load();
   }, [load]);
 
+  // See Today.tsx for why this exists — every screen preloads once at
+  // login for instant tab switches, so it needs its own silent revalidate
+  // whenever it becomes the active tab or it'll show stale data.
+  useEffect(() => {
+    if (active) load();
+  }, [active, load]);
+
   if (loading) {
     return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
 
+  const codeById = Object.fromEntries(cohort.map((c) => [c.id, c.resident_code]));
   const covered = rows.filter((r) => r.soc_covered);
   const mine = covered.filter((r) => r.ratings.some((rt) => rt.resident_id === resident.id));
   const declared = covered.filter((r) => r.absences.some((a) => a.resident_id === resident.id && a.reason === "declared"));
@@ -319,7 +329,7 @@ export function TrackMyInfo({
         </button>
       </div>
 
-      {selected && <TopicDetail topic={selected} onClose={() => setSelected(null)} />}
+      {selected && <TopicDetail topic={selected} codeById={codeById} onClose={() => setSelected(null)} />}
     </div>
   );
 }

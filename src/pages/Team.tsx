@@ -22,7 +22,7 @@ function initials(name: string) {
   return name.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
 }
 
-export function Team({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
+export function Team({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [program, setProgram] = useState<MyProgram | null>(null);
   const [cohort, setCohort] = useState<CohortMember[]>([]);
   const [ratedCounts, setRatedCounts] = useState<Record<string, number>>({});
@@ -85,6 +85,13 @@ export function Team({ resident, onAbout }: { resident: Resident; onAbout: () =>
   useEffect(() => {
     load();
   }, [load]);
+
+  // See Today.tsx for why this exists — every screen preloads once at
+  // login for instant tab switches, so it needs its own silent revalidate
+  // whenever it becomes the active tab or it'll show stale data.
+  useEffect(() => {
+    if (active) load();
+  }, [active, load]);
 
   useEffect(() => {
     if (!program) return;
