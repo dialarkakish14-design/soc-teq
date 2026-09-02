@@ -98,8 +98,7 @@ export const RATING_DOMAINS: RatingDomainKey[] = [
   {
     key: "nuance",
     name: "Nuance",
-    statement:
-      "Diagnostic pitfalls specific to skin of color were explicitly addressed — for example erythema masking.",
+    statement: "Diagnostic pitfalls specific to skin of color were explicitly addressed.",
   },
   {
     key: "mgmt",

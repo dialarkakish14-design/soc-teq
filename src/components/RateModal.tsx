@@ -79,9 +79,9 @@ export function RateModal({
         </div>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
-        <p className="mt-3 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#2E3A3D]">
-          Rate this as honestly and accurately as you can — no one in a position over you will ever see it tied to
-          your name. This only helps your cohort if it reflects what actually happened.
+        <p className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[13.5px] font-semibold leading-relaxed text-[#064B45]">
+          Your honest experience is exactly what's useful here — there's no need to soften it. This is never tied
+          to your name for anyone in a position over you, so just tell it like it was.
         </p>
 
         <div className="mt-2 flex flex-col divide-y divide-[#E2EAE9]">
