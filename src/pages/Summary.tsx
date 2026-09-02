@@ -28,7 +28,7 @@ type TopicFull = Topic & {
   sessions: { id: string; type: SessionType; days: { id: string; date: string; pgy: string } } | null;
 };
 
-type Tab = "day" | "week" | "month" | "cycle";
+type Tab = "day" | "week" | "month" | "notes" | "cycle";
 
 export function Summary({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [tab, setTab] = useState<Tab>("day");
@@ -130,7 +130,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
 
       <div className="px-5">
         <div className="mt-4 flex gap-1.5 rounded-2xl bg-[#E6ECEB] p-1">
-          {(["day", "week", "month", "cycle"] as Tab[]).map((t) => (
+          {(["day", "week", "month", "notes", "cycle"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -179,6 +179,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
               onMonthAnchorChange={setMonthAnchor}
             />
           )}
+          {tab === "notes" && <NotesTab rows={mine} codeById={codeById} onOpenTopic={openTopic} />}
           {tab === "cycle" && <CycleTab resident={resident} />}
         </div>
       </div>
@@ -217,6 +218,8 @@ function SessionDot({ type }: { type: string }) {
   );
 }
 
+type CoverageFilter = "all" | "covered" | "not";
+
 function DayTab({
   rows,
   residentId,
@@ -230,6 +233,8 @@ function DayTab({
   filterDate: string | null;
   onFilterDateChange: (d: string | null) => void;
 }) {
+  const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>("all");
+
   const byDate = new Map<string, Map<string, { type: SessionType; topics: TopicFull[] }>>();
   for (const r of rows) {
     const date = r.sessions!.days.date;
@@ -241,6 +246,9 @@ function DayTab({
   }
   const allDays = [...byDate.entries()].sort((a, b) => (a[0] < b[0] ? 1 : -1));
   const days = filterDate ? allDays.filter(([date]) => date === filterDate) : allDays;
+
+  const matchesFilter = (t: TopicFull) =>
+    coverageFilter === "all" || (coverageFilter === "covered" ? t.soc_covered : !t.soc_covered);
 
   return (
     <div className="flex flex-col gap-4">
@@ -262,6 +270,26 @@ function DayTab({
         )}
       </div>
 
+      <div className="flex gap-1.5 rounded-2xl bg-[#E6ECEB] p-1">
+        {(
+          [
+            ["all", "All"],
+            ["covered", "SoC covered"],
+            ["not", "Not covered"],
+          ] as [CoverageFilter, string][]
+        ).map(([f, label]) => (
+          <button
+            key={f}
+            onClick={() => setCoverageFilter(f)}
+            className={`flex-1 rounded-xl py-2 text-[12px] font-bold ${
+              coverageFilter === f ? "bg-white text-[#064B45] shadow-sm" : "text-[#5C6B6F]"
+            }`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+
       {days.length === 0 && (
         <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
           {filterDate ? "Nothing logged on that day." : "Nothing logged yet."}
@@ -271,33 +299,115 @@ function DayTab({
       {days.map(([date, sessMap]) => {
         const topics = [...sessMap.values()].flatMap((s) => s.topics);
         const covered = topics.filter((t) => t.soc_covered);
+        const sessions = [...sessMap.entries()]
+          .map(([sid, s]) => ({ sid, type: s.type, topics: s.topics.filter(matchesFilter) }))
+          .filter((s) => s.topics.length > 0);
         return (
           <div key={date}>
             <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
               {isDayOpen(date) ? " · open" : ""}
             </div>
-            <div className="mt-2 flex flex-col gap-3">
-              {[...sessMap.entries()].map(([sid, s]) => (
-                <div key={sid} className="overflow-hidden rounded-3xl bg-white shadow-sm">
-                  <div className="flex items-center justify-between px-4 py-3.5">
-                    <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
-                      <SessionDot type={s.type} />
-                      {s.type}
-                    </span>
-                    <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
-                      {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
-                    </span>
+            {sessions.length === 0 ? (
+              <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+                Nothing matches this filter on this day.
+              </div>
+            ) : (
+              <div className="mt-2 flex flex-col gap-3">
+                {sessions.map((s) => (
+                  <div key={s.sid} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                    <div className="flex items-center justify-between px-4 py-3.5">
+                      <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                        <SessionDot type={s.type} />
+                        {s.type}
+                      </span>
+                      <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                        {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    {s.topics.map((t) => (
+                      <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} />
+                    ))}
                   </div>
-                  {s.topics.map((t) => (
-                    <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} />
-                  ))}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         );
       })}
+    </div>
+  );
+}
+
+// Every note a resident has left, grouped by condition (across every
+// session it's ever come up in) rather than buried inside each topic's own
+// detail view — a resident preparing to teach or claim a remediation topic
+// can see everything anyone said about it in one place.
+function NotesTab({
+  rows,
+  codeById,
+  onOpenTopic,
+}: {
+  rows: TopicFull[];
+  codeById: Record<string, string>;
+  onOpenTopic: (t: TopicFull) => void;
+}) {
+  const titleKey = (t: string) => t.trim().toLowerCase();
+  const groups = new Map<string, TopicFull[]>();
+  for (const r of rows) {
+    if (!r.soc_covered || !r.ratings.some((rt) => rt.note?.trim())) continue;
+    const key = titleKey(r.title);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key)!.push(r);
+  }
+
+  const conditions = [...groups.values()]
+    .map((instances) => ({
+      title: instances[0].title,
+      instances: [...instances].sort((a, b) => (a.sessions!.days.date < b.sessions!.days.date ? 1 : -1)),
+      noteCount: instances.reduce((n, t) => n + t.ratings.filter((rt) => rt.note?.trim()).length, 0),
+    }))
+    .sort((a, b) => b.noteCount - a.noteCount);
+
+  if (conditions.length === 0) {
+    return (
+      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+        No notes yet. Notes left while rating a topic will collect here by condition.
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col gap-3">
+      {conditions.map((c) => (
+        <div key={c.title} className="rounded-3xl bg-white p-4 shadow-sm">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
+            <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+              {c.noteCount} note{c.noteCount === 1 ? "" : "s"}
+            </span>
+          </div>
+          {c.instances.map((t) => {
+            const notes = t.ratings.filter((rt) => rt.note?.trim());
+            if (notes.length === 0) return null;
+            return (
+              <div key={t.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+                <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#5C6B6F]">
+                  {t.sessions!.type} · {formatDateShort(t.sessions!.days.date)}
+                </button>
+                {notes.map((rt) => (
+                  <div key={rt.id} className="mt-1.5">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+                      {codeById[rt.resident_id] ?? "Resident"}
+                    </div>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-[#2E3A3D]">{rt.note}</p>
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </div>
+      ))}
     </div>
   );
 }
