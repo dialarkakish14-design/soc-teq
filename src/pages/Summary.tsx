@@ -238,6 +238,15 @@ function DayTab({
   onFilterDateChange: (d: string | null) => void;
 }) {
   const [coverageFilter, setCoverageFilter] = useState<CoverageFilter>("all");
+  const [openSessions, setOpenSessions] = useState<Set<string>>(new Set());
+  function toggleSession(sid: string) {
+    setOpenSessions((prev) => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid);
+      else next.add(sid);
+      return next;
+    });
+  }
 
   const byDate = new Map<string, Map<string, { type: SessionType; topics: TopicFull[] }>>();
   for (const r of rows) {
@@ -318,22 +327,34 @@ function DayTab({
               </div>
             ) : (
               <div className="mt-2 flex flex-col gap-3">
-                {sessions.map((s) => (
-                  <div key={s.sid} className="overflow-hidden rounded-3xl bg-white shadow-sm">
-                    <div className="flex items-center justify-between px-4 py-3.5">
-                      <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
-                        <SessionDot type={s.type} />
-                        {s.type}
-                      </span>
-                      <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
-                        {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
-                      </span>
+                {sessions.map((s) => {
+                  const isOpen = openSessions.has(s.sid);
+                  return (
+                    <div key={s.sid} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                      <button
+                        onClick={() => toggleSession(s.sid)}
+                        className="flex w-full items-center justify-between gap-2 px-4 py-3.5"
+                      >
+                        <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                          <SessionDot type={s.type} />
+                          {s.type}
+                        </span>
+                        <span className="flex items-center gap-2">
+                          <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                            {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
+                          </span>
+                          <span className={`text-xl font-extrabold text-[#5C6B6F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                            ▾
+                          </span>
+                        </span>
+                      </button>
+                      {isOpen &&
+                        s.topics.map((t) => (
+                          <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} />
+                        ))}
                     </div>
-                    {s.topics.map((t) => (
-                      <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} />
-                    ))}
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
