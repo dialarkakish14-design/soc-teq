@@ -340,6 +340,170 @@ $$;
 
 grant execute on function complete_signup(uuid, text, text, text, text, boolean) to authenticated;
 
+-- ---------- absences + the 4am close job ----------
+-- See supabase/patch_absences_close_job.sql for the full commentary; this
+-- mirrors it so a fresh deploy doesn't need the patch file separately.
+
+alter table days add column if not exists closed_at timestamptz;
+
+create table absences (
+  id uuid primary key default gen_random_uuid(),
+  topic_id uuid not null references topics (id) on delete cascade,
+  resident_id uuid not null references residents (id),
+  reason text not null check (reason in ('declared', 'no_response')),
+  created_at timestamptz not null default now(),
+  unique (topic_id, resident_id)
+);
+
+alter table absences enable row level security;
+
+create policy absences_select on absences for select
+  using (
+    exists (
+      select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
+      where t.id = absences.topic_id and d.program_id = my_program_id() and d.pgy = my_pgy()
+    )
+  );
+
+create policy absences_insert on absences for insert
+  with check (
+    resident_id = auth.uid()
+    and exists (
+      select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
+      where t.id = absences.topic_id and t.soc_covered = true
+        and d.program_id = my_program_id() and d.pgy = my_pgy() and is_day_open(d.date)
+    )
+  );
+
+create policy absences_delete on absences for delete
+  using (
+    resident_id = auth.uid()
+    and exists (
+      select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
+      where t.id = absences.topic_id and is_day_open(d.date)
+    )
+  );
+
+create or replace function close_finished_days()
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  d record;
+begin
+  for d in
+    select * from days
+    where closed_at is null and not is_day_open(date)
+  loop
+    insert into absences (topic_id, resident_id, reason)
+    select t.id, r.id, 'no_response'
+    from sessions s
+    join topics t on t.session_id = s.id and t.soc_covered = true
+    cross join residents r
+    where s.day_id = d.id
+      and r.program_id = d.program_id
+      and r.pgy = d.pgy
+      and not exists (select 1 from ratings ra where ra.topic_id = t.id and ra.resident_id = r.id)
+      and not exists (select 1 from absences ab where ab.topic_id = t.id and ab.resident_id = r.id)
+    on conflict (topic_id, resident_id) do nothing;
+
+    update days set closed_at = now() where id = d.id;
+  end loop;
+end;
+$$;
+
+-- Schedule separately after enabling pg_cron (Database -> Extensions):
+--   select cron.schedule('close-finished-days', '*/15 * * * *', 'select close_finished_days()');
+
+-- ---------- remediation cycle ----------
+-- See supabase/patch_remediation_cycle.sql for the full commentary.
+
+create table cycles (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references programs (id),
+  pgy text not null check (pgy in ('PGY-2', 'PGY-3', 'PGY-4')),
+  start_date date not null,
+  unique (program_id, pgy)
+);
+
+create table claims (
+  id uuid primary key default gen_random_uuid(),
+  cycle_id uuid not null references cycles (id) on delete cascade,
+  resident_id uuid not null references residents (id),
+  topic_title text not null,
+  format text not null check (format in ('Peer-teaching module', 'SoC journal club', 'Digital repository case set')),
+  status text not null default 'planned' check (status in ('planned', 'delivered')),
+  scholarly boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create table assessments (
+  id uuid primary key default gen_random_uuid(),
+  cycle_id uuid not null references cycles (id) on delete cascade,
+  resident_id uuid not null references residents (id),
+  phase text not null check (phase in ('baseline', 'followup')),
+  score int not null check (score between 0 and 100),
+  created_at timestamptz not null default now(),
+  unique (cycle_id, resident_id, phase)
+);
+
+create table resources (
+  id uuid primary key default gen_random_uuid(),
+  program_id uuid not null references programs (id),
+  pgy text not null check (pgy in ('PGY-2', 'PGY-3', 'PGY-4')),
+  topic_title text not null,
+  resident_id uuid not null references residents (id),
+  source text not null,
+  url text,
+  takeaway text not null,
+  created_at timestamptz not null default now()
+);
+
+alter table cycles enable row level security;
+alter table claims enable row level security;
+alter table assessments enable row level security;
+alter table resources enable row level security;
+
+create policy cycles_select on cycles for select
+  using (program_id = my_program_id() and pgy = my_pgy());
+
+create policy cycles_insert on cycles for insert
+  with check (program_id = my_program_id() and pgy = my_pgy());
+
+create policy claims_select on claims for select
+  using (
+    exists (select 1 from cycles c where c.id = claims.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())
+  );
+
+create policy claims_insert on claims for insert
+  with check (
+    resident_id = auth.uid()
+    and exists (select 1 from cycles c where c.id = claims.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())
+  );
+
+create policy claims_update on claims for update
+  using (resident_id = auth.uid())
+  with check (resident_id = auth.uid());
+
+create policy claims_delete on claims for delete
+  using (resident_id = auth.uid());
+
+create policy assessments_select on assessments for select
+  using (
+    exists (select 1 from cycles c where c.id = assessments.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())
+  );
+
+create policy assessments_insert on assessments for insert
+  with check (
+    resident_id = auth.uid()
+    and exists (select 1 from cycles c where c.id = assessments.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())
+  );
+
+create policy resources_select on resources for select
+  using (program_id = my_program_id() and pgy = my_pgy());
+
+create policy resources_insert on resources for insert
+  with check (resident_id = auth.uid() and program_id = my_program_id() and pgy = my_pgy());
+
 -- ---------- seed: the Wayne State pilot program ----------
 
 insert into programs (name, access_code, profile_complete)

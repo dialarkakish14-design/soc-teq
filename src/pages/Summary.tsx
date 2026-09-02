@@ -20,6 +20,7 @@ import { THRESHOLD, type Absence, type Rating, type Resident, type SessionType, 
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
 import { RateModal } from "../components/RateModal";
+import { CycleTab } from "./CycleTab";
 
 type TopicFull = Topic & {
   ratings: Rating[];
@@ -27,7 +28,7 @@ type TopicFull = Topic & {
   sessions: { id: string; type: SessionType; days: { id: string; date: string; pgy: string } } | null;
 };
 
-type Tab = "day" | "week" | "month";
+type Tab = "day" | "week" | "month" | "cycle";
 
 export function Summary({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
   const [tab, setTab] = useState<Tab>("day");
@@ -118,7 +119,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
 
       <div className="px-5">
         <div className="mt-4 flex gap-1.5 rounded-2xl bg-[#E6ECEB] p-1">
-          {(["day", "week", "month"] as Tab[]).map((t) => (
+          {(["day", "week", "month", "cycle"] as Tab[]).map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}
@@ -167,6 +168,7 @@ export function Summary({ resident, onAbout }: { resident: Resident; onAbout: ()
               onMonthAnchorChange={setMonthAnchor}
             />
           )}
+          {tab === "cycle" && <CycleTab resident={resident} />}
         </div>
       </div>
 

@@ -58,6 +58,25 @@ export function formatMonthLabel(yearMonth: string): string {
   return new Date(yearMonth + "-01T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
 }
 
+// The six-month remediation cycle's four phases (build spec section 3.4).
+export function daysSinceStart(startDate: string): number {
+  const today = new Date(todayLocalDate() + "T00:00:00");
+  const start = new Date(startDate + "T00:00:00");
+  return Math.floor((today.getTime() - start.getTime()) / 86400000);
+}
+
+export function cyclePhase(startDate: string): 1 | 2 | 3 | 4 {
+  const n = daysSinceStart(startDate);
+  if (n < 90) return 1;
+  if (n < 98) return 2;
+  if (n < 180) return 3;
+  return 4;
+}
+
+export function cycleMonth(startDate: string): number {
+  return Math.min(6, Math.floor(daysSinceStart(startDate) / 30) + 1);
+}
+
 export interface TopicScore {
   perItem: Record<string, number>;
   overall: number;

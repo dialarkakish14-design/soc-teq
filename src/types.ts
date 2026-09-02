@@ -117,3 +117,43 @@ export interface Absence {
 }
 
 export const THRESHOLD = 3.5;
+
+export interface Cycle {
+  id: string;
+  program_id: string;
+  pgy: Pgy;
+  start_date: string;
+}
+
+export const CLAIM_FORMATS = ["Peer-teaching module", "SoC journal club", "Digital repository case set"] as const;
+export type ClaimFormat = (typeof CLAIM_FORMATS)[number];
+
+export interface Claim {
+  id: string;
+  cycle_id: string;
+  resident_id: string;
+  topic_title: string;
+  format: ClaimFormat;
+  status: "planned" | "delivered";
+  scholarly: boolean;
+}
+
+export interface Assessment {
+  id: string;
+  cycle_id: string;
+  resident_id: string;
+  phase: "baseline" | "followup";
+  score: number;
+}
+
+export interface Resource {
+  id: string;
+  program_id: string;
+  pgy: Pgy;
+  topic_title: string;
+  resident_id: string;
+  source: string;
+  url: string | null;
+  takeaway: string;
+  created_at: string;
+}
