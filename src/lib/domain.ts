@@ -171,6 +171,31 @@ export function responseRecord(entries: TopicEntry[], cohortSize: number): Respo
   return { rated, declared, noResponse, waiting, total, responseRatePct: responded ? Math.round((rated / responded) * 100) : 0 };
 }
 
+export interface EngagementPoint {
+  weekStart: string;
+  weekEnd: string;
+  pct: number;
+  total: number;
+  current: boolean;
+}
+
+// Response rate per trailing week, oldest first — a self-facing mirror on
+// the cohort's own participation, not a metric anyone outside the cohort
+// ever sees (build spec section 5, rule 6 — this stays as cohort-level as
+// everything else the app already shows, never per-resident).
+export function engagementTrend(entries: TopicEntry[], cohortSize: number, weeks = 8): EngagementPoint[] {
+  const today = todayLocalDate();
+  const points: EngagementPoint[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const weekEnd = shiftDate(today, -7 * i);
+    const weekStart = shiftDate(weekEnd, -6);
+    const inWeek = entries.filter((e) => e.date >= weekStart && e.date <= weekEnd);
+    const rec = responseRecord(inWeek, cohortSize);
+    points.push({ weekStart, weekEnd, pct: rec.responseRatePct, total: rec.total, current: i === 0 });
+  }
+  return points;
+}
+
 // Mean of each item's mean across every scored, covered topic in the list.
 export function itemAverages(entries: TopicEntry[]): Record<string, number> | null {
   const scored = entries
