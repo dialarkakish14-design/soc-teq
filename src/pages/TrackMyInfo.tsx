@@ -249,10 +249,12 @@ export function TrackMyInfo({
                       {myPer[d.key].toFixed(2)} <span className="text-[#8A999D]">/ {coPer[d.key].toFixed(2)}</span>
                     </span>
                   </div>
-                  <div className="relative mt-1.5 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
-                    <div className="h-full rounded-full bg-[#5E3F73]" style={{ width: `${(myPer[d.key] / 5) * 100}%` }} />
+                  <div className="relative mt-1.5 h-2 rounded-full bg-[#EAEFEE]">
+                    <div className="h-full overflow-hidden rounded-full">
+                      <div className="h-full rounded-full bg-[#5E3F73]" style={{ width: `${(myPer[d.key] / 5) * 100}%` }} />
+                    </div>
                     <div
-                      className="absolute -top-0.5 h-3 w-0.5 bg-[#0E1A1C]/45"
+                      className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0E1A1C] shadow"
                       style={{ left: `${(coPer[d.key] / 5) * 100}%` }}
                     />
                   </div>
