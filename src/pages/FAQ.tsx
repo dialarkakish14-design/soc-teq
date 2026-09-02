@@ -41,7 +41,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
       <div className="flex items-start justify-between px-5 pt-6">
         <div>
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">FAQ</div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Common questions</h1>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Q&amp;As</h1>
         </div>
         <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
           SoC-TEQ
