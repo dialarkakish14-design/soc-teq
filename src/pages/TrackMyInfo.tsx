@@ -33,6 +33,8 @@ export function TrackMyInfo({
   const [loggerDays, setLoggerDays] = useState(0);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TopicFull | null>(null);
+  const [showCompare, setShowCompare] = useState(false);
+  const [showRated, setShowRated] = useState(false);
 
   const load = useCallback(async () => {
     const [{ data: topicRows }, { data: cohortRows }, { count: loggerCount }] = await Promise.all([
@@ -247,34 +249,49 @@ export function TrackMyInfo({
             </div>
 
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">How your ratings compare</h3>
-              <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
-                Purple is your average. The marker is the group's average on the same topics.
-              </p>
-              {RATING_DOMAINS.map((d) => (
-                <div key={d.key} className="mt-3">
-                  <div className="flex justify-between text-[12.5px] font-semibold">
-                    <span>{d.name}</span>
-                    <span className="font-mono">
-                      {myPer[d.key].toFixed(2)} <span className="text-[#5C6B6F]">/ {coPer[d.key].toFixed(2)}</span>
-                    </span>
-                  </div>
-                  <div className="relative mt-1.5 h-2 rounded-full bg-[#EAEFEE]">
-                    <div className="h-full overflow-hidden rounded-full">
-                      <div className="h-full rounded-full bg-[#5E3F73]" style={{ width: `${(myPer[d.key] / 5) * 100}%` }} />
+              <button onClick={() => setShowCompare((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
+                <h3 className="font-bold text-[#0E1A1C]">How your ratings compare</h3>
+                <span className={`shrink-0 text-xl font-extrabold text-[#5C6B6F] transition-transform ${showCompare ? "rotate-180" : ""}`}>
+                  ▾
+                </span>
+              </button>
+              {showCompare && (
+                <>
+                  <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
+                    Purple is your average. The marker is the group's average on the same topics.
+                  </p>
+                  {RATING_DOMAINS.map((d) => (
+                    <div key={d.key} className="mt-3">
+                      <div className="flex justify-between text-[12.5px] font-semibold">
+                        <span>{d.name}</span>
+                        <span className="font-mono">
+                          {myPer[d.key].toFixed(2)} <span className="text-[#5C6B6F]">/ {coPer[d.key].toFixed(2)}</span>
+                        </span>
+                      </div>
+                      <div className="relative mt-1.5 h-2 rounded-full bg-[#EAEFEE]">
+                        <div className="h-full overflow-hidden rounded-full">
+                          <div className="h-full rounded-full bg-[#5E3F73]" style={{ width: `${(myPer[d.key] / 5) * 100}%` }} />
+                        </div>
+                        <div
+                          className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0E1A1C] shadow"
+                          style={{ left: `${(coPer[d.key] / 5) * 100}%` }}
+                        />
+                      </div>
                     </div>
-                    <div
-                      className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0E1A1C] shadow"
-                      style={{ left: `${(coPer[d.key] / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+                  ))}
+                </>
+              )}
             </div>
 
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">Topics you rated</h3>
-              {mine.map((r) => {
+              <button onClick={() => setShowRated((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
+                <h3 className="font-bold text-[#0E1A1C]">Topics you rated</h3>
+                <span className={`shrink-0 text-xl font-extrabold text-[#5C6B6F] transition-transform ${showRated ? "rotate-180" : ""}`}>
+                  ▾
+                </span>
+              </button>
+              {showRated &&
+              mine.map((r) => {
                 const m = myMean(r);
                 const sc = scoreTopic(r.ratings);
                 return (

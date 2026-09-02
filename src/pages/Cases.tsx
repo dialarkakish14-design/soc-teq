@@ -117,7 +117,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
             Diversity database
           </div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Topics covered in SoC</h1>
-          <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has actually been taught in.</p>
+          <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has been taught in.</p>
         </div>
         <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
           SoC-TEQ
@@ -133,7 +133,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
           <>
             <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[#0E1A1C]">Tone coverage</h3>
+                <h3 className="font-bold text-[#0E1A1C]">Fitzpatrick coverage</h3>
                 <span
                   className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
                     thin.length ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#DCEFEB] text-[#064B45]"
