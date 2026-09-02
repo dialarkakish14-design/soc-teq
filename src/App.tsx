@@ -8,6 +8,8 @@ import { Login } from "./pages/Login";
 import { ResetPassword } from "./pages/ResetPassword";
 import { Today } from "./pages/Today";
 import { Summary } from "./pages/Summary";
+import { Cases } from "./pages/Cases";
+import { TrackMyInfo } from "./pages/TrackMyInfo";
 import { FinishSignUp } from "./pages/FinishSignUp";
 import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
@@ -71,6 +73,16 @@ function App() {
         </div>
         <div style={{ display: navScreen === "summary" ? "contents" : "none" }}>
           <Summary resident={resident} onAbout={() => setInfoOverlay("mission")} />
+        </div>
+        <div style={{ display: navScreen === "cases" ? "contents" : "none" }}>
+          <Cases resident={resident} onAbout={() => setInfoOverlay("mission")} />
+        </div>
+        <div style={{ display: navScreen === "me" ? "contents" : "none" }}>
+          <TrackMyInfo
+            resident={resident}
+            onAbout={() => setInfoOverlay("mission")}
+            onLogout={() => supabase.auth.signOut()}
+          />
         </div>
         <BottomNav active={navScreen} onChange={setNavScreen} />
         {infoOverlay && (
