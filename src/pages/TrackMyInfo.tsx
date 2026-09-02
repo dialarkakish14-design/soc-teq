@@ -239,7 +239,7 @@ export function TrackMyInfo({
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
               <h3 className="font-bold text-[#0E1A1C]">How your ratings compare</h3>
               <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
-                Purple is your average. The marker is the cohort average on the same topics.
+                Purple is your average. The marker is the group's average on the same topics.
               </p>
               {RATING_DOMAINS.map((d) => (
                 <div key={d.key} className="mt-3">
