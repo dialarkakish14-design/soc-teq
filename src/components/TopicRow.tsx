@@ -1,5 +1,5 @@
 import { isBelowThreshold, scoreTopic } from "../lib/domain";
-import type { Absence, Rating } from "../types";
+import type { Absence, Rating, SkinType } from "../types";
 import { Pill } from "./Pill";
 
 export interface RowTopic {
@@ -8,6 +8,7 @@ export interface RowTopic {
   soc_covered: boolean;
   image_soc: boolean | null;
   discussed_soc: boolean | null;
+  skin_type?: SkinType | null;
   ratings: Rating[];
   absences: Absence[];
 }
@@ -16,10 +17,12 @@ export function TopicRow({
   topic,
   residentId,
   onOpen,
+  showSkinType,
 }: {
   topic: RowTopic;
   residentId: string;
   onOpen: () => void;
+  showSkinType?: boolean;
 }) {
   const mine = topic.ratings.find((r) => r.resident_id === residentId);
   const mineAbsent = topic.absences.find((a) => a.resident_id === residentId);
@@ -50,6 +53,11 @@ export function TopicRow({
         <div className="flex items-center gap-1.5">
           <div className="text-[14.5px] font-bold text-[#0E1A1C]">{topic.title}</div>
           {hasNotes && <NoteIcon />}
+          {showSkinType && topic.soc_covered && topic.skin_type && (
+            <span className="whitespace-nowrap rounded-md bg-[#DCEFEB] px-1.5 py-0.5 font-mono text-[9.5px] font-bold text-[#064B45]">
+              {topic.skin_type === "Mixed across IV–VI" ? "IV–VI" : topic.skin_type.replace("Fitzpatrick ", "")}
+            </span>
+          )}
         </div>
         <div className="mt-0.5 text-[11.5px] text-[#5C6B6F]">{meta}</div>
       </div>

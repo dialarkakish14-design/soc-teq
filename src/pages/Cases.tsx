@@ -1,10 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
-import type { Rating, Resident, SessionType, SkinType } from "../types";
+import { FITZPATRICK_TONES, type Rating, type Resident, type SessionType, type SkinType } from "../types";
 import { TopicDetail } from "../components/TopicDetail";
 
-const TONES: SkinType[] = ["Fitzpatrick IV", "Fitzpatrick V", "Fitzpatrick VI"];
+const TONES = FITZPATRICK_TONES;
 
 interface CaseTopic {
   id: string;

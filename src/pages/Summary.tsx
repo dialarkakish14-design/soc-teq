@@ -18,7 +18,7 @@ import {
   type TopicEntry,
 } from "../lib/domain";
 import { SESSION_TYPE_COLOR, RM_DEFINITION } from "../lib/content";
-import { THRESHOLD, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
+import { FITZPATRICK_TONES, THRESHOLD, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
 import { RateModal } from "../components/RateModal";
@@ -315,12 +315,60 @@ function DayTab({
         const sessions = [...sessMap.entries()]
           .map(([sid, s]) => ({ sid, type: s.type, topics: s.topics.filter(matchesFilter) }))
           .filter((s) => s.topics.length > 0);
+
+        const sessionTypeCounts = new Map<SessionType, number>();
+        for (const s of sessMap.values()) {
+          sessionTypeCounts.set(s.type, (sessionTypeCounts.get(s.type) ?? 0) + 1);
+        }
+        const toneCounts: Record<string, number> = Object.fromEntries(FITZPATRICK_TONES.map((t) => [t, 0]));
+        for (const t of covered) {
+          if (!t.skin_type) continue;
+          if (t.skin_type === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((tone) => toneCounts[tone]++);
+          else if (t.skin_type in toneCounts) toneCounts[t.skin_type]++;
+        }
+
         return (
           <div key={date}>
             <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
+              {date === todayLocalDate() ? "Today, " : ""}
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
               {isDayOpen(date) ? " · open" : ""}
             </div>
+
+            <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
+              <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                {[...sessionTypeCounts.entries()].map(([type, count]) => (
+                  <span
+                    key={type}
+                    className="flex items-center gap-1.5 rounded-lg bg-[#F5F8F7] px-2.5 py-1.5 text-[12px] font-semibold text-[#2E3A3D]"
+                  >
+                    <SessionDot type={type} />
+                    {count} {type}
+                    {count === 1 ? "" : "s"}
+                  </span>
+                ))}
+              </div>
+              <div className="mt-3 border-t border-[#E2EAE9] pt-3">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+                  Fitzpatrick tones shown
+                </div>
+                <div className="mt-2 flex gap-1.5">
+                  {FITZPATRICK_TONES.map((t) => (
+                    <span
+                      key={t}
+                      className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold ${
+                        toneCounts[t] ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
+                      }`}
+                    >
+                      {t.replace("Fitzpatrick ", "")}
+                      {toneCounts[t] ? ` · ${toneCounts[t]}` : ""}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            </div>
+
             {sessions.length === 0 ? (
               <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
                 Nothing matches this filter on this day.
@@ -350,7 +398,7 @@ function DayTab({
                       </button>
                       {isOpen &&
                         s.topics.map((t) => (
-                          <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} />
+                          <TopicRow key={t.id} topic={t} residentId={residentId} onOpen={() => onOpenTopic(t)} showSkinType />
                         ))}
                     </div>
                   );

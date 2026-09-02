@@ -67,6 +67,10 @@ export const SKIN_TYPES = [
 ] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
+// The three tones tracked for coverage purposes — "Mixed across IV–VI" counts
+// toward all three, "Not specified" toward none.
+export const FITZPATRICK_TONES: SkinType[] = ["Fitzpatrick IV", "Fitzpatrick V", "Fitzpatrick VI"];
+
 export interface Topic {
   id: string;
   session_id: string;
