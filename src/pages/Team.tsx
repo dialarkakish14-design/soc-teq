@@ -150,20 +150,10 @@ export function Team({ resident, onAbout }: { resident: Resident; onAbout: () =>
         <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-[#0E1A1C]">Program profile</h3>
-            {isLead ? (
-              !editing && (
-                <button onClick={() => setEditing(true)} className="text-xs font-bold text-[#0E7C72]">
-                  {profileFilled ? "Edit" : "Complete"}
-                </button>
-              )
-            ) : (
-              <span
-                className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  profileFilled ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#8A999D]"
-                }`}
-              >
-                {profileFilled ? "Set" : "Not yet set"}
-              </span>
+            {isLead && !editing && (
+              <button onClick={() => setEditing(true)} className="text-xs font-bold text-[#0E7C72]">
+                {profileFilled ? "Edit" : "Complete"}
+              </button>
             )}
           </div>
 
