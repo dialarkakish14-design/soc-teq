@@ -14,6 +14,11 @@ export const SESSION_TYPE_COLOR: Record<string, string> = {
   "Clinic inpatient": "#93393E",
   "Journal club": "#2B5F8A",
   "Tumor board": "#6B5B95",
+  "Surgical dermatology": "#3E5C76",
+  Dermatopathology: "#7A3B69",
+  "Pediatric dermatology": "#B5652E",
+  "Specialty clinics": "#5C7A4A",
+  Conferences: "#8A7F3D",
 };
 
 export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";

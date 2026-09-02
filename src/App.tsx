@@ -10,6 +10,7 @@ import { Today } from "./pages/Today";
 import { Summary } from "./pages/Summary";
 import { Cases } from "./pages/Cases";
 import { TrackMyInfo } from "./pages/TrackMyInfo";
+import { Team } from "./pages/Team";
 import { FinishSignUp } from "./pages/FinishSignUp";
 import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
@@ -83,6 +84,9 @@ function App() {
             onAbout={() => setInfoOverlay("mission")}
             onLogout={() => supabase.auth.signOut()}
           />
+        </div>
+        <div style={{ display: navScreen === "team" ? "contents" : "none" }}>
+          <Team resident={resident} onAbout={() => setInfoOverlay("mission")} />
         </div>
         <BottomNav active={navScreen} onChange={setNavScreen} />
         {infoOverlay && (

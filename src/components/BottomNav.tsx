@@ -1,10 +1,11 @@
-export type NavScreen = "today" | "summary" | "cases" | "me";
+export type NavScreen = "today" | "summary" | "cases" | "me" | "team";
 
 const TABS: { id: NavScreen; label: string }[] = [
   { id: "today", label: "Today" },
   { id: "summary", label: "Summary" },
   { id: "cases", label: "Cases" },
   { id: "me", label: "My info" },
+  { id: "team", label: "Team" },
 ];
 
 export function BottomNav({ active, onChange }: { active: NavScreen; onChange: (s: NavScreen) => void }) {

@@ -17,6 +17,17 @@ export interface ProgramPublic {
   name: string;
 }
 
+export interface MyProgram {
+  id: string;
+  name: string;
+  profile_complete: boolean;
+  setting: string | null;
+  patient_mix: string | null;
+  existing_curriculum: string | null;
+  image_resources: string | null;
+  profile_updated_at: string | null;
+}
+
 export interface Day {
   id: string;
   program_id: string;
@@ -33,6 +44,11 @@ export const SESSION_TYPES = [
   "Clinic inpatient",
   "Journal club",
   "Tumor board",
+  "Surgical dermatology",
+  "Dermatopathology",
+  "Pediatric dermatology",
+  "Specialty clinics",
+  "Conferences",
 ] as const;
 export type SessionType = (typeof SESSION_TYPES)[number];
 
