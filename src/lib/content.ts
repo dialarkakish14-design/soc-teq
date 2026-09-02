@@ -18,6 +18,9 @@ export const SESSION_TYPE_COLOR: Record<string, string> = {
 
 export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";
 
+export const RM_DEFINITION =
+  "RM — Representational Mean. A topic's overall score: the mean of the five rating items (depth, visual clarity, nuance, management, confidence), each averaged across everyone who rated it. Below 3.5 flags it as a priority educational need.";
+
 export type MissionTone = "teal" | "rose" | "plum" | "amber" | "sage";
 
 export interface MissionCard {

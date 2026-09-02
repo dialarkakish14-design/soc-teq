@@ -15,7 +15,7 @@ import {
   todayLocalDate,
   type TopicEntry,
 } from "../lib/domain";
-import { SESSION_TYPE_COLOR } from "../lib/content";
+import { SESSION_TYPE_COLOR, RM_DEFINITION } from "../lib/content";
 import { THRESHOLD, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
@@ -393,6 +393,7 @@ function PeriodContent({
   const response = responseRecord(entries, cohortSize);
   const perItem = itemAverages(entries);
   const brief = period === "month" ? monthlyBrief(entries) : null;
+  const [showRmInfo, setShowRmInfo] = useState(false);
 
   return (
     <>
@@ -400,12 +401,23 @@ function PeriodContent({
         <div className="flex text-center">
           <Stat n={stats.visualCount} label="Visually relevant topics" />
           <Stat n={`${stats.exposurePct}%`} label="Teaching exposure" />
-          <Stat
-            n={stats.avgScore ? stats.avgScore.toFixed(2) : "—"}
-            label="Mean RM"
-            tone={stats.avgScore != null && stats.avgScore < THRESHOLD ? "amber" : "teal"}
-          />
+          <div className="flex-1">
+            <h2 className={`text-2xl font-extrabold ${stats.avgScore != null && stats.avgScore < THRESHOLD ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>
+              {stats.avgScore ? stats.avgScore.toFixed(2) : "—"}
+            </h2>
+            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#8A999D]">
+              Mean RM
+              <span className={`flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-bold ${showRmInfo ? "bg-[#0E7C72] text-white" : "bg-[#DCEFEB] text-[#064B45]"}`}>
+                i
+              </span>
+            </button>
+          </div>
         </div>
+        {showRmInfo && (
+          <div className="mt-3 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#2E3A3D]">
+            {RM_DEFINITION}
+          </div>
+        )}
         <p className="mt-3 text-[12.5px] text-[#2E3A3D]">
           {label} · {stats.coveredCount} of {stats.visualCount} visually relevant topics fully SoC-covered.{" "}
           {stats.gaps.length} flagged below {THRESHOLD}.

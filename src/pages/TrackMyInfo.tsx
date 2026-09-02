@@ -3,6 +3,8 @@ import { supabase } from "../lib/supabase";
 import { formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
 import { RATING_DOMAINS, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicDetail } from "../components/TopicDetail";
+import { InfoTag } from "../components/InfoTag";
+import { RM_DEFINITION } from "../lib/content";
 
 type TopicFull = Topic & {
   ratings: Rating[];
@@ -226,7 +228,7 @@ export function TrackMyInfo({
           <>
             <div className={`mt-3 flex items-center justify-between rounded-2xl px-4 py-3.5 ${isBelowThreshold(myAvg) ? "bg-[#8F5205] text-[#FBF1E1]" : "bg-[#064B45] text-[#DCEEEB]"}`}>
               <div>
-                <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Your mean RM</div>
+                <InfoTag label="Your mean RM" definition={RM_DEFINITION} dark />
                 <div className="mt-0.5 text-[11px] opacity-90">
                   Across {mine.length} topic{mine.length === 1 ? "" : "s"} · cohort mean {teamAvg.toFixed(2)}
                 </div>
@@ -235,7 +237,7 @@ export function TrackMyInfo({
             </div>
 
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">You vs your cohort</h3>
+              <h3 className="font-bold text-[#0E1A1C]">How your ratings compare</h3>
               <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
                 Purple is your average. The marker is the cohort average on the same topics.
               </p>
