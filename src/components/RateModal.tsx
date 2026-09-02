@@ -79,10 +79,14 @@ export function RateModal({
         </div>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
-        <p className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[13.5px] font-semibold leading-relaxed text-[#064B45]">
-          Be as honest as you can here — that's what makes this useful. Your rating is never linked to your name,
-          so there's no need to hold back.
-        </p>
+        <div className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[#064B45]">
+          <p className="text-[14px] font-extrabold leading-snug">Your answers make a difference.</p>
+          <p className="mt-1.5 text-[13px] leading-relaxed">
+            This data is what turns into real change — for you and for your patients. Be as honest and accurate as
+            you can; your rating is never linked to your name. And if you're running on empty, it's okay to step
+            away — stretch, get some water, and come back when you can give it a real answer.
+          </p>
+        </div>
 
         <div className="mt-3 flex flex-col gap-3">
           {RATING_DOMAINS.map((d) => {
