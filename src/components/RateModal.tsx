@@ -17,6 +17,7 @@ export function RateModal({
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showReminder, setShowReminder] = useState(false);
 
   const complete = Object.keys(vals).length === RATING_DOMAINS.length;
   const mean = complete
@@ -80,12 +81,17 @@ export function RateModal({
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
         <div className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[#064B45]">
-          <p className="text-[14px] font-extrabold leading-snug">Your answers make a difference.</p>
-          <p className="mt-1.5 text-[13px] leading-relaxed">
-            This data is what turns into real change — for you and for your patients. Be as honest and accurate as
-            you can; your rating is never linked to your name. And if you're running on empty, it's okay to step
-            away — stretch, get some water, and come back when you can give it a real answer.
-          </p>
+          <button onClick={() => setShowReminder((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
+            <span className="text-[14px] font-extrabold leading-snug">Your answers make a difference.</span>
+            <span className={`shrink-0 text-xs transition-transform ${showReminder ? "rotate-180" : ""}`}>▾</span>
+          </button>
+          {showReminder && (
+            <p className="mt-1.5 text-[13px] leading-relaxed">
+              This data is what turns into real change — for you and for your patients. Be as honest and accurate
+              as you can; your rating is never linked to your name. And if you're running on empty, it's okay to
+              step away — stretch, get some water, and come back when you can give it a real answer.
+            </p>
+          )}
         </div>
 
         <div className="mt-3 flex flex-col gap-3">
