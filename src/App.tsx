@@ -57,23 +57,31 @@ function App() {
   }
 
   if (session && resident) {
-    if (infoOverlay === "mission") {
-      return <Mission onBack={() => setInfoOverlay(null)} onHow={() => setInfoOverlay("how")} />;
-    }
-    if (infoOverlay === "how") {
-      return <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />;
-    }
+    // Today and Summary stay mounted permanently once logged in — switching
+    // tabs just toggles visibility instead of unmounting/remounting, so it
+    // doesn't retrigger each screen's full loading state on every tap.
     return (
       <>
-        {navScreen === "today" && (
+        <div style={{ display: navScreen === "today" ? "contents" : "none" }}>
           <Today
             resident={resident}
             onLogout={() => supabase.auth.signOut()}
             onAbout={() => setInfoOverlay("mission")}
           />
-        )}
-        {navScreen === "summary" && <Summary resident={resident} onAbout={() => setInfoOverlay("mission")} />}
+        </div>
+        <div style={{ display: navScreen === "summary" ? "contents" : "none" }}>
+          <Summary resident={resident} onAbout={() => setInfoOverlay("mission")} />
+        </div>
         <BottomNav active={navScreen} onChange={setNavScreen} />
+        {infoOverlay && (
+          <div className="fixed inset-0 z-40 overflow-y-auto bg-[#F2F6F5]">
+            {infoOverlay === "mission" ? (
+              <Mission onBack={() => setInfoOverlay(null)} onHow={() => setInfoOverlay("how")} />
+            ) : (
+              <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />
+            )}
+          </div>
+        )}
       </>
     );
   }

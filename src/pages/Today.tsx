@@ -107,16 +107,20 @@ export function Today({
     if (!day) return;
     const { error } = await supabase.from("days").update({ logger_id: resident.id }).eq("id", day.id);
     if (error) return flash(error.message);
+    // Updates locally instead of refetching — we already know the result,
+    // so there's no reason to wait on a round trip to show it.
+    setDay({ ...day, logger_id: resident.id });
+    setLogger(resident);
     flash("You're the logger for this day.");
-    await load();
   }
 
   async function releaseLogger() {
     if (!day) return;
     const { error } = await supabase.from("days").update({ logger_id: null }).eq("id", day.id);
     if (error) return flash(error.message);
+    setDay({ ...day, logger_id: null });
+    setLogger(null);
     flash("Released — anyone else can claim it. Nothing you've logged is affected.");
-    await load();
   }
 
   async function capture() {
@@ -126,6 +130,7 @@ export function Today({
     setBusy(true);
 
     let session = sessions.find((s) => s.type === newSessionType);
+    let isNewSession = false;
     if (!session) {
       const { data: newSession, error: sessionError } = await supabase
         .from("sessions")
@@ -137,19 +142,29 @@ export function Today({
         return flash(sessionError.message);
       }
       session = { ...(newSession as Session), topics: [] };
+      isNewSession = true;
     }
 
-    const { error: topicError } = await supabase.from("topics").insert({
-      session_id: session.id,
-      title,
-      incomplete: true,
-    });
+    const { data: newTopic, error: topicError } = await supabase
+      .from("topics")
+      .insert({ session_id: session.id, title, incomplete: true })
+      .select("*")
+      .single();
     setBusy(false);
     if (topicError) return flash(topicError.message);
 
+    // Appends the new row locally instead of refetching everything — same
+    // reasoning as claim/release above.
+    const captured: TopicWithRatings = { ...(newTopic as Topic), ratings: [], absences: [] };
+    const finishedSession = session;
+    setSessions((prev) =>
+      isNewSession
+        ? [...prev, { ...finishedSession, topics: [captured] }]
+        : prev.map((s) => (s.id === finishedSession.id ? { ...s, topics: [...s.topics, captured] } : s)),
+    );
+
     setQuickTitle("");
     flash("Captured. Finish the coverage questions after the session.");
-    await load();
   }
 
   const iAmLogger = day?.logger_id === resident.id;
