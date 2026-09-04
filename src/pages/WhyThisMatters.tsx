@@ -36,8 +36,8 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
           The evidence behind SoC-TEQ
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
-          Every number below is from published research on skin of color education and care — not
-          opinion. Tap a card to read more.
+          Every number below comes from published research on skin of color education and care.
+          Tap a card to read more.
         </p>
 
         <div className="mt-3 flex flex-col gap-3.5">

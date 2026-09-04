@@ -28,7 +28,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
         </h1>
 
         <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
-          Every day — in your didactics, lectures, grand rounds and clinics — the topics you're
+          Every day, across your didactics, lectures, grand rounds and clinics, the topics you're
           taught get registered here, along with whether each one covered skin of color, meaning
           Fitzpatrick IV–VI.
         </p>
@@ -40,9 +40,10 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
             One resident is the logger for the day. For each topic they answer whether it's visually
-            relevant, and whether it meets both criteria to count as skin of color covered — an image
-            of Fitzpatrick IV–VI, and explicit discussion of skin of color. The cohort talks these
-            through together and the logger records the answer.
+            relevant, and whether it meets both criteria to count as skin of color covered:{" "}
+            <strong className="font-bold">an image of Fitzpatrick IV–VI</strong> and{" "}
+            <strong className="font-bold">explicit discussion of skin of color</strong>. The team
+            talks these through together and the logger records the answer.
           </p>
         </div>
         <div className="mt-3 rounded-2xl bg-[#EEE7F3] p-4">
@@ -51,7 +52,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
             If both criteria are yes, the topic opens for every resident who was there to rate on the
-            five items. Those five ratings are averaged across the cohort, and topics falling below
+            five items. Those five ratings are averaged across the team, and topics falling below
             3.5 become the priority list for the next remediation cycle.
           </p>
         </div>

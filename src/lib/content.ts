@@ -48,42 +48,42 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "Why SoC-TEQ?",
     title: "Addressing the gap",
     subtitle: "",
-    body: "63% of dermatology residents get some skin of color teaching. Only 11% get a dedicated rotation. By 2050, over half the US population will have skin of color. Closing that gap is what makes diagnosis accurate for every patient.",
+    body: "Skin of color representation is missing from dermatology training long before residency starts, and it's rarely corrected once you get there. Barely half of chief residents recall ever getting a formal lecture on it, and the downstream effect is real: patients with skin of color get diagnosed later and treated less. Closing that gap in training is what makes diagnosis accurate for every patient.",
     tone: "rose",
   },
   {
     eyebrow: "Your impact",
     title: "Resident-led change",
     subtitle: "",
-    body: "Curricular change moves fastest when resident perspectives sit at the centre. Change needs capability, opportunity and motivation. You aren't only a learner here — you're an active peer-educator.",
+    body: "Curricular change moves fastest when resident perspectives sit at the centre. Change needs capability, opportunity and motivation. You aren't only a learner here, you're helping shape what gets taught next.",
     tone: "plum",
   },
   {
     eyebrow: "The six-month loop",
     title: "Our data process",
     subtitle: "",
-    body: "Months 1–3 you log. At the end of month 3, topics averaging below 3.5 are flagged and a baseline assessment is taken. Months 4–6 those gaps trigger resident-led remediation. The three-month gap before retesting avoids recall bias, so what's measured is retention rather than transient confidence.",
+    body: "Months 1–3 you log. At the end of month 3, topics averaging below 3.5 are flagged and a baseline assessment is taken. Months 4–6 those gaps trigger resident-led remediation. Waiting three months before retesting is deliberate: feeling confident right after a session doesn't always mean it stuck, so what gets measured is what's actually retained, not what's still fresh in memory.",
     tone: "amber",
   },
   {
     eyebrow: "Clinical excellence",
     title: "High-quality training",
     subtitle: "",
-    body: "We evaluate morphologic nuance, pitfalls and skin of color management, then re-test after three months to check the learning held.",
+    body: "We evaluate morphology, distribution and pattern recognition, alongside diagnostic pitfalls and skin of color management, then re-test after three months to check the learning actually held.",
     tone: "sage",
   },
   {
     eyebrow: "Your safe space",
     title: "Privacy and trust",
     subtitle: "",
-    body: "No patient-identifying information is ever registered or stored.",
+    body: "No patient-identifying information is ever registered or stored. In every export and every rating, residents appear as Resident A, B, C, never by name. Your password is never visible to us either; sign-in is handled entirely by Supabase's own encrypted authentication.",
     tone: "teal",
   },
   {
     eyebrow: "Master milestones",
     title: "Your career wins",
     subtitle: "",
-    body: "SoC-TEQ activity maps directly onto ACGME core competencies, and counts toward patient care and practice-based learning requirements.",
+    body: "SoC-TEQ activity lines up with ACGME's core competencies. Patient care and practice-based learning happen every time you log and rate a topic, though whether it formally counts toward your program's requirements is your program director's call.",
     tone: "plum",
   },
 ];
@@ -91,16 +91,16 @@ export const MISSION_CARDS: MissionCard[] = [
 export const WHY_CARDS: MissionCard[] = [
   {
     eyebrow: "The gap, in numbers",
-    title: "What residents actually get taught",
+    title: "What residents get taught",
     subtitle: "",
-    body: "63% of dermatology residents get some skin of color teaching. Only 11% get a dedicated rotation. And by 2050, over half the US population will have skin of color. What's in front of you in clinic and what you were trained on don't match.",
+    body: "Only 11% of dermatology residents get a dedicated skin of color rotation, and the textbooks used across residencies are still thin on darker skin tones. Patients notice: many report providers who seem uncomfortable or uninformed about their skin and hair. By 2050, over half the US population will have skin of color. What you're trained to recognize and who's actually walking into your clinic are moving further apart, not closer.",
     tone: "rose",
   },
   {
     eyebrow: "Why this keeps happening",
     title: "It's not a lack of interest",
     subtitle: "",
-    body: "Program directors point to the same two barriers, over and over: no one on faculty with the expertise, and no protected lecture time. It's not that nobody cares — it's that nobody owns it day to day. That's the gap SoC-TEQ was built to fill.",
+    body: "Program directors consistently cite the same two barriers: no faculty member with the expertise to teach it, and no protected time in the schedule to add it. The interest is there; what's missing is ownership on a day-to-day basis. That's the specific gap SoC-TEQ was built to fill.",
     tone: "amber",
   },
   {
@@ -129,23 +129,23 @@ export const WHY_CARDS: MissionCard[] = [
 export const HOWTO_STEPS: { title: string; body: string }[] = [
   {
     title: "Someone claims the logger, once a day",
-    body: "Whoever gets there first — it takes one tap. Having a single logger means the cohort never ends up with a conflicting yes and no on the same session.",
+    body: "Whoever opens the app and claims it, that's it. One tap, and having a single logger means the team never ends up with a conflicting yes and no on the same session.",
   },
   {
     title: "Capture topics in the room",
-    body: "The logger types just the topic name during the session — five seconds, one field. A notebook works just as well: jot the keywords as you go and finish in the app afterwards, while it's fresh.",
+    body: "The logger types just the topic name during the session, one field, five seconds. A notebook works just as well: jot the keywords as you go and finish in the app afterwards.",
   },
   {
     title: "Answer the two criteria after the session",
-    body: "Was an image of Fitzpatrick IV–VI shown, and was skin of color explicitly discussed? Both must be true for the topic to count as covered. Talk it through with the residents who were there — the coverage call belongs to the room, and the logger records what you settle on together.",
+    body: "Was an image of Fitzpatrick IV–VI shown, and was skin of color explicitly discussed? Both must be true for the topic to count as covered. Talk it through with the residents who were there: the coverage call belongs to the room, and the logger records what you settle on together.",
   },
   {
     title: "Everyone rates what was covered",
-    body: "Covered topics appear for your cohort to score on the five items: the depth, the images, the diagnostic nuance, the management, and how ready you feel with the condition afterwards. Ratings stay open until 4am the next day.",
+    body: "Covered topics appear for your team to score on the five items: the depth, the images, the diagnostic nuance, the management, and how ready you feel with the condition afterwards. Ratings stay open until 4am the next day.",
   },
   {
     title: "Say so if you weren't there",
-    body: "One tap. An absence is excluded from the average — never counted as a zero, and it never pulls a score down.",
+    body: "One tap. An absence is excluded from the average, never counted as a zero, and it never pulls a score down.",
   },
   {
     title: "Skip non-visual topics",
@@ -157,7 +157,7 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: "Why does this framework only focus on images?",
     answer:
-      "This framework targets a specific diagnostic gap: skin of color images make up only about 4.5% of medical textbooks, which is linked to missed or delayed diagnoses. Measuring whether an image was shown and discussed gives a clear, consistent way to track that gap. Other differences — pathophysiology, epidemiology, treatment response — matter too, but sit outside what this tool measures unless they meet the visual-relevance criteria.",
+      "This framework targets a specific diagnostic gap: dermatology training materials are still thin on skin of color, and that gap is linked to missed or delayed diagnoses. Measuring whether an image was shown and discussed gives a clear, consistent way to track it. Other differences, like pathophysiology, epidemiology, or treatment response, matter too, but sit outside what this tool measures unless they meet the visual-relevance criteria.",
   },
   {
     question: "What about content that's skin-of-color relevant but not visual?",

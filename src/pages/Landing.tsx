@@ -29,7 +29,8 @@ export function Landing({
           through data-driven feedback loops.
         </p>
         <p className="mt-3.5 text-[13px] leading-relaxed text-[#9FCFC7]">
-          This app is a direct translation of the published SoC-TEQ framework.
+          Built on the published SoC-TEQ framework, and taking it further: this app runs the
+          tracking, ratings and remediation loop the paper alone couldn't.
         </p>
 
         <div className="mt-5 grid grid-cols-2 gap-2.5 pb-8">
