@@ -126,9 +126,12 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
           </div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Cohort record</h1>
         </div>
-        <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
-          SoC-TEQ
-        </button>
+        <div className="mt-0.5 text-right">
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+            SoC-TEQ
+          </button>
+        </div>
       </div>
 
       <div className="px-5">
@@ -207,7 +210,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
         />
       )}
       {modal?.kind === "detail" && (
-        <TopicDetail topic={modal.topic} codeById={codeById} onClose={() => setModal(null)} />
+        <TopicDetail topic={modal.topic} codeById={codeById} residentId={resident.id} onClose={() => setModal(null)} />
       )}
     </div>
   );

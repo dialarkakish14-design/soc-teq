@@ -119,9 +119,12 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Topics covered in SoC</h1>
           <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has been taught in.</p>
         </div>
-        <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
-          SoC-TEQ
-        </button>
+        <div className="mt-0.5 text-right">
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+            SoC-TEQ
+          </button>
+        </div>
       </div>
 
       <div className="px-5">
@@ -199,7 +202,9 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
         )}
       </div>
 
-      {selected && <TopicDetail topic={selected} codeById={codeById} onClose={() => setSelected(null)} />}
+      {selected && (
+        <TopicDetail topic={selected} codeById={codeById} residentId={resident.id} onClose={() => setSelected(null)} />
+      )}
     </div>
   );
 }

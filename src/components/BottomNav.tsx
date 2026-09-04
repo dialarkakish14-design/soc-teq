@@ -2,10 +2,10 @@ export type NavScreen = "today" | "summary" | "cases" | "me" | "team" | "faq";
 
 const TABS: { id: NavScreen; label: string }[] = [
   { id: "today", label: "Today" },
-  { id: "summary", label: "Summary" },
   { id: "cases", label: "Cases" },
-  { id: "me", label: "My info" },
+  { id: "summary", label: "Summary" },
   { id: "team", label: "Team" },
+  { id: "me", label: "My profile" },
   { id: "faq", label: "FAQ" },
 ];
 

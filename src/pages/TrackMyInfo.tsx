@@ -196,11 +196,14 @@ export function TrackMyInfo({
     <div className="mx-auto min-h-dvh max-w-md pb-24">
       <div className="flex items-start justify-between px-5 pt-6">
         <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
-          Track my info
+          My profile
         </div>
-        <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
-          SoC-TEQ
-        </button>
+        <div className="text-right">
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+            SoC-TEQ
+          </button>
+        </div>
       </div>
 
       <div className="px-5">
@@ -214,6 +217,16 @@ export function TrackMyInfo({
               {resident.pgy} · @{resident.username} · you appear as <b className="text-[#0E1A1C]">{resident.resident_code}</b> in all
               data
             </div>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
+          <h3 className="font-bold text-[#0E1A1C]">Account</h3>
+          <div className="mt-2.5 flex flex-col gap-2 text-[13px]">
+            <AccountRow label="Username" value={`@${resident.username}`} />
+            <AccountRow label="Email" value={resident.email} />
+            <AccountRow label="Program year" value={resident.pgy} />
+            <AccountRow label="Resident code" value={resident.resident_code} />
           </div>
         </div>
 
@@ -346,7 +359,18 @@ export function TrackMyInfo({
         </button>
       </div>
 
-      {selected && <TopicDetail topic={selected} codeById={codeById} onClose={() => setSelected(null)} />}
+      {selected && (
+        <TopicDetail topic={selected} codeById={codeById} residentId={resident.id} onClose={() => setSelected(null)} />
+      )}
+    </div>
+  );
+}
+
+function AccountRow({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex items-center justify-between border-t border-[#E2EAE9] pt-2 first:border-t-0 first:pt-0">
+      <span className="text-[#5C6B6F]">{label}</span>
+      <span className="font-semibold text-[#0E1A1C]">{value}</span>
     </div>
   );
 }

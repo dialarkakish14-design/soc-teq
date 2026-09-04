@@ -1,22 +1,29 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { SKIN_TYPES, type SkinType, type Topic } from "../types";
+import { SKIN_TYPES, type Rating, type SkinType, type Topic } from "../types";
 
 export function CoverageModal({
   topic,
+  ratings,
   onClose,
   onSaved,
 }: {
   topic: Topic;
+  ratings?: Rating[];
   onClose: () => void;
   onSaved: () => void;
 }) {
-  const [visual, setVisual] = useState<boolean | null>(null);
-  const [image, setImage] = useState<boolean | null>(null);
-  const [discussed, setDiscussed] = useState<boolean | null>(null);
-  const [skinType, setSkinType] = useState<SkinType>("Fitzpatrick IV");
+  // A topic that's already been through coverage once (editing, not first
+  // entry) starts pre-filled with its existing answers instead of blank —
+  // "visually relevant" itself isn't stored, but only visually-relevant
+  // topics ever reach a non-incomplete state, so that's a safe default.
+  const [visual, setVisual] = useState<boolean | null>(topic.incomplete ? null : true);
+  const [image, setImage] = useState<boolean | null>(topic.image_soc);
+  const [discussed, setDiscussed] = useState<boolean | null>(topic.discussed_soc);
+  const [skinType, setSkinType] = useState<SkinType>(topic.skin_type ?? "Fitzpatrick IV");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const isEdit = !topic.incomplete;
 
   const covered = image === true && discussed === true;
 
@@ -64,7 +71,7 @@ export function CoverageModal({
           ‹ Cancel
         </button>
         <div className="mt-2 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
-          Logger only
+          Logger only {isEdit ? "· editing" : ""}
         </div>
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
@@ -72,6 +79,13 @@ export function CoverageModal({
           Before marking coverage, check with the residents in the room that you agree on what was
           shown and discussed.
         </div>
+
+        {isEdit && ratings && ratings.length > 0 && (
+          <div className="mt-3 rounded-2xl bg-[#F8E4E4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#93393E]">
+            {ratings.length} resident{ratings.length === 1 ? " has" : "s have"} already rated this topic. Changing
+            coverage here won't remove those ratings, but may affect whether this topic still counts as covered.
+          </div>
+        )}
 
         <div className="mt-5 text-xs font-bold text-[#0E1A1C]">Is this a visually relevant topic?</div>
         <SegButtons value={visual} onChange={setVisual} />

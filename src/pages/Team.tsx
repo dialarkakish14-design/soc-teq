@@ -148,9 +148,12 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
             Your {resident.pgy} cohort only. Other PGY years keep separate directories and separate data.
           </p>
         </div>
-        <button onClick={onAbout} className="mt-0.5 text-xs font-bold text-[#0E7C72]">
-          SoC-TEQ
-        </button>
+        <div className="mt-0.5 text-right">
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+            SoC-TEQ
+          </button>
+        </div>
       </div>
 
       <div className="px-5">

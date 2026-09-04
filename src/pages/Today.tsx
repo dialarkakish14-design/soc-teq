@@ -36,6 +36,7 @@ export function Today({
   const [newSessionType, setNewSessionType] = useState<string>(SESSION_TYPES[0]);
   const [quickTitle, setQuickTitle] = useState("");
   const [busy, setBusy] = useState(false);
+  const [search, setSearch] = useState("");
 
   function flash(msg: string) {
     setToast(msg);
@@ -211,6 +212,28 @@ export function Today({
     }
   }
 
+  function editTopic(t: TopicWithRatings) {
+    setModal({ kind: "coverage", topic: t });
+  }
+
+  async function deleteTopic(t: TopicWithRatings) {
+    if (!window.confirm(`Delete "${t.title}"? This can't be undone.`)) return;
+    const { error } = await supabase.from("topics").delete().eq("id", t.id);
+    if (error) return flash(error.message);
+    flash("Deleted.");
+    load();
+  }
+
+  const allTopics = sessions.flatMap((s) => s.topics);
+  const needsRating = allTopics.filter(
+    (t) =>
+      !t.incomplete &&
+      t.soc_covered &&
+      open &&
+      !t.ratings.some((r) => r.resident_id === resident.id) &&
+      !t.absences.some((a) => a.resident_id === resident.id),
+  );
+
   if (loading) {
     return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
   }
@@ -227,9 +250,12 @@ export function Today({
           </h1>
         </div>
         <div className="flex flex-col items-end gap-1.5">
-          <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
-            SoC-TEQ
-          </button>
+          <div className="text-right">
+            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+            <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
+              SoC-TEQ
+            </button>
+          </div>
           <button onClick={onLogout} className="text-xs font-bold text-[#5C6B6F]">
             Log out
           </button>
@@ -240,6 +266,30 @@ export function Today({
         <div className="mt-2 text-xs text-[#5C6B6F]">
           You are <b className="text-[#0E1A1C]">{resident.resident_code}</b> · {open ? `open until ${closesAtLabel(date)}` : "closed"}
         </div>
+
+        {needsRating.length > 0 && (
+          <div className="mt-4 rounded-2xl border-2 border-[#93393E] bg-[#F8E4E4] p-4">
+            <div className="font-mono text-[10px] font-extrabold uppercase tracking-widest text-[#93393E]">
+              Needs your rating
+            </div>
+            <p className="mt-1 text-[12.5px] font-semibold text-[#93393E]">
+              {needsRating.length} topic{needsRating.length === 1 ? "" : "s"} today still need{needsRating.length === 1 ? "s" : ""} your
+              rating.
+            </p>
+            <div className="mt-2.5 flex flex-col gap-1.5">
+              {needsRating.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setModal({ kind: "rate", topic: t })}
+                  className="flex items-center justify-between gap-3 rounded-xl bg-white px-3 py-2.5 text-left"
+                >
+                  <span className="text-[13.5px] font-bold text-[#0E1A1C]">{t.title}</span>
+                  <span className="whitespace-nowrap text-xs font-bold text-[#93393E]">Rate ›</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* logger card */}
         <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
@@ -355,31 +405,59 @@ export function Today({
         )}
 
         {/* sessions & topics */}
+        {sessions.length > 0 && (
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search today's topics…"
+            className="input mt-4"
+          />
+        )}
         <div className="mt-4 flex flex-col gap-3">
           {sessions.length === 0 && (
             <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
               Nothing registered for this day yet.
             </div>
           )}
-          {sessions.map((s) => (
-            <div key={s.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
-              <div className="flex items-center justify-between px-4 py-3.5">
-                <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
-                  <span
-                    className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                    style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#5C6B6F" }}
+          {sessions
+            .map((s) => ({
+              ...s,
+              topics: search.trim() ? s.topics.filter((t) => t.title.toLowerCase().includes(search.trim().toLowerCase())) : s.topics,
+            }))
+            .filter((s) => s.topics.length > 0)
+            .map((s) => (
+              <div key={s.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                <div className="flex items-center justify-between px-4 py-3.5">
+                  <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                    <span
+                      className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
+                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#5C6B6F" }}
+                    />
+                    {s.type}
+                  </span>
+                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                    {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
+                  </span>
+                </div>
+                {s.topics.map((t) => (
+                  <TopicRow
+                    key={t.id}
+                    topic={t}
+                    residentId={resident.id}
+                    onOpen={() => openTopic(t)}
+                    onEdit={iAmLogger && open ? () => editTopic(t) : undefined}
+                    onDelete={iAmLogger && open ? () => deleteTopic(t) : undefined}
                   />
-                  {s.type}
-                </span>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
-                  {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
-                </span>
+                ))}
               </div>
-              {s.topics.map((t) => (
-                <TopicRow key={t.id} topic={t} residentId={resident.id} onOpen={() => openTopic(t)} />
-              ))}
-            </div>
-          ))}
+            ))}
+          {sessions.length > 0 &&
+            search.trim() &&
+            sessions.every((s) => !s.topics.some((t) => t.title.toLowerCase().includes(search.trim().toLowerCase()))) && (
+              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+                No topics match "{search.trim()}".
+              </div>
+            )}
         </div>
       </div>
 
@@ -392,6 +470,7 @@ export function Today({
       {modal?.kind === "coverage" && (
         <CoverageModal
           topic={modal.topic}
+          ratings={modal.topic.ratings}
           onClose={() => setModal(null)}
           onSaved={() => {
             setModal(null);
@@ -413,7 +492,7 @@ export function Today({
         />
       )}
       {modal?.kind === "detail" && (
-        <TopicDetail topic={modal.topic} codeById={codeById} onClose={() => setModal(null)} />
+        <TopicDetail topic={modal.topic} codeById={codeById} residentId={resident.id} onClose={() => setModal(null)} />
       )}
     </div>
   );

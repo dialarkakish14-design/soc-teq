@@ -1,7 +1,10 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 import { isBelowThreshold, scoreTopic } from "../lib/domain";
 import type { Rating } from "../types";
 
 export interface DetailTopic {
+  id: string;
   title: string;
   incomplete: boolean;
   soc_covered: boolean;
@@ -13,10 +16,12 @@ export interface DetailTopic {
 export function TopicDetail({
   topic,
   codeById = {},
+  residentId,
   onClose,
 }: {
   topic: DetailTopic;
   codeById?: Record<string, string>;
+  residentId?: string;
   onClose: () => void;
 }) {
   const sc = scoreTopic(topic.ratings);
@@ -92,7 +97,122 @@ export function TopicDetail({
             )}
           </>
         )}
+
+        {residentId && <PrivateNoteCard topicId={topic.id} residentId={residentId} />}
       </div>
+    </div>
+  );
+}
+
+// A note only the writer can ever see — never shown to the rest of the
+// cohort, unlike the rating note above. Saved separately per resident.
+function PrivateNoteCard({ topicId, residentId }: { topicId: string; residentId: string }) {
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from("private_notes")
+      .select("note")
+      .eq("topic_id", topicId)
+      .eq("resident_id", residentId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (!active) return;
+        setSaved(data?.note ?? null);
+        setDraft(data?.note ?? "");
+        setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [topicId, residentId]);
+
+  async function save() {
+    setSaving(true);
+    setError("");
+    const { error: upsertError } = await supabase
+      .from("private_notes")
+      .upsert({ topic_id: topicId, resident_id: residentId, note: draft.trim(), updated_at: new Date().toISOString() }, { onConflict: "topic_id,resident_id" });
+    setSaving(false);
+    if (upsertError) return setError(upsertError.message);
+    setSaved(draft.trim() || null);
+    setEditing(false);
+  }
+
+  async function remove() {
+    setSaving(true);
+    const { error: deleteError } = await supabase.from("private_notes").delete().eq("topic_id", topicId).eq("resident_id", residentId);
+    setSaving(false);
+    if (deleteError) return setError(deleteError.message);
+    setSaved(null);
+    setDraft("");
+    setEditing(false);
+  }
+
+  if (loading) return null;
+
+  return (
+    <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
+      <div className="flex items-center justify-between">
+        <h3 className="font-bold text-[#0E1A1C]">Your private note</h3>
+        <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[9.5px] font-semibold uppercase text-[#5E3F73]">
+          Only you
+        </span>
+      </div>
+      {editing ? (
+        <>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Anything you want to remember — never shown to anyone else."
+            className="input mt-2 min-h-[70px]"
+          />
+          {error && (
+            <div className="mt-2 rounded-xl bg-[#F8E4E4] px-3 py-2 text-xs font-semibold text-[#93393E]">{error}</div>
+          )}
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => {
+                setEditing(false);
+                setDraft(saved ?? "");
+                setError("");
+              }}
+              className="flex-1 rounded-xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#2E3A3D]"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={save}
+              disabled={saving}
+              className="flex-1 rounded-xl bg-[#5E3F73] py-2.5 text-xs font-bold text-white disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Save"}
+            </button>
+          </div>
+        </>
+      ) : saved ? (
+        <>
+          <p className="mt-2 text-[13px] leading-relaxed text-[#2E3A3D]">{saved}</p>
+          <div className="mt-2 flex gap-2">
+            <button onClick={() => setEditing(true)} className="text-xs font-bold text-[#0E7C72]">
+              Edit
+            </button>
+            <button onClick={remove} disabled={saving} className="text-xs font-bold text-[#93393E]">
+              Delete
+            </button>
+          </div>
+        </>
+      ) : (
+        <button onClick={() => setEditing(true)} className="mt-2 text-xs font-bold text-[#0E7C72]">
+          + Add a private note
+        </button>
+      )}
     </div>
   );
 }
