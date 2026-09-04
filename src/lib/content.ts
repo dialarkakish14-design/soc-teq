@@ -152,27 +152,27 @@ export const WHY_AGENCY_CARD = {
 export const HOWTO_STEPS: { title: string; body: string }[] = [
   {
     title: "Someone claims the logger, once a day",
-    body: "Whoever opens the app and claims it, that's it. One tap, and having a single logger means the team never ends up with a conflicting yes and no on the same session.",
+    body: "One resident claims the logger for the day. Having a single logger keeps each session represented consistently and avoids duplicate or conflicting entries.",
   },
   {
     title: "Capture topics in the room",
-    body: "The logger types just the topic name during the session, one field, five seconds. A notebook works just as well: jot the keywords as you go and finish in the app afterwards.",
+    body: "The logger enters the topic name during the session.\n\nIf it's easier, jot down the topics as you go and add them to the app afterwards.",
   },
   {
     title: "Answer the two criteria after the session",
-    body: "Was an image of Fitzpatrick IV–VI shown, and was skin of color explicitly discussed? Both must be true for the topic to count as covered. Talk it through with the residents who were there: the coverage call belongs to the room, and the logger records what you settle on together.",
+    body: "Was a Fitzpatrick IV–VI image shown, and was skin of color explicitly discussed?\n\nBoth criteria must be met for the topic to count as covered.\n\nResidents who attended can discuss the session together, with the logger recording the agreed response.",
   },
   {
     title: "Everyone rates what was covered",
-    body: "Covered topics appear for your team to score on the five items: the depth, the images, the diagnostic nuance, the management, and how ready you feel with the condition afterwards. Ratings stay open until 4am the next day.",
+    body: "Covered topics appear for residents who attended to rate across five areas:\n\n• Depth of teaching\n• Image representation\n• Diagnostic considerations\n• Management\n• Your current confidence with the topic\n\nThe fifth item reflects how confident you feel at that point in your training and serves as a snapshot of your current baseline.\n\nRatings remain open until 4 AM the following day.",
   },
   {
     title: "Say so if you weren't there",
-    body: "One tap. An absence is excluded from the average, never counted as a zero, and it never pulls a score down.",
+    body: "If you didn't attend the session, mark yourself absent.\n\nAbsences are excluded from the average. They are never treated as a score of zero and do not lower the topic's rating.",
   },
   {
     title: "Skip non-visual topics",
-    body: "Biostatistics, health policy, research methods and the like sit outside the framework. No need to register them at all.",
+    body: "Topics without a meaningful visual component, such as biostatistics, health policy, or research methods, fall outside the framework and do not need to be logged.",
   },
 ];
 

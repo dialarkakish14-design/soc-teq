@@ -28,9 +28,9 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
         </h1>
 
         <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
-          Every day, across your didactics, lectures, grand rounds and clinics, the topics you're
-          taught get registered here, along with whether each one covered skin of color, meaning
-          Fitzpatrick IV–VI.
+          Across your teaching sessions, grand rounds, and clinics, visually relevant topics can be
+          logged here, along with whether the session included representation of Fitzpatrick IV–VI
+          skin and explicit discussion of skin of color.
         </p>
         <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">It happens in two parts.</p>
 
@@ -39,11 +39,8 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
             Part 1 · the logger
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
-            One resident is the logger for the day. For each topic they answer whether it's visually
-            relevant, and whether it meets both criteria to count as skin of color covered:{" "}
-            <strong className="font-bold">an image of Fitzpatrick IV–VI</strong> and{" "}
-            <strong className="font-bold">explicit discussion of skin of color</strong>. The team
-            talks these through together and the logger records the answer.
+            One resident logs the day's visually relevant topics and records whether each meets the
+            framework's two coverage criteria.
           </p>
         </div>
         <div className="mt-3 rounded-2xl bg-[#EEE7F3] p-4">
@@ -51,9 +48,8 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
             Part 2 · everyone
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
-            If both criteria are yes, the topic opens for every resident who was there to rate on the
-            five items. Those five ratings are averaged across the team, and topics falling below
-            3.5 become the priority list for the next remediation cycle.
+            When both criteria are met, residents who attended can rate the learning experience
+            across the five SoC-TEQ items.
           </p>
         </div>
 
@@ -79,15 +75,32 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
                     ▾
                   </span>
                 </button>
-                {isOpen && <p className="mt-2 pl-[42px] text-[13px] leading-relaxed text-[#2E3A3D]">{s.body}</p>}
+                {isOpen && (
+                  <p className="mt-2 whitespace-pre-line pl-[42px] text-[13px] leading-relaxed text-[#2E3A3D]">
+                    {s.body}
+                  </p>
+                )}
               </div>
             );
           })}
         </div>
 
-        <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
-          The app records topics, never instructors. Nothing you log identifies who taught the
-          session.
+        <div className="mt-5 rounded-2xl bg-[#EAEFEE] p-4">
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
+            What happens next
+          </div>
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
+            The five ratings are averaged across the team. Topics averaging below 3.5 are identified
+            for focused follow-up during the next learning cycle.
+          </p>
+        </div>
+
+        <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] leading-relaxed text-[#8F5205]">
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-widest">Privacy note</div>
+          <p className="mt-1 font-semibold">
+            SoC-TEQ records topics, not instructors. Nothing you log identifies who taught the
+            session.
+          </p>
         </div>
 
         <button
