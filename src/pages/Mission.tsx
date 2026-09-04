@@ -63,7 +63,7 @@ export function Mission({
                   </span>
                 </button>
                 {isOpen && (
-                  <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>
+                  <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#16211F]">{c.body}</p>
                 )}
               </div>
             );

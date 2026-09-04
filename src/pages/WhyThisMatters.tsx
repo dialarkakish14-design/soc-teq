@@ -35,7 +35,7 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
         <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-[#0E1A1C]">
           The evidence behind SoC-TEQ
         </h1>
-        <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#2E3A3D]">{WHY_INTRO}</p>
+        <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#16211F]">{WHY_INTRO}</p>
 
         <div className="mt-3 flex flex-col gap-3.5">
           {WHY_CARDS.map((c, i) => {
@@ -60,7 +60,7 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
                   </span>
                 </button>
                 {isOpen && (
-                  <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>
+                  <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#16211F]">{c.body}</p>
                 )}
               </div>
             );
@@ -73,7 +73,7 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
         >
           <div className="font-mono text-[11px] font-semibold text-[#9FCFC7]">{WHY_AGENCY_CARD.eyebrow}</div>
           <h2 className="mt-1.5 text-[21px] font-bold leading-tight tracking-tight">{WHY_AGENCY_CARD.title}</h2>
-          <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#DCEEEB]">
+          <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-[#DCEEEB]">
             {WHY_AGENCY_CARD.body}
           </p>
         </div>

@@ -27,18 +27,18 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
           How to use SoC-TEQ
         </h1>
 
-        <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
+        <p className="mt-3 text-[14px] leading-relaxed text-[#16211F]">
           Across your teaching sessions, grand rounds, and clinics, visually relevant topics can be
           logged here, along with whether the session included representation of Fitzpatrick IV–VI
           skin and explicit discussion of skin of color.
         </p>
-        <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">It happens in two parts.</p>
+        <p className="mt-3 text-[14px] leading-relaxed text-[#16211F]">It happens in two parts.</p>
 
         <div className="mt-3 rounded-2xl bg-[#DCEFEB] p-4">
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#064B45]">
             Part 1 · the logger
           </div>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[#16211F]">
             One resident logs the day's visually relevant topics and records whether each meets the
             framework's two coverage criteria.
           </p>
@@ -47,7 +47,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5E3F73]">
             Part 2 · everyone
           </div>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[#16211F]">
             When both criteria are met, residents who attended can rate the learning experience
             across the five SoC-TEQ items.
           </p>
@@ -76,7 +76,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
                   </span>
                 </button>
                 {isOpen && (
-                  <p className="mt-2 whitespace-pre-line pl-[42px] text-[13px] leading-relaxed text-[#2E3A3D]">
+                  <p className="mt-2 whitespace-pre-line pl-[42px] text-[13px] leading-relaxed text-[#16211F]">
                     {s.body}
                   </p>
                 )}
@@ -89,7 +89,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
             What happens next
           </div>
-          <p className="mt-2 text-[13.5px] leading-relaxed text-[#2E3A3D]">
+          <p className="mt-2 text-[13.5px] leading-relaxed text-[#16211F]">
             The five ratings are averaged across the team. Topics averaging below 3.5 are identified
             for focused follow-up during the next learning cycle.
           </p>
