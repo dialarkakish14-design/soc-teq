@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WHY_CARDS } from "../lib/content";
+import { WHY_CARDS, WHY_AGENCY_CARD } from "../lib/content";
 import type { MissionTone } from "../lib/content";
 
 const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
@@ -36,8 +36,7 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
           The evidence behind SoC-TEQ
         </h1>
         <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
-          Every number below comes from published research on skin of color education and care.
-          Tap a card to read more.
+          Sourced from peer-reviewed research on skin of color education and care.
         </p>
 
         <div className="mt-3 flex flex-col gap-3.5">
@@ -62,10 +61,23 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
                     ▾
                   </span>
                 </button>
-                {isOpen && <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>}
+                {isOpen && (
+                  <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#2E3A3D]">{c.body}</p>
+                )}
               </div>
             );
           })}
+        </div>
+
+        <div
+          className="mt-3.5 rounded-[22px] p-[22px] text-white"
+          style={{ background: "linear-gradient(168deg,#12897E 0%,#0A5850 52%,#06322E 100%)" }}
+        >
+          <div className="font-mono text-[11px] font-semibold text-[#9FCFC7]">{WHY_AGENCY_CARD.eyebrow}</div>
+          <h2 className="mt-1.5 text-[21px] font-bold leading-tight tracking-tight">{WHY_AGENCY_CARD.title}</h2>
+          <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#DCEEEB]">
+            {WHY_AGENCY_CARD.body}
+          </p>
         </div>
       </div>
     </div>
