@@ -124,7 +124,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
             Summary · {resident.pgy}
           </div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Cohort record</h1>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Team record</h1>
         </div>
         <div className="mt-0.5 text-right">
           <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
