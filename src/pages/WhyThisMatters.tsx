@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { MISSION_CARDS, type MissionTone } from "../lib/content";
+import { WHY_CARDS } from "../lib/content";
+import type { MissionTone } from "../lib/content";
 
 const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
   teal: { bg: "#DCEFEB", text: "#064B45" },
@@ -9,15 +10,7 @@ const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
   sage: { bg: "#E3EFE5", text: "#3D6B49" },
 };
 
-export function Mission({
-  onBack,
-  onHow,
-  onWhy,
-}: {
-  onBack: () => void;
-  onHow?: () => void;
-  onWhy?: () => void;
-}) {
+export function WhyThisMatters({ onBack }: { onBack: () => void }) {
   const [open, setOpen] = useState<Set<number>>(new Set());
   function toggle(i: number) {
     setOpen((prev) => {
@@ -37,10 +30,18 @@ export function Mission({
       </div>
       <div className="px-4 pb-10 pt-2">
         <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
-          Mission map
+          Why this matters
         </div>
+        <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-[#0E1A1C]">
+          The evidence behind SoC-TEQ
+        </h1>
+        <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
+          Every number below is from published research on skin of color education and care — not
+          opinion. Tap a card to read more.
+        </p>
+
         <div className="mt-3 flex flex-col gap-3.5">
-          {MISSION_CARDS.map((c, i) => {
+          {WHY_CARDS.map((c, i) => {
             const style = TONE_STYLES[c.tone];
             const isOpen = open.has(i);
             return (
@@ -48,15 +49,14 @@ export function Mission({
                 <button onClick={() => toggle(i)} className="flex w-full items-start justify-between gap-3 text-left">
                   <div>
                     <div className="font-mono text-[11px] font-semibold" style={{ color: style.text }}>
-                      {String(i + 1).padStart(2, "0")} / {String(MISSION_CARDS.length).padStart(2, "0")}
+                      {c.eyebrow}
                     </div>
-                    <h2 className="mt-3 text-[24px] font-bold tracking-tight text-[#0E1A1C]">{c.eyebrow}</h2>
-                    <div className="mt-1.5 text-[12.5px] font-bold" style={{ color: style.text }}>
+                    <h2 className="mt-1.5 text-[19px] font-bold leading-tight tracking-tight text-[#0E1A1C]">
                       {c.title}
-                    </div>
+                    </h2>
                   </div>
                   <span
-                    className={`mt-3 shrink-0 text-2xl font-extrabold transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`mt-1 shrink-0 text-2xl font-extrabold transition-transform ${isOpen ? "rotate-180" : ""}`}
                     style={{ color: style.text }}
                   >
                     ▾
@@ -67,22 +67,6 @@ export function Mission({
             );
           })}
         </div>
-        {onWhy && (
-          <button
-            onClick={onWhy}
-            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-[#0E7C72] shadow-sm"
-          >
-            Why this matters <i className="not-italic">›</i>
-          </button>
-        )}
-        {onHow && (
-          <button
-            onClick={onHow}
-            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-[#0E7C72] shadow-sm"
-          >
-            How to use it <i className="not-italic">›</i>
-          </button>
-        )}
       </div>
     </div>
   );

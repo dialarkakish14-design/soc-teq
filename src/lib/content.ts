@@ -48,7 +48,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "Why SoC-TEQ?",
     title: "Addressing the gap",
     subtitle: "",
-    body: "Skin of color images make up only 4.5% of medical texts. Physicians are twice as likely to miss malignant lesions in skin of color. Closing that representation gap is what makes diagnosis accurate for every patient.",
+    body: "63% of dermatology residents get some skin of color teaching. Only 11% get a dedicated rotation. By 2050, over half the US population will have skin of color. Closing that gap is what makes diagnosis accurate for every patient.",
     tone: "rose",
   },
   {
@@ -85,6 +85,44 @@ export const MISSION_CARDS: MissionCard[] = [
     subtitle: "",
     body: "SoC-TEQ activity maps directly onto ACGME core competencies, and counts toward patient care and practice-based learning requirements.",
     tone: "plum",
+  },
+];
+
+export const WHY_CARDS: MissionCard[] = [
+  {
+    eyebrow: "The gap, in numbers",
+    title: "What residents actually get taught",
+    subtitle: "",
+    body: "63% of dermatology residents get some skin of color teaching. Only 11% get a dedicated rotation. And by 2050, over half the US population will have skin of color. What's in front of you in clinic and what you were trained on don't match.",
+    tone: "rose",
+  },
+  {
+    eyebrow: "Why this keeps happening",
+    title: "It's not a lack of interest",
+    subtitle: "",
+    body: "Program directors point to the same two barriers, over and over: no one on faculty with the expertise, and no protected lecture time. It's not that nobody cares — it's that nobody owns it day to day. That's the gap SoC-TEQ was built to fill.",
+    tone: "amber",
+  },
+  {
+    eyebrow: "What patients are dealing with",
+    title: "These aren't rare conditions",
+    subtitle: "",
+    body: "Hidradenitis suppurativa is 2.5x more common, keloids 20x more common, melasma 1.3x more common in patients with skin of color — and they're still under-researched and easy to miss when you haven't seen enough of them.",
+    tone: "plum",
+  },
+  {
+    eyebrow: "What's been tried",
+    title: "Dedicated clinics help — but don't scale",
+    subtitle: "",
+    body: "Skin of color clinics work, and residents who rotate through them say so. But most run on one faculty member's own time, with no funding and no administrative support behind them. A rotation you can't scale isn't a fix. Daily tracking is.",
+    tone: "sage",
+  },
+  {
+    eyebrow: "Where you come in",
+    title: "You don't have to wait to be faculty",
+    subtitle: "",
+    body: "Logging a topic, flagging a gap, rating what you actually saw — that's the intervention. It's small, it happens every day, and it's yours to run.",
+    tone: "teal",
   },
 ];
 

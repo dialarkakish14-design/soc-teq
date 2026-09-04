@@ -5,11 +5,13 @@ export function Landing({
   onLogin,
   onMission,
   onHow,
+  onWhy,
 }: {
   onSignUp: () => void;
   onLogin: () => void;
   onMission: () => void;
   onHow: () => void;
+  onWhy: () => void;
 }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col">
@@ -42,6 +44,12 @@ export function Landing({
             className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
           >
             How to use it <i className="not-italic opacity-65">›</i>
+          </button>
+          <button
+            onClick={onWhy}
+            className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
+          >
+            Why this matters <i className="not-italic opacity-65">›</i>
           </button>
           <a
             href={PAPER_URL}

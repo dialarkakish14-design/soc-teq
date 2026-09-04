@@ -3,6 +3,7 @@ import { useAuth } from "./hooks/useAuth";
 import { Landing } from "./pages/Landing";
 import { Mission } from "./pages/Mission";
 import { HowToUse } from "./pages/HowToUse";
+import { WhyThisMatters } from "./pages/WhyThisMatters";
 import { SignUp } from "./pages/SignUp";
 import { Login } from "./pages/Login";
 import { ResetPassword } from "./pages/ResetPassword";
@@ -17,8 +18,8 @@ import { supabase } from "./lib/supabase";
 import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
 import { BottomNav, type NavScreen } from "./components/BottomNav";
 
-type Screen = "landing" | "signup" | "login" | "mission" | "how";
-type InfoOverlay = "mission" | "how" | null;
+type Screen = "landing" | "signup" | "login" | "mission" | "how" | "why";
+type InfoOverlay = "mission" | "how" | "why" | null;
 
 function App() {
   const { session, resident, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } = useAuth();
@@ -98,9 +99,15 @@ function App() {
         {infoOverlay && (
           <div className="fixed inset-0 z-40 overflow-y-auto bg-[#F2F6F5]">
             {infoOverlay === "mission" ? (
-              <Mission onBack={() => setInfoOverlay(null)} onHow={() => setInfoOverlay("how")} />
-            ) : (
+              <Mission
+                onBack={() => setInfoOverlay(null)}
+                onHow={() => setInfoOverlay("how")}
+                onWhy={() => setInfoOverlay("why")}
+              />
+            ) : infoOverlay === "how" ? (
               <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />
+            ) : (
+              <WhyThisMatters onBack={() => setInfoOverlay("mission")} />
             )}
           </div>
         )}
@@ -115,8 +122,11 @@ function App() {
     return <FinishSignUp email={session.user.email ?? ""} onDone={refreshResident} />;
   }
 
-  if (screen === "mission") return <Mission onBack={() => setScreen("landing")} />;
+  if (screen === "mission") {
+    return <Mission onBack={() => setScreen("landing")} onWhy={() => setScreen("why")} />;
+  }
   if (screen === "how") return <HowToUse onDone={() => setScreen("landing")} onBack={() => setScreen("landing")} />;
+  if (screen === "why") return <WhyThisMatters onBack={() => setScreen("mission")} />;
   if (screen === "signup") {
     return (
       <SignUp
@@ -141,6 +151,7 @@ function App() {
       onLogin={() => setScreen("login")}
       onMission={() => setScreen("mission")}
       onHow={() => setScreen("how")}
+      onWhy={() => setScreen("why")}
     />
   );
 }
