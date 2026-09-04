@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { isBelowThreshold, scoreTopic } from "../lib/domain";
-import type { Rating } from "../types";
+import { RATING_DOMAINS, type Rating } from "../types";
 
 export interface DetailTopic {
   id: string;
@@ -26,6 +26,7 @@ export function TopicDetail({
 }) {
   const sc = scoreTopic(topic.ratings);
   const notes = topic.ratings.filter((r) => r.note?.trim());
+  const mine = residentId ? topic.ratings.find((r) => r.resident_id === residentId) : undefined;
   return (
     <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
       <div className="max-h-[92dvh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-[#F2F6F5] p-5 sm:rounded-3xl">
@@ -83,6 +84,26 @@ export function TopicDetail({
                 </div>
               ))}
             </div>
+            {mine && (
+              <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="font-bold text-[#0E1A1C]">Your rating</h3>
+                <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">What you personally rated this topic.</p>
+                {RATING_DOMAINS.map((d) => (
+                  <div key={d.key} className="mt-2.5">
+                    <div className="flex justify-between text-[12.5px] font-semibold">
+                      <span>{d.name}</span>
+                      <span className="font-mono">{mine[d.key]}</span>
+                    </div>
+                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
+                      <div
+                        className="h-full rounded-full bg-[#5E3F73]"
+                        style={{ width: `${((mine[d.key] as number) / 5) * 100}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
             {notes.length > 0 && (
               <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
                 <h3 className="font-bold text-[#0E1A1C]">Notes</h3>

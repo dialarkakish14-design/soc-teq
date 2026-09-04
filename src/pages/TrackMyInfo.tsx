@@ -255,7 +255,8 @@ export function TrackMyInfo({
               <div>
                 <InfoTag label="Your mean RM" definition={RM_DEFINITION} dark />
                 <div className="mt-0.5 text-[11px] opacity-90">
-                  Across {mine.length} topic{mine.length === 1 ? "" : "s"} · cohort mean {teamAvg.toFixed(2)}
+                  Across the {mine.length} topic{mine.length === 1 ? "" : "s"} you rated · team mean {teamAvg.toFixed(2)} on
+                  those same topics
                 </div>
               </div>
               <div className="font-mono text-3xl font-semibold">{myAvg.toFixed(2)}</div>
@@ -271,7 +272,8 @@ export function TrackMyInfo({
               {showCompare && (
                 <>
                   <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
-                    Purple is your average. The marker is the group's average on the same topics.
+                    Only the topics you've rated. Purple bars are your own score on each item; the black marker is
+                    your team's average on those same topics.
                   </p>
                   {RATING_DOMAINS.map((d) => (
                     <div key={d.key} className="mt-3">
