@@ -67,48 +67,58 @@ export function TopicDetail({
               <div className="font-mono text-3xl font-semibold">{sc.overall.toFixed(2)}</div>
             </div>
             <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">Team item averages</h3>
-              <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Mean of every resident's rating on this topic — not an individual score.</p>
-              {Object.entries(sc.perItem).map(([k, v]) => (
-                <div key={k} className="mt-2.5">
-                  <div className="flex justify-between text-[12.5px] font-semibold">
-                    <span className="capitalize">{k}</span>
-                    <span className="font-mono">{v.toFixed(2)}</span>
-                  </div>
-                  <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
-                    <div
-                      className={`h-full rounded-full ${v < 3.5 ? "bg-[#8F5205]" : "bg-[#0E7C72]"}`}
-                      style={{ width: `${(v / 5) * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-            {mine && (
-              <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-bold text-[#0E1A1C]">Your rating</h3>
+              <div className="flex items-center justify-between">
+                <h3 className="font-bold text-[#0E1A1C]">{mine ? "Your rating vs. team" : "Team item averages"}</h3>
+                {mine && (
                   <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[9.5px] font-semibold uppercase text-[#5E3F73]">
-                    Only you
+                    Only you see this marked
                   </span>
-                </div>
-                <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Your scores on this topic — never shown to other residents.</p>
-                {RATING_DOMAINS.map((d) => (
+                )}
+              </div>
+              <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">
+                {mine
+                  ? "Purple is your score on each item. The black marker is your team's average."
+                  : "Mean of every resident's rating on this topic — not an individual score."}
+              </p>
+              {RATING_DOMAINS.map((d) => {
+                const teamVal = sc.perItem[d.key];
+                const mineVal = mine ? (mine[d.key] as number) : null;
+                return (
                   <div key={d.key} className="mt-2.5">
                     <div className="flex justify-between text-[12.5px] font-semibold">
                       <span>{d.name}</span>
-                      <span className="font-mono">{mine[d.key]}</span>
+                      <span className="font-mono">
+                        {mineVal != null ? (
+                          <>
+                            {mineVal.toFixed(2)} <span className="text-[#5C6B6F]">/ {teamVal.toFixed(2)}</span>
+                          </>
+                        ) : (
+                          teamVal.toFixed(2)
+                        )}
+                      </span>
                     </div>
-                    <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
-                      <div
-                        className="h-full rounded-full bg-[#5E3F73]"
-                        style={{ width: `${((mine[d.key] as number) / 5) * 100}%` }}
-                      />
-                    </div>
+                    {mineVal != null ? (
+                      <div className="relative mt-1.5 h-2 rounded-full bg-[#EAEFEE]">
+                        <div className="h-full overflow-hidden rounded-full">
+                          <div className="h-full rounded-full bg-[#5E3F73]" style={{ width: `${(mineVal / 5) * 100}%` }} />
+                        </div>
+                        <div
+                          className="absolute top-1/2 h-3.5 w-3.5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-[#0E1A1C] shadow"
+                          style={{ left: `${(teamVal / 5) * 100}%` }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-1 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
+                        <div
+                          className={`h-full rounded-full ${teamVal < 3.5 ? "bg-[#8F5205]" : "bg-[#0E7C72]"}`}
+                          style={{ width: `${(teamVal / 5) * 100}%` }}
+                        />
+                      </div>
+                    )}
                   </div>
-                ))}
-              </div>
-            )}
+                );
+              })}
+            </div>
             {notes.length > 0 && (
               <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
                 <h3 className="font-bold text-[#0E1A1C]">Notes</h3>
