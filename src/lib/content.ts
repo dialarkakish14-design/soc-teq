@@ -48,7 +48,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "Why SoC-TEQ?",
     title: "Addressing the gap",
     subtitle: "",
-    body: "Skin of color representation is missing from dermatology training long before residency starts, and it's rarely corrected once you get there. Barely half of chief residents recall ever getting a formal lecture on it, and the downstream effect is real: patients with skin of color get diagnosed later and treated less. Closing that gap in training is what makes diagnosis accurate for every patient.",
+    body: "Skin of color representation has been limited throughout medical education, and residency programs often lack tools to identify or address these gaps. Many residents report limited formal teaching on skin of color, and studies show that differences in clinical presentation across skin tones can affect diagnostic accuracy. Strengthening representation in training helps support equitable, high-quality care for all patients.",
     tone: "rose",
   },
   {
@@ -62,14 +62,14 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "The six-month loop",
     title: "Our data process",
     subtitle: "",
-    body: "Months 1–3 you log. At the end of month 3, topics averaging below 3.5 are flagged and a baseline assessment is taken. Months 4–6 those gaps trigger resident-led remediation. Waiting three months before retesting is deliberate: feeling confident right after a session doesn't always mean it stuck, so what gets measured is what's actually retained, not what's still fresh in memory.",
+    body: "Months 1–3 you log. At the end of month 3, topics averaging below 3.5 are flagged and a baseline assessment is taken. Months 4–6 those gaps trigger resident-led remediation. Waiting three months before retesting is deliberate: feeling confident right after a session doesn't always mean it stuck, so what gets measured is what's actually retained.",
     tone: "amber",
   },
   {
     eyebrow: "Clinical excellence",
     title: "High-quality training",
     subtitle: "",
-    body: "We evaluate morphology, distribution and pattern recognition, alongside diagnostic pitfalls and skin of color management, then re-test after three months to check the learning actually held.",
+    body: "We evaluate morphology, distribution and pattern recognition, alongside diagnostic pitfalls and skin of color management, then re-test after three months to check the learning held.",
     tone: "sage",
   },
   {
@@ -83,7 +83,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "Master milestones",
     title: "Your career wins",
     subtitle: "",
-    body: "SoC-TEQ activity lines up with ACGME's core competencies. Patient care and practice-based learning happen every time you log and rate a topic, though whether it formally counts toward your program's requirements is your program director's call.",
+    body: "SoC-TEQ activity lines up with ACGME's core competencies. Patient care and practice-based learning happen every time you log and rate a topic.",
     tone: "plum",
   },
 ];
