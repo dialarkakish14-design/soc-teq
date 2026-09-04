@@ -41,7 +41,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "The definition",
     title: "Our core framework",
     subtitle: "",
-    body: "A resident-led framework to quantify and improve the quality of skin of color education through data-driven feedback loops.",
+    body: "A resident-led framework to track and strengthen skin of color education through data-informed feedback loops.",
     tone: "teal",
   },
   {

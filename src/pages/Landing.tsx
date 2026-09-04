@@ -25,8 +25,8 @@ export function Landing({
           framework
         </h1>
         <p className="mt-3.5 text-[15px] text-[#C4E4DE]">
-          A resident-led framework to quantify and improve the quality of skin of color education
-          through data-driven feedback loops.
+          A resident-led framework to track and strengthen skin of color education through
+          data-informed feedback loops.
         </p>
         <p className="mt-3.5 text-[13px] leading-relaxed text-[#9FCFC7]">
           Built on the published SoC-TEQ framework.
