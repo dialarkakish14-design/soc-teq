@@ -10,7 +10,7 @@ const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
   sage: { bg: "#E3EFE5", text: "#3D6B49" },
 };
 
-export function WhyThisMatters({ onBack }: { onBack: () => void }) {
+export function WhyThisMatters({ onBack, onHow }: { onBack: () => void; onHow?: () => void }) {
   const [open, setOpen] = useState<Set<number>>(new Set());
   function toggle(i: number) {
     setOpen((prev) => {
@@ -73,10 +73,19 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
         >
           <div className="font-mono text-[11px] font-semibold text-[#9FCFC7]">{WHY_AGENCY_CARD.eyebrow}</div>
           <h2 className="mt-1.5 text-[21px] font-bold leading-tight tracking-tight">{WHY_AGENCY_CARD.title}</h2>
-          <p className="mt-3 whitespace-pre-line text-[15px] leading-relaxed text-[#DCEEEB]">
+          <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#DCEEEB]">
             {WHY_AGENCY_CARD.body}
           </p>
         </div>
+
+        {onHow && (
+          <button
+            onClick={onHow}
+            className="mt-5 flex w-full items-center justify-center gap-2 rounded-2xl bg-white py-4 font-bold text-[#0E7C72] shadow-sm"
+          >
+            How to use it <i className="not-italic">›</i>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -107,7 +107,7 @@ function App() {
             ) : infoOverlay === "how" ? (
               <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />
             ) : (
-              <WhyThisMatters onBack={() => setInfoOverlay("mission")} />
+              <WhyThisMatters onBack={() => setInfoOverlay("mission")} onHow={() => setInfoOverlay("how")} />
             )}
           </div>
         )}
@@ -126,7 +126,9 @@ function App() {
     return <Mission onBack={() => setScreen("landing")} onWhy={() => setScreen("why")} />;
   }
   if (screen === "how") return <HowToUse onDone={() => setScreen("landing")} onBack={() => setScreen("landing")} />;
-  if (screen === "why") return <WhyThisMatters onBack={() => setScreen("mission")} />;
+  if (screen === "why") {
+    return <WhyThisMatters onBack={() => setScreen("mission")} onHow={() => setScreen("how")} />;
+  }
   if (screen === "signup") {
     return (
       <SignUp
