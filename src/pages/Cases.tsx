@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
-import { FITZPATRICK_TONES, type Rating, type Resident, type SessionType, type SkinType } from "../types";
+import { formatDateShort, isBelowThreshold, scoreTopic, type TopicScore } from "../lib/domain";
+import { FITZPATRICK_TONES, SESSION_TYPES, type Rating, type Resident, type SessionType, type SkinType } from "../types";
+import { SESSION_TYPE_COLOR } from "../lib/content";
 import { TopicDetail } from "../components/TopicDetail";
 
 const TONES = FITZPATRICK_TONES;
@@ -19,11 +20,28 @@ interface CaseTopic {
   sessionType: SessionType;
 }
 
+interface ConditionSummary {
+  title: string;
+  instances: CaseTopic[];
+  tones: Set<SkinType>;
+  latest: CaseTopic;
+  score: TopicScore | null;
+}
+
 export function Cases({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [rows, setRows] = useState<CaseTopic[]>([]);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<CaseTopic | null>(null);
+  const [openSessions, setOpenSessions] = useState<Set<SessionType>>(new Set());
+  function toggleSession(t: SessionType) {
+    setOpenSessions((prev) => {
+      const next = new Set(prev);
+      if (next.has(t)) next.delete(t);
+      else next.add(t);
+      return next;
+    });
+  }
 
   const load = useCallback(async () => {
     const [{ data }, { data: cohortRows }] = await Promise.all([
@@ -109,6 +127,29 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
 
   const thin = conditions.filter((c) => c.tones.size < TONES.length);
 
+  // Grouped by where it was taught, not when — Summary's Day tab already
+  // owns "what happened on this specific day," so this stays the all-time
+  // reference organized by session type instead of duplicating that view.
+  const bySession = new Map<SessionType, Map<string, CaseTopic[]>>();
+  for (const r of rows) {
+    if (!bySession.has(r.sessionType)) bySession.set(r.sessionType, new Map());
+    const condMap = bySession.get(r.sessionType)!;
+    const key = titleKey(r.title);
+    if (!condMap.has(key)) condMap.set(key, []);
+    condMap.get(key)!.push(r);
+  }
+  const sessionGroups = SESSION_TYPES.filter((t) => bySession.has(t)).map((type) => {
+    const condMap = bySession.get(type)!;
+    const conds = [...condMap.values()].map((instances) => ({
+      title: instances[0].title,
+      instances,
+      tones: tonesFor(instances),
+      latest: instances[0],
+      score: scoreTopic(instances[0].ratings),
+    }));
+    return { type, conditions: conds };
+  });
+
   return (
     <div className="mx-auto min-h-dvh max-w-md pb-24">
       <div className="flex items-start justify-between px-5 pt-6">
@@ -153,48 +194,38 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
             </div>
 
             <div className="mt-3 flex flex-col gap-3">
-              {conditions.map((c) => {
-                const missing = TONES.filter((t) => !c.tones.has(t));
+              {sessionGroups.map((g) => {
+                const isOpen = openSessions.has(g.type);
                 return (
-                  <button
-                    key={c.title}
-                    onClick={() => setSelected(c.latest)}
-                    className="rounded-3xl bg-white p-4 text-left shadow-sm"
-                  >
-                    <div className="flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-                        <div className="mt-0.5 text-xs text-[#5C6B6F]">
-                          {c.instances.length} session{c.instances.length > 1 ? "s" : ""} · {c.latest.sessionType} ·{" "}
-                          {formatDateShort(c.latest.date)}
-                        </div>
-                      </div>
-                      <span
-                        className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                          c.score && isBelowThreshold(c.score.overall) ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#DCEFEB] text-[#064B45]"
-                        }`}
-                      >
-                        {c.score ? c.score.overall.toFixed(2) : "—"}
-                      </span>
-                    </div>
-                    <div className="mt-2.5 flex gap-1.5">
-                      {TONES.map((t) => (
+                  <div key={g.type} className="overflow-hidden rounded-3xl bg-white shadow-sm">
+                    <button
+                      onClick={() => toggleSession(g.type)}
+                      className="flex w-full items-center justify-between gap-2 px-4 py-3.5"
+                    >
+                      <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
                         <span
-                          key={t}
-                          className={`flex-1 rounded-lg py-1.5 text-center font-mono text-[10.5px] font-semibold ${
-                            c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
-                          }`}
-                        >
-                          {t.replace("Fitzpatrick ", "")}
+                          className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
+                          style={{ background: SESSION_TYPE_COLOR[g.type] ?? "#5C6B6F" }}
+                        />
+                        {g.type}
+                      </span>
+                      <span className="flex items-center gap-2">
+                        <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                          {g.conditions.length} condition{g.conditions.length === 1 ? "" : "s"}
                         </span>
-                      ))}
-                    </div>
-                    {missing.length > 0 && (
-                      <div className="mt-2 text-[11px] text-[#5C6B6F]">
-                        Not yet taught in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
+                        <span className={`text-xl font-extrabold text-[#5C6B6F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                          ▾
+                        </span>
+                      </span>
+                    </button>
+                    {isOpen && (
+                      <div className="flex flex-col gap-3 px-4 pb-4">
+                        {g.conditions.map((c) => (
+                          <ConditionCard key={c.title} c={c} onOpen={() => setSelected(c.latest)} />
+                        ))}
                       </div>
                     )}
-                  </button>
+                  </div>
                 );
               })}
             </div>
@@ -206,5 +237,45 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
         <TopicDetail topic={selected} codeById={codeById} residentId={resident.id} onClose={() => setSelected(null)} />
       )}
     </div>
+  );
+}
+
+function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void }) {
+  const missing = TONES.filter((t) => !c.tones.has(t));
+  return (
+    <button onClick={onOpen} className="rounded-2xl bg-[#F5F8F7] p-4 text-left">
+      <div className="flex items-center justify-between gap-3">
+        <div>
+          <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
+          <div className="mt-0.5 text-xs text-[#5C6B6F]">
+            {c.instances.length} session{c.instances.length > 1 ? "s" : ""} · {formatDateShort(c.latest.date)}
+          </div>
+        </div>
+        <span
+          className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
+            c.score && isBelowThreshold(c.score.overall) ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#DCEFEB] text-[#064B45]"
+          }`}
+        >
+          {c.score ? c.score.overall.toFixed(2) : "—"}
+        </span>
+      </div>
+      <div className="mt-2.5 flex gap-1.5">
+        {TONES.map((t) => (
+          <span
+            key={t}
+            className={`flex-1 rounded-lg py-1.5 text-center font-mono text-[10.5px] font-semibold ${
+              c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
+            }`}
+          >
+            {t.replace("Fitzpatrick ", "")}
+          </span>
+        ))}
+      </div>
+      {missing.length > 0 && (
+        <div className="mt-2 text-[11px] text-[#5C6B6F]">
+          Not yet taught in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
+        </div>
+      )}
+    </button>
   );
 }
