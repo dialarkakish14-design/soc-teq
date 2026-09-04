@@ -88,54 +88,57 @@ export const MISSION_CARDS: MissionCard[] = [
   },
 ];
 
+export const WHY_INTRO =
+  "Dermatology is learned through repeated exposure to patterns, images, cases, and clinical experiences. Research suggests that representation across skin tones remains variable across training, creating an opportunity to better understand what residents encounter over time.\n\nSoC-TEQ was designed to help make those learning experiences easier to see, reflect on, and strengthen.";
+
 export const WHY_CARDS: MissionCard[] = [
   {
     eyebrow: "Dermatology trains the eye",
     title: "What you see shapes what you recognize",
     subtitle: "",
-    body: "Dermatology is built on visual pattern recognition. No residency can expose you to every presentation in clinic, so the images, cases, lectures, and conferences you learn from matter too.\n\nYet representation across skin tones remains limited in commonly used educational materials.\n\nWhat residents repeatedly see becomes familiar. What they rarely see may remain harder to recognize.",
+    body: "Dermatology relies heavily on visual pattern recognition. No residency can expose trainees to every possible presentation in clinic, so the images, cases, lectures, and conferences residents learn from also play an important role.\n\nResearch continues to show limited representation of diverse skin tones in commonly used educational materials.\n\nBroader exposure can help strengthen recognition across a wider range of clinical presentations.",
     tone: "rose",
   },
   {
-    eyebrow: "The exposure gap",
-    title: "A lecture is not longitudinal training",
+    eyebrow: "Exposure across training",
+    title: "A lecture is only one part of the learning experience",
     subtitle: "",
-    body: "In one survey, 63.2% of dermatology residents had access to skin of color didactics, but only 11.2% had a dedicated skin of color rotation.\n\nAnd skin of color education is still often treated as a separate topic instead of being integrated across diseases and throughout residency.\n\nThe question is not only whether SoC was taught. It is where, how often, and across what kinds of learning experiences.",
+    body: "In one survey, 63.2% of dermatology residents had access to skin of color didactics, while 11.2% had a dedicated skin of color rotation.\n\nSkin of color education may also be presented as a distinct topic rather than integrated across diseases and throughout residency.\n\nLooking beyond whether a topic was taught can help us understand where, how often, and in what settings residents encounter it.",
     tone: "amber",
   },
   {
     eyebrow: "Why exposure matters",
-    title: "What is unfamiliar can be missed",
+    title: "Familiarity supports recognition",
     subtitle: "",
-    body: "Differences in clinical presentation can contribute to misdiagnosis and delayed diagnosis in patients with skin of color.\n\nPatients notice the gap too. Studies describe frustration with clinicians who seemed uncomfortable or uninformed about their skin and hair, while greater provider knowledge has been linked with greater patient satisfaction.\n\nRepresentation in training is not just an educational issue. It reaches the exam room.",
+    body: "Differences in clinical presentation can contribute to misdiagnosis and delayed diagnosis in patients with skin of color.\n\nPatients also value clinicians who feel knowledgeable and comfortable caring for their skin and hair. Studies describe greater satisfaction when patients feel their clinicians understand these concerns.\n\nRepresentation in training can support recognition, confidence, and the experience of care.",
     tone: "plum",
   },
   {
-    eyebrow: "This is everyday dermatology",
-    title: "These are not fringe presentations",
+    eyebrow: "This is part of everyday dermatology",
+    title: "Diverse presentations are part of routine care",
     subtitle: "",
-    body: "Hidradenitis suppurativa is reported as 2.5× more common in African American patients, keloids 20× more common, and melasma 1.3× more common in Hispanic patients.\n\nMany conditions disproportionately affecting patients with skin of color also remain underrepresented in research.\n\nAnd by 2050, people with skin of color are projected to make up more than half of the U.S. population.\n\nTraining across skin tones is preparation for the patients dermatologists will actually treat.",
+    body: "Hidradenitis suppurativa is reported as 2.5× more common in African American patients, keloids 20× more common, and melasma 1.3× more common in Hispanic patients.\n\nSeveral conditions affecting patients with skin of color also remain underrepresented in dermatologic research.\n\nBy 2050, people with skin of color are projected to make up more than half of the U.S. population.\n\nTraining across skin tones helps prepare residents for the diversity of patients they will care for.",
     tone: "sage",
   },
   {
-    eyebrow: "What already works",
-    title: "Dedicated clinics help, but they can't be the whole answer",
+    eyebrow: "Dedicated clinics add valuable exposure",
+    title: "One part of a broader learning environment",
     subtitle: "",
-    body: "Dedicated skin of color clinics provide valuable expertise and trainee exposure. But they are not universally available. In one survey, only 26.4% of respondents worked in a dedicated SoC clinic, and most were based in academic centers. These clinics also report barriers including limited institutional support, scheduling, reimbursement, and provider burden.\n\nA dedicated rotation can strengthen training. It cannot tell you what happened during the rest of the year.",
+    body: "Dedicated skin of color clinics provide focused expertise and structured opportunities for trainee learning.\n\nThey are not available in every setting. In one survey, 26.4% of respondents worked in a dedicated skin of color clinic, most within academic centers. These clinics also reported practical challenges related to scheduling, reimbursement, provider time, and institutional support.\n\nDedicated rotations can strengthen training, while year-round learning also takes place across many other settings.",
     tone: "teal",
   },
   {
-    eyebrow: "So why does the gap persist?",
-    title: "The missing piece is often structure",
+    eyebrow: "Supporting consistent learning",
+    title: "Structure can make improvement easier",
     subtitle: "",
-    body: "The literature suggests the problem is not simply lack of interest.\n\nFaculty may agree that skin of color education should be stronger, but what is often missing is time, structure, and a concrete plan. Programs also cite difficulty identifying faculty expertise and finding room within already crowded curricula.\n\nBefore a program can improve exposure, it has to be able to see where exposure is happening, and where it is not.",
+    body: "The literature suggests that interest in strengthening skin of color education is already present.\n\nAt the same time, practical factors such as time, structure, available expertise, and a clear plan can influence how consistently content is incorporated across training.\n\nA clearer view of residents' learning experiences can help programs recognize what is working well and where there may be opportunities to build further.",
     tone: "rose",
   },
   {
     eyebrow: "Where SoC-TEQ comes in",
-    title: "Make the invisible curriculum visible",
+    title: "Turn everyday learning into insight",
     subtitle: "",
-    body: "Residents learn everywhere: clinic, lectures, conferences, slide decks, cases, and conversations. SoC-TEQ gives those scattered encounters a place to become visible over time.\n\nLog what you encountered.\nReflect on the quality of the exposure.\nFlag what was missing.\nShare what was useful.\nSee patterns emerge.\n\nSoC-TEQ does not replace faculty expertise, dedicated clinics, or existing curricula. It helps residents and programs see whether those efforts are actually reaching day-to-day training, and where they are not.",
+    body: "Residents learn across clinic, lectures, conferences, slide decks, cases, and conversations.\n\nSoC-TEQ gives those day-to-day learning experiences a place to become visible over time.\n\nLog what you encountered.\nReflect on the quality of the exposure.\nNote opportunities to build on it.\nShare what was useful.\nSee patterns emerge.\n\nSoC-TEQ does not replace faculty expertise, dedicated clinics, or existing curricula.\n\nIt helps residents and programs better understand how skin of color education is experienced across day-to-day training.",
     tone: "amber",
   },
 ];
@@ -143,7 +146,7 @@ export const WHY_CARDS: MissionCard[] = [
 export const WHY_AGENCY_CARD = {
   eyebrow: "You're part of the curriculum too",
   title: "You don't have to wait to be faculty",
-  body: "Residents are uniquely positioned to notice gaps because they experience the curriculum every day. The literature encourages residents to identify areas where representation could be strengthened, bring diverse cases into conferences, improve representation in teaching materials, and work with faculty toward lasting change.\n\nWith SoC-TEQ, that starts small:\nNotice. Log. Share. Improve.",
+  body: "Residents are uniquely positioned to notice patterns in education because they experience the curriculum every day.\n\nThe literature encourages residents to identify areas where representation could be strengthened, bring diverse cases into conferences, contribute to teaching materials, and work with faculty toward lasting curricular improvement.\n\nWith SoC-TEQ, that can start small:\n\nNotice. Log. Share. Improve.",
 };
 
 export const HOWTO_STEPS: { title: string; body: string }[] = [

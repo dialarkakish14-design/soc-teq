@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { WHY_CARDS, WHY_AGENCY_CARD } from "../lib/content";
+import { WHY_CARDS, WHY_AGENCY_CARD, WHY_INTRO } from "../lib/content";
 import type { MissionTone } from "../lib/content";
 
 const TONE_STYLES: Record<MissionTone, { bg: string; text: string }> = {
@@ -35,9 +35,7 @@ export function WhyThisMatters({ onBack }: { onBack: () => void }) {
         <h1 className="mt-2 text-[28px] font-extrabold leading-tight tracking-tight text-[#0E1A1C]">
           The evidence behind SoC-TEQ
         </h1>
-        <p className="mt-3 text-[14px] leading-relaxed text-[#2E3A3D]">
-          Sourced from peer-reviewed research on skin of color education and care.
-        </p>
+        <p className="mt-3 whitespace-pre-line text-[14px] leading-relaxed text-[#2E3A3D]">{WHY_INTRO}</p>
 
         <div className="mt-3 flex flex-col gap-3.5">
           {WHY_CARDS.map((c, i) => {
