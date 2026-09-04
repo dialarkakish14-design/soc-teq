@@ -216,14 +216,6 @@ export function Today({
     setModal({ kind: "coverage", topic: t });
   }
 
-  async function deleteTopic(t: TopicWithRatings) {
-    if (!window.confirm(`Delete "${t.title}"? This can't be undone.`)) return;
-    const { error } = await supabase.from("topics").delete().eq("id", t.id);
-    if (error) return flash(error.message);
-    flash("Deleted.");
-    load();
-  }
-
   const allTopics = sessions.flatMap((s) => s.topics);
   const needsRating = allTopics.filter(
     (t) =>
@@ -446,7 +438,6 @@ export function Today({
                     residentId={resident.id}
                     onOpen={() => openTopic(t)}
                     onEdit={iAmLogger && open ? () => editTopic(t) : undefined}
-                    onDelete={iAmLogger && open ? () => deleteTopic(t) : undefined}
                   />
                 ))}
               </div>
