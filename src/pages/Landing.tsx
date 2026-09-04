@@ -32,22 +32,22 @@ export function Landing({
           This app is a direct translation of the published SoC-TEQ framework.
         </p>
 
-        <div className="mt-5 flex flex-wrap gap-2.5 pb-8">
+        <div className="mt-5 grid grid-cols-2 gap-2.5 pb-8">
           <button
             onClick={onMission}
-            className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 px-3 py-2.5 text-center text-[13px] font-bold text-[#E4F5F1]"
           >
             What is SoC-TEQ? <i className="not-italic opacity-65">›</i>
           </button>
           <button
             onClick={onHow}
-            className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 px-3 py-2.5 text-center text-[13px] font-bold text-[#E4F5F1]"
           >
             How to use it <i className="not-italic opacity-65">›</i>
           </button>
           <button
             onClick={onWhy}
-            className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 px-3 py-2.5 text-center text-[13px] font-bold text-[#E4F5F1]"
           >
             Why this matters <i className="not-italic opacity-65">›</i>
           </button>
@@ -55,7 +55,7 @@ export function Landing({
             href={PAPER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-2 self-start rounded-full bg-white/15 px-4 py-2.5 text-[13px] font-bold text-[#E4F5F1]"
+            className="flex items-center justify-center gap-1.5 rounded-full bg-white/15 px-3 py-2.5 text-center text-[13px] font-bold text-[#E4F5F1]"
           >
             Read the paper <i className="not-italic opacity-65">↗</i>
           </a>
