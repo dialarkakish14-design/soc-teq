@@ -66,7 +66,8 @@ export function TopicDetail({
               <div className="font-mono text-3xl font-semibold">{sc.overall.toFixed(2)}</div>
             </div>
             <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">Item averages</h3>
+              <h3 className="font-bold text-[#0E1A1C]">Team item averages</h3>
+              <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Mean of every resident's rating on this topic — not an individual score.</p>
               {Object.entries(sc.perItem).map(([k, v]) => (
                 <div key={k} className="mt-2.5">
                   <div className="flex justify-between text-[12.5px] font-semibold">
