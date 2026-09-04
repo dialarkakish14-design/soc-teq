@@ -158,7 +158,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
             Diversity database
           </div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Topics covered in SoC</h1>
-          <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has been taught in.</p>
+          <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has been shown in.</p>
         </div>
         <div className="mt-0.5 text-right">
           <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
@@ -273,7 +273,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
       </div>
       {missing.length > 0 && (
         <div className="mt-2 text-[11px] text-[#5C6B6F]">
-          Not yet taught in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
+          Not yet shown in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
         </div>
       )}
     </button>
