@@ -86,8 +86,13 @@ export function TopicDetail({
             </div>
             {mine && (
               <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="font-bold text-[#0E1A1C]">Your rating</h3>
-                <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">What you personally rated this topic.</p>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-bold text-[#0E1A1C]">Your rating</h3>
+                  <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[9.5px] font-semibold uppercase text-[#5E3F73]">
+                    Only you
+                  </span>
+                </div>
+                <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Your scores on this topic — never shown to other residents.</p>
                 {RATING_DOMAINS.map((d) => (
                   <div key={d.key} className="mt-2.5">
                     <div className="flex justify-between text-[12.5px] font-semibold">
