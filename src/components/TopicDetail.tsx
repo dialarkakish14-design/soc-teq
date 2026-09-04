@@ -67,18 +67,16 @@ export function TopicDetail({
               <div className="font-mono text-3xl font-semibold">{sc.overall.toFixed(2)}</div>
             </div>
             <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
-              <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[#0E1A1C]">{mine ? "Your rating vs. team" : "Team item averages"}</h3>
-                {mine && (
-                  <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[9.5px] font-semibold uppercase text-[#5E3F73]">
-                    Only you see this marked
-                  </span>
-                )}
-              </div>
+              <h3 className="font-bold text-[#0E1A1C]">{mine ? "Your rating vs. team" : "Team item averages"}</h3>
               <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">
-                {mine
-                  ? "Purple is your score on each item. The black marker is your team's average."
-                  : "Mean of every resident's rating on this topic — not an individual score."}
+                {mine ? (
+                  <>
+                    The black marker is your team's average, visible to everyone. The{" "}
+                    <span className="font-semibold text-[#5E3F73]">purple bar is your own score, visible only to you</span>.
+                  </>
+                ) : (
+                  "Mean of every resident's rating on this topic — not an individual score."
+                )}
               </p>
               {RATING_DOMAINS.map((d) => {
                 const teamVal = sc.perItem[d.key];
