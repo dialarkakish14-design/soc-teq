@@ -143,7 +143,7 @@ export const WHY_CARDS: MissionCard[] = [
 export const WHY_AGENCY_CARD = {
   eyebrow: "You're part of the curriculum too",
   title: "You don't have to wait to be faculty",
-  body: "Residents are uniquely positioned to notice gaps because they experience the curriculum every day. The literature already calls on residents to identify deficiencies, bring diverse cases into conferences, improve representation in teaching materials, and work with faculty toward lasting change.\n\nWith SoC-TEQ, that starts small:\nNotice. Log. Share. Improve.",
+  body: "Residents are uniquely positioned to notice gaps because they experience the curriculum every day. The literature encourages residents to identify areas where representation could be strengthened, bring diverse cases into conferences, improve representation in teaching materials, and work with faculty toward lasting change.\n\nWith SoC-TEQ, that starts small:\nNotice. Log. Share. Improve.",
 };
 
 export const HOWTO_STEPS: { title: string; body: string }[] = [
