@@ -20,7 +20,7 @@ export function BottomNav({ active, onChange }: { active: NavScreen; onChange: (
             active === t.id ? "text-[#064B45]" : "text-[#5C6B6F]"
           }`}
         >
-          <span className={`h-5 w-5 rounded-lg ${active === t.id ? "bg-[#0E7C72]" : "bg-[#E8EEED]"}`} />
+          <span className={`h-5 w-5 rounded-lg ${active === t.id ? "bg-[#0E7C72]" : "bg-[#DCEFEB]"}`} />
           {t.label}
         </button>
       ))}
