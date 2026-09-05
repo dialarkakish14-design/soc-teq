@@ -143,7 +143,9 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
       <div className="flex items-start justify-between px-5 pt-6">
         <div>
           <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">Team</div>
-          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{program.name}</h1>
+          <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">
+            {program.name.replace(/\s+—\s+/g, " · ")}
+          </h1>
           <p className="mt-1 text-[13px] text-[#2E3A3D]">
             Your {resident.pgy} cohort only. Other PGY years keep separate directories and separate data.
           </p>
