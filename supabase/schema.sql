@@ -104,9 +104,12 @@ $$;
 -- Ratings for a day are open until 04:00 the following morning, in that
 -- program's own local time zone (not a single hardcoded one — programs can
 -- be anywhere in the world), then permanently locked (build spec section 6).
+-- security definer so it can read programs.timezone even though the
+-- programs table has no select policy for ordinary residents (same
+-- reason my_program_id() and my_pgy() above are security definer).
 create or replace function is_day_open(d date, p_program_id uuid)
 returns boolean
-language sql stable as $$
+language sql stable security definer set search_path = public as $$
   select now() < ((d + 1)::timestamp + time '04:00') at time zone (
     select timezone from programs where id = p_program_id
   );
