@@ -20,7 +20,7 @@ export function CoverageModal({
   const [visual, setVisual] = useState<boolean | null>(topic.incomplete ? null : true);
   const [image, setImage] = useState<boolean | null>(topic.image_soc);
   const [discussed, setDiscussed] = useState<boolean | null>(topic.discussed_soc);
-  const [skinType, setSkinType] = useState<SkinType>(topic.skin_type ?? "Fitzpatrick IV");
+  const [skinType, setSkinType] = useState<SkinType | null>(topic.skin_type ?? null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const isEdit = !topic.incomplete;
@@ -47,6 +47,12 @@ export function CoverageModal({
     if (image == null || discussed == null) {
       setBusy(false);
       setError("Answer both coverage questions.");
+      return;
+    }
+
+    if (covered && skinType == null) {
+      setBusy(false);
+      setError("Choose which skin type was shown (or Not sure).");
       return;
     }
 
@@ -132,18 +138,25 @@ export function CoverageModal({
                   </span>
                 </div>
                 {covered && (
-                  <label className="mt-3 block">
+                  <div className="mt-3">
                     <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Skin type shown</div>
-                    <select
-                      value={skinType}
-                      onChange={(e) => setSkinType(e.target.value as SkinType)}
-                      className="input"
-                    >
+                    <div className="flex flex-wrap gap-2">
                       {SKIN_TYPES.map((s) => (
-                        <option key={s}>{s}</option>
+                        <button
+                          key={s}
+                          type="button"
+                          onClick={() => setSkinType(s)}
+                          className={`rounded-2xl border-[1.5px] px-3.5 py-2.5 text-[13px] font-bold ${
+                            skinType === s
+                              ? "border-[#0E7C72] bg-[#0E7C72] text-white"
+                              : "border-[#E2EAE9] bg-white text-[#2E3A3D]"
+                          }`}
+                        >
+                          {s === "Not specified" ? "Not sure" : s.replace("Fitzpatrick ", "")}
+                        </button>
                       ))}
-                    </select>
-                  </label>
+                    </div>
+                  </div>
                 )}
               </div>
             )}
