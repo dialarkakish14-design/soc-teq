@@ -170,6 +170,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
               onWeekAnchorChange={setWeekAnchor}
               monthAnchor={monthAnchor}
               onMonthAnchorChange={setMonthAnchor}
+              engagementPoints={engagementPoints}
             />
           )}
           {tab === "month" && (
