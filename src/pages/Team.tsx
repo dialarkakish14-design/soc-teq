@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { formatDateShort } from "../lib/domain";
+import { timezoneOptions, timezoneLabel } from "../lib/timezones";
 import type { MyProgram, Resident } from "../types";
 
 interface CohortMember {
@@ -33,6 +34,8 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
   const [form, setForm] = useState<ProfileForm>({ setting: "", patient_mix: "", existing_curriculum: "", image_resources: "" });
+  const [location, setLocation] = useState("");
+  const [timezone, setTimezone] = useState("America/Detroit");
 
   function flash(msg: string) {
     setToast(msg);
@@ -101,6 +104,8 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
       existing_curriculum: program.existing_curriculum ?? "",
       image_resources: program.image_resources ?? "",
     });
+    setLocation(program.location ?? "");
+    setTimezone(program.timezone || "America/Detroit");
   }, [program]);
 
   if (loadError) {
@@ -130,6 +135,8 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
       p_patient_mix: form.patient_mix,
       p_existing_curriculum: form.existing_curriculum,
       p_image_resources: form.image_resources,
+      p_location: location,
+      p_timezone: timezone,
     });
     setSaving(false);
     if (error) return flash(error.message);
@@ -182,6 +189,28 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                   />
                 </div>
               ))}
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Location</label>
+                <input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Detroit, Michigan, USA"
+                  className="input mt-1"
+                />
+              </div>
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Time zone</label>
+                <p className="mt-0.5 text-[11px] text-[#5C6B6F]">
+                  Sets when this program's 4am rating cutoff actually falls, in local time.
+                </p>
+                <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="input mt-1">
+                  {timezoneOptions().map((tz) => (
+                    <option key={tz} value={tz}>
+                      {timezoneLabel(tz)}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="flex gap-2">
                 <button
                   onClick={() => {
@@ -192,6 +221,8 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                       existing_curriculum: program.existing_curriculum ?? "",
                       image_resources: program.image_resources ?? "",
                     });
+                    setLocation(program.location ?? "");
+                    setTimezone(program.timezone);
                   }}
                   className="flex-1 rounded-xl bg-[#EAEFEE] py-2.5 text-sm font-bold text-[#2E3A3D]"
                 >
@@ -214,6 +245,16 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                   <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">{program[f.key]}</div>
                 </div>
               ))}
+              <div className="border-t border-[#E2EAE9] py-2.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Location</div>
+                <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">{program.location || "Pending"}</div>
+              </div>
+              <div className="border-t border-[#E2EAE9] py-2.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Time zone</div>
+                <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">
+                  {timezoneLabel(program.timezone || "America/Detroit")}
+                </div>
+              </div>
               {program.profile_updated_at && (
                 <div className="mt-2.5 text-[11px] text-[#5C6B6F]">Last updated {formatDateShort(program.profile_updated_at)}</div>
               )}

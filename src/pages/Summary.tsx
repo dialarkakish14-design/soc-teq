@@ -44,7 +44,17 @@ function toEntry(r: TopicFull): TopicEntry {
   };
 }
 
-export function Summary({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
+export function Summary({
+  resident,
+  active,
+  programTimezone,
+  onAbout,
+}: {
+  resident: Resident;
+  active: boolean;
+  programTimezone: string;
+  onAbout: () => void;
+}) {
   const [tab, setTab] = useState<Tab>("day");
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohortSize, setCohortSize] = useState(0);
@@ -105,7 +115,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
     }
     const mine = t.ratings.find((r) => r.resident_id === resident.id);
     const mineAbsent = t.absences.find((a) => a.resident_id === resident.id);
-    const open = isDayOpen(t.sessions.days.date);
+    const open = isDayOpen(t.sessions.days.date, programTimezone);
     if (!mine && !mineAbsent && open) {
       setModal({ kind: "rate", topic: t });
     } else {
@@ -157,6 +167,7 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
             <DayTab
               rows={mine}
               residentId={resident.id}
+              programTimezone={programTimezone}
               onOpenTopic={openTopic}
               filterDate={dayFilter}
               onFilterDateChange={setDayFilter}
@@ -234,12 +245,14 @@ type CoverageFilter = "all" | "covered" | "not";
 function DayTab({
   rows,
   residentId,
+  programTimezone,
   onOpenTopic,
   filterDate,
   onFilterDateChange,
 }: {
   rows: TopicFull[];
   residentId: string;
+  programTimezone: string;
   onOpenTopic: (t: TopicFull) => void;
   filterDate: string | null;
   onFilterDateChange: (d: string | null) => void;
@@ -349,7 +362,7 @@ function DayTab({
             <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
               {date === todayLocalDate() ? "Today, " : ""}
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
-              {isDayOpen(date) ? " · open" : ""}
+              {isDayOpen(date, programTimezone) ? " · open" : ""}
             </div>
 
             {coverageFilter === "all" && (

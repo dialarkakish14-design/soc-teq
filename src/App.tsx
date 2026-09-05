@@ -22,7 +22,8 @@ type Screen = "landing" | "signup" | "login" | "mission" | "how" | "why";
 type InfoOverlay = "mission" | "how" | "why" | null;
 
 function App() {
-  const { session, resident, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } = useAuth();
+  const { session, resident, programTimezone, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } =
+    useAuth();
   const [screen, setScreen] = useState<Screen>("landing");
   const [navScreen, setNavScreen] = useState<NavScreen>("today");
   const [infoOverlay, setInfoOverlay] = useState<InfoOverlay>(null);
@@ -71,12 +72,18 @@ function App() {
           <Today
             resident={resident}
             active={navScreen === "today"}
+            programTimezone={programTimezone}
             onLogout={() => supabase.auth.signOut()}
             onAbout={() => setInfoOverlay("mission")}
           />
         </div>
         <div style={{ display: navScreen === "summary" ? "contents" : "none" }}>
-          <Summary resident={resident} active={navScreen === "summary"} onAbout={() => setInfoOverlay("mission")} />
+          <Summary
+            resident={resident}
+            active={navScreen === "summary"}
+            programTimezone={programTimezone}
+            onAbout={() => setInfoOverlay("mission")}
+          />
         </div>
         <div style={{ display: navScreen === "cases" ? "contents" : "none" }}>
           <Cases resident={resident} active={navScreen === "cases"} onAbout={() => setInfoOverlay("mission")} />
@@ -85,6 +92,7 @@ function App() {
           <TrackMyInfo
             resident={resident}
             active={navScreen === "me"}
+            programTimezone={programTimezone}
             onAbout={() => setInfoOverlay("mission")}
             onLogout={() => supabase.auth.signOut()}
           />

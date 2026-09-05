@@ -16,6 +16,8 @@ create table programs (
   patient_mix text,
   existing_curriculum text,
   image_resources text,
+  location text,
+  timezone text not null default 'America/Detroit',
   profile_updated_at date,
   created_at timestamptz not null default now()
 );
@@ -99,12 +101,15 @@ language sql stable security definer set search_path = public as $$
   select pgy from residents where id = auth.uid();
 $$;
 
--- Ratings for a day are open until 04:00 the following morning, Wayne State
--- local time, then permanently locked (build spec section 6).
-create or replace function is_day_open(d date)
+-- Ratings for a day are open until 04:00 the following morning, in that
+-- program's own local time zone (not a single hardcoded one — programs can
+-- be anywhere in the world), then permanently locked (build spec section 6).
+create or replace function is_day_open(d date, p_program_id uuid)
 returns boolean
 language sql stable as $$
-  select now() < ((d + 1)::timestamp + time '04:00') at time zone 'America/Detroit';
+  select now() < ((d + 1)::timestamp + time '04:00') at time zone (
+    select timezone from programs where id = p_program_id
+  );
 $$;
 
 -- ---------- row level security ----------
@@ -162,7 +167,7 @@ create policy sessions_insert on sessions for insert
   with check (
     exists (
       select 1 from days d
-      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -170,7 +175,7 @@ create policy sessions_update on sessions for update
   using (
     exists (
       select 1 from days d
-      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -178,7 +183,7 @@ create policy sessions_delete on sessions for delete
   using (
     exists (
       select 1 from days d
-      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where d.id = sessions.day_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -196,7 +201,7 @@ create policy topics_insert on topics for insert
   with check (
     exists (
       select 1 from sessions s join days d on d.id = s.day_id
-      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -204,7 +209,7 @@ create policy topics_update on topics for update
   using (
     exists (
       select 1 from sessions s join days d on d.id = s.day_id
-      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -212,7 +217,7 @@ create policy topics_delete on topics for delete
   using (
     exists (
       select 1 from sessions s join days d on d.id = s.day_id
-      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date)
+      where s.id = topics.session_id and d.logger_id = auth.uid() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -234,7 +239,7 @@ create policy ratings_insert on ratings for insert
     and exists (
       select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
       where t.id = ratings.topic_id and t.soc_covered = true
-        and d.program_id = my_program_id() and d.pgy = my_pgy() and is_day_open(d.date)
+        and d.program_id = my_program_id() and d.pgy = my_pgy() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -244,7 +249,7 @@ create policy ratings_update on ratings for update
     resident_id = auth.uid()
     and exists (
       select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
-      where t.id = ratings.topic_id and is_day_open(d.date)
+      where t.id = ratings.topic_id and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -380,7 +385,7 @@ create policy absences_insert on absences for insert
     and exists (
       select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
       where t.id = absences.topic_id and t.soc_covered = true
-        and d.program_id = my_program_id() and d.pgy = my_pgy() and is_day_open(d.date)
+        and d.program_id = my_program_id() and d.pgy = my_pgy() and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -389,7 +394,7 @@ create policy absences_delete on absences for delete
     resident_id = auth.uid()
     and exists (
       select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
-      where t.id = absences.topic_id and is_day_open(d.date)
+      where t.id = absences.topic_id and is_day_open(d.date, d.program_id)
     )
   );
 
@@ -401,7 +406,7 @@ declare
 begin
   for d in
     select * from days
-    where closed_at is null and not is_day_open(date)
+    where closed_at is null and not is_day_open(date, program_id)
   loop
     insert into absences (topic_id, resident_id, reason)
     select t.id, r.id, 'no_response'
@@ -520,7 +525,8 @@ create policy resources_insert on resources for insert
 -- owner, same pattern as programs_public, so it bypasses the (policy-less)
 -- RLS on the base table without ever exposing access_code.
 create view my_program with (security_invoker = false) as
-  select id, name, profile_complete, setting, patient_mix, existing_curriculum, image_resources, profile_updated_at
+  select id, name, profile_complete, setting, patient_mix, existing_curriculum, image_resources,
+         location, timezone, profile_updated_at
   from programs
   where id = my_program_id();
 
@@ -530,11 +536,16 @@ grant select on my_program to authenticated;
 -- programs row directly (there is no update policy on programs at all,
 -- deliberately — see the comment above the RLS section); checks the
 -- caller's role itself rather than relying on RLS to gate it.
+-- location and timezone were added later (patch_program_timezone.sql) —
+-- timezone is required (it drives is_day_open's cutoff), location is
+-- informational only and left optional.
 create or replace function update_program_profile(
   p_setting text,
   p_patient_mix text,
   p_existing_curriculum text,
-  p_image_resources text
+  p_image_resources text,
+  p_location text,
+  p_timezone text
 )
 returns void
 language plpgsql security definer set search_path = public as $$
@@ -549,8 +560,9 @@ begin
   end if;
 
   if coalesce(trim(p_setting), '') = '' or coalesce(trim(p_patient_mix), '') = ''
-     or coalesce(trim(p_existing_curriculum), '') = '' or coalesce(trim(p_image_resources), '') = '' then
-    raise exception 'All four fields are required';
+     or coalesce(trim(p_existing_curriculum), '') = '' or coalesce(trim(p_image_resources), '') = ''
+     or coalesce(trim(p_timezone), '') = '' then
+    raise exception 'All four fields and a time zone are required';
   end if;
 
   update programs
@@ -558,13 +570,15 @@ begin
       patient_mix = trim(p_patient_mix),
       existing_curriculum = trim(p_existing_curriculum),
       image_resources = trim(p_image_resources),
+      location = nullif(trim(p_location), ''),
+      timezone = trim(p_timezone),
       profile_updated_at = current_date,
       profile_complete = true
   where id = v_program_id;
 end;
 $$;
 
-grant execute on function update_program_profile(text, text, text, text) to authenticated;
+grant execute on function update_program_profile(text, text, text, text, text, text) to authenticated;
 
 -- ---------- feedback ----------
 -- See supabase/patch_feedback.sql for the full commentary.

@@ -14,16 +14,18 @@ type SessionWithTopics = Session & { topics: TopicWithRatings[] };
 export function Today({
   resident,
   active,
+  programTimezone,
   onLogout,
   onAbout,
 }: {
   resident: Resident;
   active: boolean;
+  programTimezone: string;
   onLogout: () => void;
   onAbout: () => void;
 }) {
   const date = todayLocalDate();
-  const open = isDayOpen(date);
+  const open = isDayOpen(date, programTimezone);
 
   const [day, setDay] = useState<Day | null>(null);
   const [sessions, setSessions] = useState<SessionWithTopics[]>([]);

@@ -25,6 +25,8 @@ export interface MyProgram {
   patient_mix: string | null;
   existing_curriculum: string | null;
   image_resources: string | null;
+  location: string | null;
+  timezone: string;
   profile_updated_at: string | null;
 }
 

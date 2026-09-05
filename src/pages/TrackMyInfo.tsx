@@ -20,11 +20,13 @@ interface CohortResident {
 export function TrackMyInfo({
   resident,
   active,
+  programTimezone,
   onAbout,
   onLogout,
 }: {
   resident: Resident;
   active: boolean;
+  programTimezone: string;
   onAbout: () => void;
   onLogout: () => void;
 }) {
@@ -81,7 +83,7 @@ export function TrackMyInfo({
   const noResponse = covered.filter((r) => r.absences.some((a) => a.resident_id === resident.id && a.reason === "no_response"));
   const waitingOnMe = covered.filter(
     (r) =>
-      isDayOpen(r.sessions!.days.date) &&
+      isDayOpen(r.sessions!.days.date, programTimezone) &&
       !r.ratings.some((rt) => rt.resident_id === resident.id) &&
       !r.absences.some((a) => a.resident_id === resident.id),
   );

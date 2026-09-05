@@ -16,12 +16,17 @@ function checkUrlForRecovery(): boolean {
 export function useAuth() {
   const [session, setSession] = useState<Session | null>(null);
   const [resident, setResident] = useState<Resident | null>(null);
+  const [programTimezone, setProgramTimezone] = useState<string>("America/Detroit");
   const [loading, setLoading] = useState(true);
   const [isPasswordRecovery, setIsPasswordRecovery] = useState(checkUrlForRecovery);
 
   const loadResident = useCallback(async (userId: string) => {
     const { data } = await supabase.from("residents").select("*").eq("id", userId).maybeSingle();
     setResident(data as Resident | null);
+    if (data) {
+      const { data: program } = await supabase.from("my_program").select("timezone").maybeSingle();
+      if (program) setProgramTimezone((program as { timezone: string }).timezone);
+    }
   }, []);
 
   useEffect(() => {
@@ -56,5 +61,5 @@ export function useAuth() {
     window.history.replaceState({}, "", window.location.pathname + window.location.search);
   }, []);
 
-  return { session, resident, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery };
+  return { session, resident, programTimezone, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery };
 }

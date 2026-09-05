@@ -5,12 +5,31 @@ export function todayLocalDate(): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 }
 
-// Ratings for a day are open until 04:00 the following morning (build spec section 6).
-export function isDayOpen(date: string): boolean {
-  const close = new Date(date + "T00:00:00");
-  close.setDate(close.getDate() + 1);
-  close.setHours(4, 0, 0, 0);
-  return new Date() < close;
+// "Now" as a zero-padded, sortable "YYYY-MM-DDTHH:mm:ss" string in an
+// arbitrary IANA time zone — lets date-boundary math work correctly for a
+// program anywhere in the world, not just the browser's own local zone.
+function nowInTimeZone(timeZone: string): string {
+  const parts = new Intl.DateTimeFormat("en-CA", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  }).formatToParts(new Date());
+  const get = (t: string) => parts.find((p) => p.type === t)!.value;
+  return `${get("year")}-${get("month")}-${get("day")}T${get("hour")}:${get("minute")}:${get("second")}`;
+}
+
+// Ratings for a day are open until 04:00 the following morning, in the
+// program's own time zone — matching the database's is_day_open() (build
+// spec section 6). String comparison works because both sides are the same
+// zero-padded "YYYY-MM-DDTHH:mm:ss" shape.
+export function isDayOpen(date: string, timeZone: string): boolean {
+  const closeDate = shiftDate(date, 1);
+  return nowInTimeZone(timeZone) < `${closeDate}T04:00:00`;
 }
 
 export function closesAtLabel(date: string): string {
