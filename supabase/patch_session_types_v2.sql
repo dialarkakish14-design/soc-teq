@@ -3,8 +3,11 @@
 -- split out) that made logging inconsistent between residents.
 -- Run this once in the Supabase SQL Editor.
 
--- Relabel existing rows BEFORE swapping the constraint, since Postgres
--- validates every existing row against a new check constraint.
+-- Drop the old constraint FIRST — it's still enforcing the old 12-item
+-- list, so renaming rows to the new values would violate it if done
+-- before this.
+alter table sessions drop constraint sessions_type_check;
+
 -- Direct renames (meaning unchanged):
 update sessions set type = 'Lecture / structured didactic' where type = 'Lecture';
 update sessions set type = 'Lecture / structured didactic' where type = 'Didactic';
@@ -26,7 +29,7 @@ update sessions set type = 'Other teaching session' where type = 'Pediatric derm
 update sessions set type = 'Other teaching session' where type = 'Specialty clinics';
 update sessions set type = 'Other teaching session' where type = 'Conferences';
 
-alter table sessions drop constraint sessions_type_check;
+-- Now that every row matches the new list, add the new constraint.
 alter table sessions add constraint sessions_type_check check (
   type in (
     'Lecture / structured didactic', 'Grand rounds', 'Journal club', 'Case conference / unknowns',
