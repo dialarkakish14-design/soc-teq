@@ -200,11 +200,12 @@ export function SignUp({
             ))}
           </select>
           <p className="mt-1.5 text-[11.5px] text-[#5C6B6F]">
-            SoC-TEQ is open to any dermatology program worldwide. Don't see yours listed? Email{" "}
+            SoC-TEQ is in early pilot with a small number of programs. Interested in piloting it at
+            yours? Email{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
               dialarkakish1@hotmail.com
-            </a>{" "}
-            to get it added.
+            </a>
+            .
           </p>
         </Field>
 
