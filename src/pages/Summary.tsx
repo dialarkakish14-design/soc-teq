@@ -348,52 +348,54 @@ function DayTab({
               {isDayOpen(date) ? " · open" : ""}
             </div>
 
-            <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
-              <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
-              <div className="mt-2.5 flex flex-wrap gap-2">
-                {[...sessionTypeCounts.entries()].map(([type, count]) => (
-                  <span
-                    key={type}
-                    className="flex items-center gap-1.5 rounded-lg bg-[#F5F8F7] px-2.5 py-1.5 text-[12px] font-semibold text-[#2E3A3D]"
-                  >
-                    <SessionDot type={type} />
-                    {count} {type}
-                    {count === 1 ? "" : "s"}
-                  </span>
-                ))}
-              </div>
-              <div className="mt-3 border-t border-[#E2EAE9] pt-3">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
-                  Fitzpatrick tones shown
+            {coverageFilter === "all" && (
+              <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
+                <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
+                <div className="mt-2.5 flex flex-wrap gap-2">
+                  {[...sessionTypeCounts.entries()].map(([type, count]) => (
+                    <span
+                      key={type}
+                      className="flex items-center gap-1.5 rounded-lg bg-[#F5F8F7] px-2.5 py-1.5 text-[12px] font-semibold text-[#2E3A3D]"
+                    >
+                      <SessionDot type={type} />
+                      {count} {type}
+                      {count === 1 ? "" : "s"}
+                    </span>
+                  ))}
                 </div>
-                <div className="mt-2 flex gap-1.5">
-                  {FITZPATRICK_TONES.map((t) => {
-                    const key = `${date}:${t}`;
-                    const isOpen = openTones.has(key);
-                    const count = toneTopics[t].length;
-                    return (
-                      <button
-                        key={t}
-                        onClick={() => count > 0 && toggleTone(key)}
-                        disabled={count === 0}
-                        className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold transition-colors ${
-                          count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
-                        } ${isOpen ? "ring-2 ring-[#0E7C72]" : ""}`}
-                      >
-                        {t.replace("Fitzpatrick ", "")}
-                        {count ? ` · ${count}` : ""}
-                      </button>
-                    );
-                  })}
-                </div>
-                {FITZPATRICK_TONES.filter((t) => openTones.has(`${date}:${t}`) && toneTopics[t].length > 0).map((t) => (
-                  <div key={t} className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] leading-relaxed text-[#2E3A3D]">
-                    <span className="font-semibold">{t} shown in:</span>{" "}
-                    {toneTopics[t].join(", ")}
+                <div className="mt-3 border-t border-[#E2EAE9] pt-3">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+                    Fitzpatrick tones shown
                   </div>
-                ))}
+                  <div className="mt-2 flex gap-1.5">
+                    {FITZPATRICK_TONES.map((t) => {
+                      const key = `${date}:${t}`;
+                      const isOpen = openTones.has(key);
+                      const count = toneTopics[t].length;
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => count > 0 && toggleTone(key)}
+                          disabled={count === 0}
+                          className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold transition-colors ${
+                            count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
+                          } ${isOpen ? "ring-2 ring-[#0E7C72]" : ""}`}
+                        >
+                          {t.replace("Fitzpatrick ", "")}
+                          {count ? ` · ${count}` : ""}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {FITZPATRICK_TONES.filter((t) => openTones.has(`${date}:${t}`) && toneTopics[t].length > 0).map((t) => (
+                    <div key={t} className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] leading-relaxed text-[#2E3A3D]">
+                      <span className="font-semibold">{t} shown in:</span>{" "}
+                      {toneTopics[t].join(", ")}
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {sessions.length === 0 ? (
               <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">

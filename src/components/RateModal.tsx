@@ -117,8 +117,21 @@ export function RateModal({
                   step={1}
                   defaultValue={3}
                   className={set ? "mt-3 w-full" : "mt-3 w-full untouched"}
+                  style={{ touchAction: "none" }}
                   onInput={(e) => {
                     const v = +(e.target as HTMLInputElement).value;
+                    setVals((prev) => ({ ...prev, [d.key]: v }));
+                  }}
+                  onClick={(e) => {
+                    // Native range inputs don't reliably jump to the clicked
+                    // point on the track across browsers — some only respond
+                    // to dragging the thumb. Compute the value from click
+                    // position directly so tapping anywhere always works.
+                    const el = e.currentTarget;
+                    const rect = el.getBoundingClientRect();
+                    const ratio = (e.clientX - rect.left) / rect.width;
+                    const v = Math.min(5, Math.max(1, Math.round(1 + ratio * 4)));
+                    el.value = String(v);
                     setVals((prev) => ({ ...prev, [d.key]: v }));
                   }}
                 />
