@@ -15,7 +15,7 @@ create table programs (
   setting text,
   patient_mix text,
   existing_curriculum text,
-  image_resources text,
+  resident_count text,
   location text,
   timezone text not null default 'America/Detroit',
   profile_updated_at date,
@@ -525,7 +525,7 @@ create policy resources_insert on resources for insert
 -- owner, same pattern as programs_public, so it bypasses the (policy-less)
 -- RLS on the base table without ever exposing access_code.
 create view my_program with (security_invoker = false) as
-  select id, name, profile_complete, setting, patient_mix, existing_curriculum, image_resources,
+  select id, name, profile_complete, setting, patient_mix, existing_curriculum, resident_count,
          profile_updated_at, location, timezone
   from programs
   where id = my_program_id();
@@ -538,12 +538,14 @@ grant select on my_program to authenticated;
 -- caller's role itself rather than relying on RLS to gate it.
 -- location and timezone were added later (patch_program_timezone.sql) —
 -- timezone is required (it drives is_day_open's cutoff), location is
--- informational only and left optional.
+-- informational only and left optional. image_resources was later
+-- repurposed as resident_count (patch_resident_count.sql) since image
+-- resources weren't used anywhere in the app.
 create or replace function update_program_profile(
   p_setting text,
   p_patient_mix text,
   p_existing_curriculum text,
-  p_image_resources text,
+  p_resident_count text,
   p_location text,
   p_timezone text
 )
@@ -560,7 +562,7 @@ begin
   end if;
 
   if coalesce(trim(p_setting), '') = '' or coalesce(trim(p_patient_mix), '') = ''
-     or coalesce(trim(p_existing_curriculum), '') = '' or coalesce(trim(p_image_resources), '') = ''
+     or coalesce(trim(p_existing_curriculum), '') = '' or coalesce(trim(p_resident_count), '') = ''
      or coalesce(trim(p_timezone), '') = '' then
     raise exception 'All four fields and a time zone are required';
   end if;
@@ -569,7 +571,7 @@ begin
   set setting = trim(p_setting),
       patient_mix = trim(p_patient_mix),
       existing_curriculum = trim(p_existing_curriculum),
-      image_resources = trim(p_image_resources),
+      resident_count = trim(p_resident_count),
       location = nullif(trim(p_location), ''),
       timezone = trim(p_timezone),
       profile_updated_at = current_date,

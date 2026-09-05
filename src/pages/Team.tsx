@@ -10,11 +10,11 @@ interface CohortMember {
   email: string;
 }
 
-const PROFILE_FIELDS: { key: "setting" | "patient_mix" | "existing_curriculum" | "image_resources"; label: string; placeholder: string }[] = [
+const PROFILE_FIELDS: { key: "setting" | "patient_mix" | "existing_curriculum" | "resident_count"; label: string; placeholder: string }[] = [
   { key: "setting", label: "Setting", placeholder: "e.g. Academic medical center, urban" },
   { key: "patient_mix", label: "Patient mix", placeholder: "e.g. Roughly 40% patients with skin of color" },
   { key: "existing_curriculum", label: "Existing curriculum", placeholder: "What skin-of-color teaching already exists" },
-  { key: "image_resources", label: "Image resources", placeholder: "Atlases or resources used for skin-of-color images" },
+  { key: "resident_count", label: "Number of residents", placeholder: "e.g. 9 total, 3 per PGY year" },
 ];
 
 type ProfileForm = Record<(typeof PROFILE_FIELDS)[number]["key"], string>;
@@ -33,7 +33,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
-  const [form, setForm] = useState<ProfileForm>({ setting: "", patient_mix: "", existing_curriculum: "", image_resources: "" });
+  const [form, setForm] = useState<ProfileForm>({ setting: "", patient_mix: "", existing_curriculum: "", resident_count: "" });
   const [location, setLocation] = useState("");
   const [timezone, setTimezone] = useState("America/Detroit");
 
@@ -102,7 +102,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
       setting: program.setting ?? "",
       patient_mix: program.patient_mix ?? "",
       existing_curriculum: program.existing_curriculum ?? "",
-      image_resources: program.image_resources ?? "",
+      resident_count: program.resident_count ?? "",
     });
     setLocation(program.location ?? "");
     setTimezone(program.timezone || "America/Detroit");
@@ -134,7 +134,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
       p_setting: form.setting,
       p_patient_mix: form.patient_mix,
       p_existing_curriculum: form.existing_curriculum,
-      p_image_resources: form.image_resources,
+      p_resident_count: form.resident_count,
       p_location: location,
       p_timezone: timezone,
     });
@@ -219,10 +219,10 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                       setting: program.setting ?? "",
                       patient_mix: program.patient_mix ?? "",
                       existing_curriculum: program.existing_curriculum ?? "",
-                      image_resources: program.image_resources ?? "",
+                      resident_count: program.resident_count ?? "",
                     });
                     setLocation(program.location ?? "");
-                    setTimezone(program.timezone);
+                    setTimezone(program.timezone || "America/Detroit");
                   }}
                   className="flex-1 rounded-xl bg-[#EAEFEE] py-2.5 text-sm font-bold text-[#2E3A3D]"
                 >
@@ -262,7 +262,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
           ) : (
             <p className="mt-2 text-[13px] text-[#5C6B6F]">
               {isLead
-                ? "Tap Complete to describe your program's setting, patient mix, existing curriculum and image resources."
+                ? "Tap Complete to describe your program's setting, patient mix, existing curriculum and number of residents."
                 : "Your program lead hasn't filled this in yet."}
             </p>
           )}

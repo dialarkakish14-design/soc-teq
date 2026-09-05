@@ -24,7 +24,7 @@ export interface MyProgram {
   setting: string | null;
   patient_mix: string | null;
   existing_curriculum: string | null;
-  image_resources: string | null;
+  resident_count: string | null;
   location: string | null;
   timezone: string;
   profile_updated_at: string | null;
