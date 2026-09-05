@@ -526,7 +526,7 @@ create policy resources_insert on resources for insert
 -- RLS on the base table without ever exposing access_code.
 create view my_program with (security_invoker = false) as
   select id, name, profile_complete, setting, patient_mix, existing_curriculum, image_resources,
-         location, timezone, profile_updated_at
+         profile_updated_at, location, timezone
   from programs
   where id = my_program_id();
 

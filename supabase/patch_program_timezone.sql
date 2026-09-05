@@ -131,7 +131,7 @@ drop function if exists is_day_open(date);
 -- Add location/timezone to the program-profile view and edit function.
 create or replace view my_program with (security_invoker = false) as
   select id, name, profile_complete, setting, patient_mix, existing_curriculum, image_resources,
-         location, timezone, profile_updated_at
+         profile_updated_at, location, timezone
   from programs
   where id = my_program_id();
 
