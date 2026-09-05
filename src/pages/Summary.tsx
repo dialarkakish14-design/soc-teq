@@ -32,6 +32,18 @@ type TopicFull = Topic & {
 
 type Tab = "day" | "week" | "month" | "notes" | "cycle";
 
+function toEntry(r: TopicFull): TopicEntry {
+  return {
+    id: r.id,
+    title: r.title,
+    socCovered: r.soc_covered,
+    date: r.sessions!.days.date,
+    sessionType: r.sessions!.type,
+    ratings: r.ratings,
+    absences: r.absences,
+  };
+}
+
 export function Summary({ resident, active, onAbout }: { resident: Resident; active: boolean; onAbout: () => void }) {
   const [tab, setTab] = useState<Tab>("day");
   const [rows, setRows] = useState<TopicFull[]>([]);
@@ -106,15 +118,6 @@ export function Summary({ resident, active, onAbout }: { resident: Resident; act
   }
 
   const mine = rows.filter((r) => r.sessions?.days);
-  const toEntry = (r: TopicFull): TopicEntry => ({
-    id: r.id,
-    title: r.title,
-    socCovered: r.soc_covered,
-    date: r.sessions!.days.date,
-    sessionType: r.sessions!.type,
-    ratings: r.ratings,
-    absences: r.absences,
-  });
   const engagementPoints = engagementTrend(mine.map(toEntry), cohortSize);
 
   return (
@@ -339,6 +342,7 @@ function DayTab({
           if (t.skin_type === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((tone) => toneTopics[tone].push(t.title));
           else if (t.skin_type in toneTopics) toneTopics[t.skin_type].push(t.title);
         }
+        const dayBrief = monthlyBrief(topics.map(toEntry));
 
         return (
           <div key={date}>
@@ -350,7 +354,7 @@ function DayTab({
 
             {coverageFilter === "all" && (
               <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
-                <h3 className="font-bold text-[#0E1A1C]">Daily summary</h3>
+                <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
                 <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Everything logged and rated on this day.</p>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {[...sessionTypeCounts.entries()].map(([type, count]) => (
@@ -395,6 +399,12 @@ function DayTab({
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {coverageFilter === "all" && dayBrief && (
+              <div className="mt-2">
+                <BriefCard brief={dayBrief} label={formatDateShort(date)} period="day" />
               </div>
             )}
 
@@ -676,7 +686,7 @@ function PeriodContent({
   const stats = summaryStats(entries);
   const response = responseRecord(entries, cohortSize);
   const perItem = itemAverages(entries);
-  const brief = period === "month" ? monthlyBrief(entries) : null;
+  const brief = monthlyBrief(entries);
   const [showRmInfo, setShowRmInfo] = useState(false);
 
   return (
@@ -789,7 +799,7 @@ function PeriodContent({
         </div>
       )}
 
-      {brief && <MonthlyBriefCard brief={brief} label={label} />}
+      {brief && <BriefCard brief={brief} label={label} period={period} />}
     </>
   );
 }
@@ -812,27 +822,33 @@ function Legend({ color, label }: { color: string; label: string }) {
   );
 }
 
-function MonthlyBriefCard({
+function BriefCard({
   brief,
   label,
+  period,
 }: {
   brief: NonNullable<ReturnType<typeof monthlyBrief>>;
   label: string;
+  period: "day" | "week" | "month";
 }) {
+  const periodLabel = period === "day" ? "Daily brief" : period === "week" ? "Weekly brief" : "Monthly brief";
+  const periodWord = period === "day" ? "today" : period === "week" ? "this week" : "this month";
   return (
     <div className="rounded-3xl bg-gradient-to-br from-[#123F3A] to-[#0A2A27] p-5 text-[#DCEEEA]">
-      <div className="font-mono text-[9.5px] uppercase tracking-widest text-[#7FC3B9]">Monthly brief · {label}</div>
+      <div className="font-mono text-[9.5px] uppercase tracking-widest text-[#7FC3B9]">
+        {periodLabel} · {label}
+      </div>
       <h3 className="mt-2 text-lg font-bold text-white">What to work on next</h3>
       <p className="mt-2 text-[13.5px] text-[#BEDCD6]">
-        Across {brief.coveredCount} skin of color topic{brief.coveredCount === 1 ? "" : "s"} this month, your cohort
+        Across {brief.coveredCount} skin of color topic{brief.coveredCount === 1 ? "" : "s"} {periodWord}, your cohort
         scored {brief.weakest.name.toLowerCase()} lowest ({brief.weakestVal.toFixed(2)}) and{" "}
         {brief.strongest.name.toLowerCase()} highest ({brief.strongestVal.toFixed(2)}).
       </p>
       <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-[13.5px] text-[#D6EBE7]">
         <li>
           {brief.gapTitles.length
-            ? `Priority needs: ${brief.gapTitles.join(", ")} — below ${THRESHOLD}.`
-            : `No topic fell below ${THRESHOLD} this month.`}
+            ? `Priority needs: ${brief.gapTitles.join(", ")}, below ${THRESHOLD}.`
+            : `No topic fell below ${THRESHOLD} ${periodWord}.`}
         </li>
         <li>
           Weakest item is {brief.weakest.name.toLowerCase()}. {brief.weakest.statement}
@@ -841,9 +857,7 @@ function MonthlyBriefCard({
           <li>Visually relevant but not SoC-covered: {brief.uncoveredTitles.join(", ")}.</li>
         )}
       </ul>
-      <p className="mt-3.5 text-[11.5px] text-[#DCEEEA]/70">
-        Draft example, generated from your data — not AI-written.
-      </p>
+      <p className="mt-3.5 text-[11.5px] text-[#DCEEEA]/70">Generated from your data.</p>
     </div>
   );
 }

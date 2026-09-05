@@ -82,14 +82,12 @@ export function RateModal({
 
         <div className="mt-3 rounded-2xl bg-[#DCEFEB] px-4 py-3.5 text-[#064B45]">
           <button onClick={() => setShowReminder((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
-            <span className="text-[14px] font-extrabold leading-snug">Your answers make a difference.</span>
+            <span className="text-[14px] font-extrabold leading-snug">A thoughtful rating matters</span>
             <span className={`shrink-0 text-xl font-extrabold transition-transform ${showReminder ? "rotate-180" : ""}`}>▾</span>
           </button>
           {showReminder && (
-            <p className="mt-1.5 text-[13px] leading-relaxed">
-              This data is what turns into real change — for you and for your patients. Be as honest and accurate
-              as you can; your rating is never linked to your name. And if you're running on empty, it's okay to
-              step away — stretch, get some water, and come back when you can give it a real answer.
+            <p className="mt-1.5 whitespace-pre-line text-[13px] leading-relaxed">
+              {"Your ratings help SoC-TEQ reflect the learning experience as accurately as possible. Take a moment to answer based on what you genuinely encountered and how the session felt to you.\n\nTraining moves quickly, but a brief moment of reflection can help keep the full range of patients we care for in view."}
             </p>
           )}
         </div>
