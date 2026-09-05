@@ -225,7 +225,7 @@ export function TrackMyInfo({
         {waitingOnMe.length > 0 && (
           <div className="mt-4 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
             {waitingOnMe.length} topic{waitingOnMe.length === 1 ? "" : "s"} still waiting on your rating. If you don't
-            respond before close you'll be recorded as no response.
+            respond before close you'll be recorded as having forgotten to rate it.
           </div>
         )}
 
@@ -233,11 +233,11 @@ export function TrackMyInfo({
           <div className="flex text-center">
             <Stat n={mine.length} label="Rated" />
             <Stat n={declared.length} label="Absent" />
-            <Stat n={noResponse.length} label="No response" />
+            <Stat n={noResponse.length} label="Forgot to rate" />
             <Stat n={loggerDays} label="Logged" />
           </div>
           <p className="mt-3 text-[12.5px] text-[#2E3A3D]">
-            Both are excluded from averages. "No response" just means a day closed without you.
+            Both are excluded from averages. "Forgot to rate" just means a day closed without a rating from you.
           </p>
         </div>
 

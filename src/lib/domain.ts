@@ -186,8 +186,11 @@ export function responseRecord(entries: TopicEntry[], cohortSize: number): Respo
     noResponse += n;
   }
   const total = rated + declared + noResponse + waiting;
-  const responded = rated + declared + noResponse;
-  return { rated, declared, noResponse, waiting, total, responseRatePct: responded ? Math.round((rated / responded) * 100) : 0 };
+  // A declared absence is excluded here too, same as it's excluded from
+  // score averages — it's a legitimate documented absence, not a gap in
+  // engagement, so it shouldn't pull the response rate down.
+  const responseBase = rated + noResponse;
+  return { rated, declared, noResponse, waiting, total, responseRatePct: responseBase ? Math.round((rated / responseBase) * 100) : 0 };
 }
 
 export interface EngagementPoint {

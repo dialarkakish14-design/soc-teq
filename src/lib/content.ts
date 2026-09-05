@@ -198,7 +198,7 @@ export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
     question: "What happens if I forget to rate something?",
     answer:
-      "Ratings remain open until 4 AM the following day.\n\nIf you have not submitted a rating or marked yourself absent by then, it is recorded as no response and is not treated as a score of zero or included as a low rating.",
+      "Ratings remain open until 4 AM the following day.\n\nIf you have not submitted a rating or marked yourself absent by then, it is recorded as forgot to rate, not as a score of zero or a low rating. If you did mark yourself absent, that's excluded too, and neither one affects your response rate.",
   },
   {
     question: "Can I change a rating after I submit it?",

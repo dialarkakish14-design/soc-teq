@@ -773,7 +773,7 @@ function PeriodContent({
           <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] text-[#2E3A3D]">
             <Legend color="#0E7C72" label={`Rated ${response.rated}`} />
             <Legend color="#3D6B49" label={`Absent, declared ${response.declared}`} />
-            <Legend color="#8F5205" label={`No response ${response.noResponse}`} />
+            <Legend color="#8F5205" label={`Forgot to rate ${response.noResponse}`} />
             {response.waiting > 0 && <Legend color="#C9D3D2" label={`Still open ${response.waiting}`} />}
           </div>
           <p className="mt-3 text-[12.5px] text-[#2E3A3D]">Response rate {response.responseRatePct}%.</p>
