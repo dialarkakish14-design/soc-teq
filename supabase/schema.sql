@@ -47,8 +47,9 @@ create table sessions (
   day_id uuid not null references days (id) on delete cascade,
   type text not null check (
     type in (
-      'Lecture', 'Didactic', 'Grand round', 'Clinic outpatient', 'Clinic inpatient', 'Journal club', 'Tumor board',
-      'Surgical dermatology', 'Dermatopathology', 'Pediatric dermatology', 'Specialty clinics', 'Conferences'
+      'Lecture / structured didactic', 'Grand rounds', 'Journal club', 'Case conference / unknowns',
+      'Tumor board / multidisciplinary conference', 'Dermatopathology teaching / sign-out',
+      'Workshop / skills lab', 'Outpatient clinic', 'Inpatient / consult service', 'Other teaching session'
     )
   ),
   created_at timestamptz not null default now()

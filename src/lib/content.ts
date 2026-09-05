@@ -7,18 +7,16 @@
 // next to the label rather than tinting the whole card, so topic content
 // stays on a neutral background.
 export const SESSION_TYPE_COLOR: Record<string, string> = {
-  Lecture: "#0E7C72",
-  Didactic: "#5E3F73",
-  "Grand round": "#8F5205",
-  "Clinic outpatient": "#3D6B49",
-  "Clinic inpatient": "#93393E",
+  "Lecture / structured didactic": "#0E7C72",
+  "Grand rounds": "#8F5205",
   "Journal club": "#2B5F8A",
-  "Tumor board": "#6B5B95",
-  "Surgical dermatology": "#3E5C76",
-  Dermatopathology: "#7A3B69",
-  "Pediatric dermatology": "#B5652E",
-  "Specialty clinics": "#5C7A4A",
-  Conferences: "#8A7F3D",
+  "Case conference / unknowns": "#5E3F73",
+  "Tumor board / multidisciplinary conference": "#6B5B95",
+  "Dermatopathology teaching / sign-out": "#7A3B69",
+  "Workshop / skills lab": "#B5652E",
+  "Outpatient clinic": "#3D6B49",
+  "Inpatient / consult service": "#93393E",
+  "Other teaching session": "#5C7A4A",
 };
 
 export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";

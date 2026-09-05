@@ -37,18 +37,16 @@ export interface Day {
 }
 
 export const SESSION_TYPES = [
-  "Lecture",
-  "Didactic",
-  "Grand round",
-  "Clinic outpatient",
-  "Clinic inpatient",
+  "Lecture / structured didactic",
+  "Grand rounds",
   "Journal club",
-  "Tumor board",
-  "Surgical dermatology",
-  "Dermatopathology",
-  "Pediatric dermatology",
-  "Specialty clinics",
-  "Conferences",
+  "Case conference / unknowns",
+  "Tumor board / multidisciplinary conference",
+  "Dermatopathology teaching / sign-out",
+  "Workshop / skills lab",
+  "Outpatient clinic",
+  "Inpatient / consult service",
+  "Other teaching session",
 ] as const;
 export type SessionType = (typeof SESSION_TYPES)[number];
 
