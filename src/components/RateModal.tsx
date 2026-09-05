@@ -107,7 +107,10 @@ export function RateModal({
                     {set ? vals[d.key] : "—"}
                   </span>
                 </div>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">{d.statement}</p>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-[#16211F]">{d.statement}</p>
+                {d.hint && (
+                  <p className="mt-1 text-[11.5px] italic leading-relaxed text-[#5C6B6F]">{d.hint}</p>
+                )}
                 <input
                   type="range"
                   min={1}

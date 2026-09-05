@@ -86,6 +86,7 @@ export interface RatingDomainKey {
   key: "depth" | "clarity" | "nuance" | "mgmt" | "conf";
   name: string;
   statement: string;
+  hint?: string;
 }
 
 export const RATING_DOMAINS: RatingDomainKey[] = [
@@ -103,6 +104,7 @@ export const RATING_DOMAINS: RatingDomainKey[] = [
     key: "nuance",
     name: "Nuance",
     statement: "Diagnostic pitfalls specific to skin of color were explicitly addressed.",
+    hint: "Meaning: presentations, exam findings, or complications that are easy to miss or that look different specifically in skin of color.",
   },
   {
     key: "mgmt",

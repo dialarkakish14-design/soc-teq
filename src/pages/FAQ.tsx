@@ -73,7 +73,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
           })}
         </div>
 
-        <div className="mt-6 rounded-3xl bg-white p-4 shadow-sm">
+        <div className="mt-6 rounded-3xl bg-[#DCEFEB] p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Got feedback?</h3>
           <p className="mt-1 text-[12.5px] leading-relaxed text-[#16211F]">
             SoC-TEQ is continuing to evolve, and resident feedback helps shape what comes next.
