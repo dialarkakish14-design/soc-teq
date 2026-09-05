@@ -17,13 +17,21 @@ export function Login({
   const [busy, setBusy] = useState(false);
   const [forgotMode, setForgotMode] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setError("");
     setBusy(true);
     try {
+      // Read straight from the form instead of the username/password state:
+      // some browsers/password managers fill the visible input without
+      // firing the input event React's onChange relies on, which would
+      // otherwise submit a stale (often empty) value on the first attempt.
+      const form = new FormData(e.currentTarget);
+      const formUsername = String(form.get("username") ?? "").trim();
+      const formPassword = String(form.get("password") ?? "");
+
       const { data: email, error: lookupError } = await supabase.rpc("get_email_for_username", {
-        p_username: username.trim(),
+        p_username: formUsername,
       });
       if (lookupError || !email) {
         setError("Username or password doesn't match.");
@@ -31,7 +39,7 @@ export function Login({
       }
       const { error: signInError } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password: formPassword,
       });
       if (signInError) {
         setError("Username or password doesn't match.");
@@ -59,10 +67,12 @@ export function Login({
         <label className="block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Username</div>
           <input
+            name="username"
             value={username}
             onChange={(e) => setUsername(e.target.value)}
             placeholder="Username"
             autoCapitalize="none"
+            autoComplete="username"
             className="input"
           />
         </label>
@@ -71,10 +81,12 @@ export function Login({
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Password</div>
           <div className="relative">
             <input
+              name="password"
               type={showPassword ? "text" : "password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Password"
+              autoComplete="current-password"
               className="input pr-16"
             />
             <button
