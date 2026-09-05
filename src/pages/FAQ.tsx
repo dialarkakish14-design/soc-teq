@@ -63,7 +63,11 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
                     ▾
                   </span>
                 </button>
-                {isOpen && <p className="mt-2 text-[13px] leading-relaxed text-[#2E3A3D]">{item.answer}</p>}
+                {isOpen && (
+                  <p className="mt-2 whitespace-pre-line text-[13px] leading-relaxed text-[#2E3A3D]">
+                    {item.answer}
+                  </p>
+                )}
               </div>
             );
           })}
@@ -72,12 +76,16 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
         <div className="mt-6 rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Got feedback?</h3>
           <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">
-            This app is actively evolving, and what you think of it shapes what gets built next. Type it below, or
-            email it directly to{" "}
+            SoC-TEQ is continuing to evolve, and resident feedback helps shape what comes next.
+          </p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-[#2E3A3D]">
+            Share what's working, what could be improved, or what you'd like to see in a future version.
+          </p>
+          <p className="mt-2 text-[12.5px] leading-relaxed text-[#2E3A3D]">
+            You can submit feedback here or email me directly at{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
               dialarkakish1@hotmail.com
             </a>
-            .
           </p>
 
           {sent ? (

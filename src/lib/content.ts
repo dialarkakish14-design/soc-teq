@@ -178,48 +178,33 @@ export const HOWTO_STEPS: { title: string; body: string }[] = [
 
 export const FAQ_ITEMS: { question: string; answer: string }[] = [
   {
-    question: "Why does this framework only focus on images?",
+    question: "Why does SoC-TEQ focus on visually relevant topics?",
     answer:
-      "This framework targets a specific diagnostic gap: dermatology training materials are still thin on skin of color, and that gap is linked to missed or delayed diagnoses. Measuring whether an image was shown and discussed gives a clear, consistent way to track it. Other differences, like pathophysiology, epidemiology, or treatment response, matter too, but sit outside what this tool measures unless they meet the visual-relevance criteria.",
+      "SoC-TEQ was designed to measure a defined part of dermatology education: whether visually relevant teaching includes representation of Fitzpatrick IV–VI skin alongside explicit discussion of skin of color.\n\nNon-visual topics related to skin of color are important too, but they currently fall outside what the framework measures.",
   },
   {
-    question: "What about content that's skin-of-color relevant but not visual?",
+    question: "Why does SoC-TEQ ask about my program?",
     answer:
-      "Yes — and it's a genuine gap in what's tracked today. If a topic isn't visually relevant, it's skipped entirely, even when it holds valuable non-visual skin of color content. Expanding this is something we're actively working on.",
+      "Program information provides context for interpreting the patterns that emerge over time.\n\nFor example, access to a dedicated skin of color curriculum, clinic, or image resources may shape the kinds of learning experiences residents encounter.\n\nThe program profile adds context, it is not a score or evaluation of the program.",
   },
   {
-    question: "What's planned for future versions?",
+    question: "What if teaching is already strong across skin tones?",
     answer:
-      "Ideas being explored: quizzes, linking articles to a condition, resources suggested for weak topics, a \"did you know\" section, and voice notes that get transcribed automatically. None of this is built yet — what comes next depends partly on resident feedback.",
+      "That is useful information too.\n\nSoC-TEQ is designed to identify patterns, not to assume that a gap exists. Consistently strong ratings can show where teaching is working well and where residents are receiving meaningful exposure.",
   },
   {
-    question: "Why is adding the program profile important?",
+    question: "How are my ratings kept private?",
     answer:
-      "It gives context to the scores. A program with no dedicated SoC curriculum or limited image resources should be read differently than one with both, and the profile makes that visible instead of leaving low scores to look like a mystery.",
-  },
-  {
-    question: "What if there's genuinely no gap between SoC and non-SoC teaching for a condition?",
-    answer:
-      "That's a valid outcome, and useful data on its own. Rating isn't about manufacturing a gap — it's about checking systematically instead of assuming. A condition that consistently scores well shows the teaching is working.",
-  },
-  {
-    question: "Is my identity really anonymous? Does the app store my password?",
-    answer:
-      "Yes, and no — in the direction that protects you. Every rating is tied to a resident code like \"Resident A,\" never your name; your real name only appears in the Team directory, never next to a rating. And the app never stores your password — sign-in is handled entirely by Supabase's own authentication system.",
-  },
-  {
-    question: "Can a program director or faculty member see my individual ratings?",
-    answer:
-      "No. A program lead can edit the program's shared profile card, but they're locked out of individual ratings — enforced in the database itself, not just hidden in the app.",
+      "Ratings are associated with a resident code, such as Resident A, rather than your name. Your name may appear in the Team directory, but it is not displayed alongside your individual ratings.\n\nProgram leads can manage the program's shared profile, but they cannot view individual resident ratings.\n\nSign-in is handled through Supabase authentication, and SoC-TEQ does not store or display your password.",
   },
   {
     question: "What happens if I forget to rate something?",
     answer:
-      "Ratings stay open until 4am the next morning. If you haven't rated or marked yourself absent by then, you're recorded as \"no response\" — never treated as a bad score.",
+      "Ratings remain open until 4 AM the following day.\n\nIf you have not submitted a rating or marked yourself absent by then, it is recorded as no response and is not treated as a score of zero or included as a low rating.",
   },
   {
     question: "Can I change a rating after I submit it?",
     answer:
-      "Yes, right up until the day closes at 4am. After that it locks permanently, so the data reflects what people thought in the moment, not a later second-guess.",
+      "Yes. You can update your rating until the daily window closes at 4 AM.\n\nAfter that, the rating is locked so the dataset preserves the response recorded during that learning period.",
   },
 ];
