@@ -19,9 +19,11 @@ create view my_program with (security_invoker = false) as
 
 grant select on my_program to authenticated;
 
--- Same parameter count and types as before (6 x text), so this is a
--- straightforward replace — no drop needed, and the existing grant on
--- the function stays attached across the replace.
+-- Postgres won't let CREATE OR REPLACE rename a parameter (even with the
+-- same type signature) — it has to be dropped first. Dropping it also
+-- drops its grant, so that's re-issued below.
+drop function if exists update_program_profile(text, text, text, text, text, text);
+
 create or replace function update_program_profile(
   p_setting text,
   p_patient_mix text,
@@ -60,3 +62,5 @@ begin
   where id = v_program_id;
 end;
 $$;
+
+grant execute on function update_program_profile(text, text, text, text, text, text) to authenticated;
