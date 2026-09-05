@@ -350,7 +350,8 @@ function DayTab({
 
             {coverageFilter === "all" && (
               <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
-                <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
+                <h3 className="font-bold text-[#0E1A1C]">Daily summary</h3>
+                <p className="mt-0.5 text-[11.5px] text-[#5C6B6F]">Everything logged and rated on this day.</p>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {[...sessionTypeCounts.entries()].map(([type, count]) => (
                     <span
@@ -680,6 +681,15 @@ function PeriodContent({
 
   return (
     <>
+      <div>
+        <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
+          {period === "week" ? "Weekly summary" : "Monthly summary"}
+        </div>
+        <p className="mt-1 text-[12px] text-[#5C6B6F]">
+          Everything logged and rated across this {period} as a whole, not broken out by individual day.
+        </p>
+      </div>
+
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <div className="flex text-center">
           <Stat n={stats.visualCount} label="Visually relevant topics" />
