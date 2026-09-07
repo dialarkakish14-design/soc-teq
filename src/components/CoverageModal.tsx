@@ -1,7 +1,10 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { COVERAGE_DEFINITIONS } from "../lib/content";
-import { SKIN_TYPES, type Rating, type SkinType, type Topic } from "../types";
+import { RATING_DOMAINS, SKIN_TYPES, type Rating, type SkinType, type Topic } from "../types";
+
+const NUANCE_HINT = RATING_DOMAINS.find((d) => d.key === "nuance")?.hint;
+const MGMT_HINT = RATING_DOMAINS.find((d) => d.key === "mgmt")?.hint;
 
 export function CoverageModal({
   topic,
@@ -31,6 +34,7 @@ export function CoverageModal({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showDefs, setShowDefs] = useState(false);
+  const [showScopeInfo, setShowScopeInfo] = useState(false);
   const isEdit = !topic.incomplete;
 
   const covered = image === true && discussed === true;
@@ -197,15 +201,28 @@ export function CoverageModal({
 
             {covered && (
               <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
-                <h3 className="font-bold text-[#0E1A1C]">Domains outside this session's scope</h3>
-                <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">
-                  Check with the residents present before marking a domain below. Only select a domain when
-                  that area of teaching was genuinely outside the scope of the session, not when it was
-                  relevant but simply wasn't covered for skin of color.
-                </p>
+                <button
+                  onClick={() => setShowScopeInfo((s) => !s)}
+                  className="flex w-full items-center justify-between gap-2 text-left"
+                >
+                  <h3 className="font-bold text-[#0E1A1C]">Domains outside this session's scope</h3>
+                  <span
+                    className={`shrink-0 text-lg font-extrabold text-[#5C6B6F] transition-transform ${showScopeInfo ? "rotate-180" : ""}`}
+                  >
+                    ▾
+                  </span>
+                </button>
+                {showScopeInfo && (
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">
+                    Check with the residents present before marking a domain below. Only select a domain when
+                    that area of teaching was genuinely outside the scope of the session, not when it was
+                    relevant but simply wasn't covered for skin of color.
+                  </p>
+                )}
 
                 <ScopeCheckbox
-                  label="Diagnostic nuance"
+                  label="Nuance"
+                  hint={NUANCE_HINT}
                   excluded={!nuanceApplicable}
                   onToggle={() => setNuanceApplicable((a) => !a)}
                   reason={nuanceReason}
@@ -213,6 +230,7 @@ export function CoverageModal({
                 />
                 <ScopeCheckbox
                   label="Management"
+                  hint={MGMT_HINT}
                   excluded={!mgmtApplicable}
                   onToggle={() => setMgmtApplicable((a) => !a)}
                   reason={mgmtReason}
@@ -243,34 +261,54 @@ export function CoverageModal({
 
 function ScopeCheckbox({
   label,
+  hint,
   excluded,
   onToggle,
   reason,
   onReasonChange,
 }: {
   label: string;
+  hint?: string;
   excluded: boolean;
   onToggle: () => void;
   reason: string;
   onReasonChange: (v: string) => void;
 }) {
+  const [showHint, setShowHint] = useState(false);
   return (
     <div className="mt-3 border-t border-[#E2EAE9] pt-3 first:mt-2 first:border-t-0 first:pt-0">
-      <button type="button" onClick={onToggle} className="flex w-full items-center gap-2.5 text-left">
-        <span
-          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] text-xs font-bold ${
-            excluded ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#C9D3D2] bg-white"
-          }`}
-        >
-          {excluded ? "✓" : ""}
-        </span>
-        <span className="text-[13.5px] font-semibold text-[#0E1A1C]">{label}</span>
-        {excluded && (
-          <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase text-[#064B45]">
-            Excluded
+      <div className="flex items-center gap-2.5">
+        <button type="button" onClick={onToggle} className="flex flex-1 items-center gap-2.5 text-left">
+          <span
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] text-xs font-bold ${
+              excluded ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#C9D3D2] bg-white"
+            }`}
+          >
+            {excluded ? "✓" : ""}
           </span>
+          <span className="text-[13.5px] font-semibold text-[#0E1A1C]">{label}</span>
+          {excluded && (
+            <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase text-[#064B45]">
+              Excluded
+            </span>
+          )}
+        </button>
+        {hint && (
+          <button
+            type="button"
+            onClick={() => setShowHint((s) => !s)}
+            className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
+              showHint ? "bg-[#0E7C72] text-white" : "bg-[#EAEFEE] text-[#5C6B6F]"
+            }`}
+            aria-label={`What does ${label} mean?`}
+          >
+            ?
+          </button>
         )}
-      </button>
+      </div>
+      {showHint && hint && (
+        <p className="mt-1.5 pl-[30px] text-[11.5px] italic leading-relaxed text-[#5C6B6F]">{hint}</p>
+      )}
       <div className="mt-2 pl-[30px]">
         <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
           Why was this outside the session's scope? <span className="font-normal normal-case">· optional</span>
