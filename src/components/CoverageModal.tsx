@@ -113,13 +113,23 @@ export function CoverageModal({
             </span>
           </button>
           {showDefs && (
-            <div className="flex flex-col gap-3 px-3.5 pb-3.5">
-              {COVERAGE_DEFINITIONS.map((d) => (
-                <div key={d.title}>
-                  <div className="text-[12.5px] font-bold text-[#0E1A1C]">{d.title}</div>
-                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#2E3A3D]">{d.body}</p>
-                </div>
-              ))}
+            <div className="flex flex-col gap-2.5 px-3.5 pb-3.5">
+              {COVERAGE_DEFINITIONS.map((d, i) => {
+                const tones = [
+                  { bg: "#F8E4E4", text: "#93393E" },
+                  { bg: "#FAEBD4", text: "#8F5205" },
+                  { bg: "#EEE7F3", text: "#5E3F73" },
+                ];
+                const tone = tones[i % tones.length];
+                return (
+                  <div key={d.title} className="rounded-2xl p-3.5" style={{ background: tone.bg }}>
+                    <div className="text-[12.5px] font-bold" style={{ color: tone.text }}>
+                      {d.title}
+                    </div>
+                    <p className="mt-1.5 text-[13px] leading-[1.6] text-[#2E3A3D]">{d.body}</p>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
