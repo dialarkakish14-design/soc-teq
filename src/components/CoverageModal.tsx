@@ -117,7 +117,7 @@ export function CoverageModal({
               {COVERAGE_DEFINITIONS.map((d, i) => {
                 const tones = [
                   { bg: "#F8E4E4", text: "#93393E" },
-                  { bg: "#FAEBD4", text: "#8F5205" },
+                  { bg: "#DCE8F3", text: "#2B5F8A" },
                   { bg: "#EEE7F3", text: "#5E3F73" },
                 ];
                 const tone = tones[i % tones.length];
