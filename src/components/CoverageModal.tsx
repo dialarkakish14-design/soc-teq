@@ -22,9 +22,11 @@ export function CoverageModal({
   const [image, setImage] = useState<boolean | null>(topic.image_soc);
   const [discussed, setDiscussed] = useState<boolean | null>(topic.discussed_soc);
   const [skinType, setSkinType] = useState<SkinType | null>(topic.skin_type ?? null);
-  const [nuanceApplicable, setNuanceApplicable] = useState(topic.nuance_applicable);
+  // ?? true: default to "in scope" (unticked) if this is unset, rather than
+  // letting a missing/undefined value read as excluded.
+  const [nuanceApplicable, setNuanceApplicable] = useState(topic.nuance_applicable ?? true);
   const [nuanceReason, setNuanceReason] = useState(topic.nuance_scope_reason ?? "");
-  const [mgmtApplicable, setMgmtApplicable] = useState(topic.mgmt_applicable);
+  const [mgmtApplicable, setMgmtApplicable] = useState(topic.mgmt_applicable ?? true);
   const [mgmtReason, setMgmtReason] = useState(topic.mgmt_scope_reason ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
@@ -59,18 +61,6 @@ export function CoverageModal({
     if (covered && skinType == null) {
       setBusy(false);
       setError("Choose which skin type was shown (or Not sure).");
-      return;
-    }
-
-    if (covered && !nuanceApplicable && !nuanceReason.trim()) {
-      setBusy(false);
-      setError("Explain why diagnostic nuance was outside this session's scope.");
-      return;
-    }
-
-    if (covered && !mgmtApplicable && !mgmtReason.trim()) {
-      setBusy(false);
-      setError("Explain why management was outside this session's scope.");
       return;
     }
 
@@ -275,20 +265,23 @@ function ScopeCheckbox({
           {excluded ? "✓" : ""}
         </span>
         <span className="text-[13.5px] font-semibold text-[#0E1A1C]">{label}</span>
+        {excluded && (
+          <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-0.5 font-mono text-[9.5px] font-semibold uppercase text-[#064B45]">
+            Excluded
+          </span>
+        )}
       </button>
-      {excluded && (
-        <div className="mt-2 pl-[30px]">
-          <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
-            Why was this outside the session's scope?
-          </label>
-          <textarea
-            value={reason}
-            onChange={(e) => onReasonChange(e.target.value)}
-            placeholder="e.g. This was a diagnosis-only session; management was not addressed."
-            className="input mt-1 min-h-[56px]"
-          />
-        </div>
-      )}
+      <div className="mt-2 pl-[30px]">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+          Why was this outside the session's scope? <span className="font-normal normal-case">· optional</span>
+        </label>
+        <textarea
+          value={reason}
+          onChange={(e) => onReasonChange(e.target.value)}
+          placeholder="e.g. This was a diagnosis-only session; management was not addressed."
+          className="input mt-1 min-h-[56px]"
+        />
+      </div>
     </div>
   );
 }
