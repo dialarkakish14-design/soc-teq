@@ -80,6 +80,10 @@ export interface Topic {
   discussed_soc: boolean | null;
   soc_covered: boolean;
   skin_type: SkinType | null;
+  nuance_applicable: boolean;
+  nuance_scope_reason: string | null;
+  mgmt_applicable: boolean;
+  mgmt_scope_reason: string | null;
 }
 
 export interface RatingDomainKey {
@@ -93,30 +97,32 @@ export const RATING_DOMAINS: RatingDomainKey[] = [
   {
     key: "depth",
     name: "Depth",
-    statement: "The SoC content was taught with the same emphasis as non-SoC content.",
-    hint: "Meaning: how much emphasis skin of color actually received relative to the rest of the topic, not how advanced the content was. A topic can score well on nuance or management while still scoring low here, if skin of color only got a brief mention compared to the depth given to everything else covered.",
+    statement: "The SoC content received comparable emphasis to the rest of the topic.",
+    hint: "Meaning: how much attention skin of color received relative to the rest of the topic, not how advanced the content was. A session can score well on nuance or management while still scoring low here if skin of color received only a brief mention compared with the depth given to the rest of the topic.",
   },
   {
     key: "clarity",
     name: "Visual clarity",
-    statement: "High-quality, diagnostic images of skin of color were used.",
+    statement: "Clear, diagnostically useful images of skin of color were used.",
+    hint: "Meaning: whether the images clearly demonstrated the relevant findings in skin of color and were useful for learning and recognition.",
   },
   {
     key: "nuance",
     name: "Nuance",
-    statement: "Diagnostic pitfalls specific to skin of color were explicitly addressed.",
-    hint: "Meaning: presentations, exam findings, or complications that are easy to miss or that look different specifically in skin of color.",
+    statement: "Diagnostic nuances and pitfalls relevant to skin of color were explicitly addressed.",
+    hint: "Meaning: whether the session addressed presentations, examination findings, or complications that may appear differently, be less apparent, or be more easily missed in skin of color.",
   },
   {
     key: "mgmt",
     name: "Management",
-    statement: "Management considerations specific to skin of color were clearly discussed.",
-    hint: "Meaning: whether treatment, monitoring, or care considerations that can differ for skin of color were addressed, not just how the condition looks or is diagnosed.",
+    statement: "Management considerations relevant to skin of color were clearly discussed.",
+    hint: "Meaning: whether treatment, monitoring, counseling, or other care considerations that may differ or require particular attention in skin of color were addressed, beyond how the condition looks or is diagnosed.",
   },
   {
     key: "conf",
     name: "Confidence",
-    statement: "I feel more capable of managing this condition in skin of color after this session.",
+    statement: "I feel more capable of applying what I learned in this session to patients with skin of color.",
+    hint: "Meaning: whether this specific session made you feel more confident applying what it actually covered, whether that was diagnosis, management, or both, to patients with skin of color.",
   },
 ];
 
@@ -126,8 +132,8 @@ export interface Rating {
   resident_id: string;
   depth: number;
   clarity: number;
-  nuance: number;
-  mgmt: number;
+  nuance: number | null;
+  mgmt: number | null;
   conf: number;
   note: string | null;
 }

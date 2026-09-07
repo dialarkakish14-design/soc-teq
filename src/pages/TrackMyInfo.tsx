@@ -90,7 +90,8 @@ export function TrackMyInfo({
 
   const myMean = (r: TopicFull) => {
     const mineRating = r.ratings.find((rt) => rt.resident_id === resident.id)!;
-    return RATING_DOMAINS.reduce((a, d) => a + (mineRating[d.key] as number), 0) / RATING_DOMAINS.length;
+    const values = RATING_DOMAINS.map((d) => mineRating[d.key] as number | null).filter((v): v is number => v != null);
+    return values.reduce((a, v) => a + v, 0) / values.length;
   };
   const myAvg = mine.length ? mine.reduce((a, r) => a + myMean(r), 0) / mine.length : null;
   const teamAvg = mine.length
@@ -114,6 +115,10 @@ export function TrackMyInfo({
       "n_no_response",
       "cohort_size",
       "flagged",
+      "nuance_applicable",
+      "nuance_scope_reason",
+      "mgmt_applicable",
+      "mgmt_scope_reason",
     ];
     const dataRows = rows.map((r) => {
       const sc = scoreTopic(r.ratings);
@@ -128,13 +133,17 @@ export function TrackMyInfo({
         r.discussed_soc ? 1 : 0,
         r.soc_covered ? 1 : 0,
         r.skin_type ?? "",
-        ...RATING_DOMAINS.map((d) => (sc ? sc.perItem[d.key].toFixed(2) : "")),
+        ...RATING_DOMAINS.map((d) => (sc && sc.perItem[d.key] != null ? sc.perItem[d.key].toFixed(2) : "")),
         sc ? sc.overall.toFixed(2) : "",
         sc ? sc.n : 0,
         decl,
         nores,
         cohort.length,
         sc ? (isBelowThreshold(sc.overall) ? 1 : 0) : "",
+        r.nuance_applicable ? 1 : 0,
+        r.nuance_scope_reason ?? "",
+        r.mgmt_applicable ? 1 : 0,
+        r.mgmt_scope_reason ?? "",
       ];
     });
     downloadCsv(`soc-teq_topic_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
@@ -163,7 +172,10 @@ export function TrackMyInfo({
         const v = r.ratings.find((rt) => rt.resident_id === c.id);
         const absence = r.absences.find((a) => a.resident_id === c.id);
         const status = v ? "rated" : absence?.reason === "declared" ? "absent_declared" : absence?.reason === "no_response" ? "no_response" : "pending";
-        const raterMean = v ? (RATING_DOMAINS.reduce((a, d) => a + (v[d.key] as number), 0) / RATING_DOMAINS.length).toFixed(2) : "";
+        const raterValues = v
+          ? RATING_DOMAINS.map((d) => v[d.key] as number | null).filter((x): x is number => x != null)
+          : [];
+        const raterMean = raterValues.length ? (raterValues.reduce((a, x) => a + x, 0) / raterValues.length).toFixed(2) : "";
         dataRows.push([
           r.sessions!.days.date,
           r.sessions!.type,
@@ -172,7 +184,7 @@ export function TrackMyInfo({
           r.skin_type ?? "",
           c.resident_code,
           status,
-          ...RATING_DOMAINS.map((d) => (v ? (v[d.key] as number) : "")),
+          ...RATING_DOMAINS.map((d) => (v && v[d.key] != null ? (v[d.key] as number) : "")),
           raterMean,
           sc ? sc.overall.toFixed(2) : "",
           sc ? sc.n : 0,

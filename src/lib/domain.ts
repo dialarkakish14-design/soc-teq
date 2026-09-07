@@ -102,16 +102,21 @@ export interface TopicScore {
   n: number;
 }
 
-// The topic score is the mean of the five item means, each taken across only
-// the residents who actually rated — never divided by cohort size (build
-// spec section 3.3).
+// The topic score is the mean of the item means, each taken across only the
+// residents who actually rated — never divided by cohort size (build spec
+// section 3.3). A domain marked out of scope for this topic (nuance/mgmt can
+// be null) is left out of perItem entirely, not treated as a 0 or midpoint,
+// and out of the overall average too.
 export function scoreTopic(ratings: Rating[]): TopicScore | null {
   if (!ratings.length) return null;
   const perItem: Record<string, number> = {};
   for (const d of RATING_DOMAINS) {
-    perItem[d.key] = ratings.reduce((sum, r) => sum + (r[d.key] as number), 0) / ratings.length;
+    const values = ratings.map((r) => r[d.key] as number | null).filter((v): v is number => v != null);
+    if (values.length) perItem[d.key] = values.reduce((sum, v) => sum + v, 0) / values.length;
   }
-  const overall = RATING_DOMAINS.reduce((sum, d) => sum + perItem[d.key], 0) / RATING_DOMAINS.length;
+  const keys = Object.keys(perItem);
+  if (!keys.length) return null;
+  const overall = keys.reduce((sum, k) => sum + perItem[k], 0) / keys.length;
   return { perItem, overall, n: ratings.length };
 }
 
@@ -227,9 +232,10 @@ export function itemAverages(entries: TopicEntry[]): Record<string, number> | nu
   if (!scored.length) return null;
   const per: Record<string, number> = {};
   for (const d of RATING_DOMAINS) {
-    per[d.key] = scored.reduce((a, s) => a + s.perItem[d.key], 0) / scored.length;
+    const values = scored.map((s) => s.perItem[d.key]).filter((v): v is number => v != null);
+    if (values.length) per[d.key] = values.reduce((a, v) => a + v, 0) / values.length;
   }
-  return per;
+  return Object.keys(per).length ? per : null;
 }
 
 export interface MonthlyBrief {
@@ -252,9 +258,12 @@ export function monthlyBrief(entries: TopicEntry[]): MonthlyBrief | null {
   if (!scored.length) return null;
   const per: Record<string, number> = {};
   for (const d of RATING_DOMAINS) {
-    per[d.key] = scored.reduce((a, o) => a + o.score.perItem[d.key], 0) / scored.length;
+    const values = scored.map((o) => o.score.perItem[d.key]).filter((v): v is number => v != null);
+    if (values.length) per[d.key] = values.reduce((a, v) => a + v, 0) / values.length;
   }
-  const sorted = [...RATING_DOMAINS].sort((a, b) => per[a.key] - per[b.key]);
+  const available = RATING_DOMAINS.filter((d) => per[d.key] != null);
+  if (!available.length) return null;
+  const sorted = [...available].sort((a, b) => per[a.key] - per[b.key]);
   const weakest = sorted[0];
   const strongest = sorted[sorted.length - 1];
   return {

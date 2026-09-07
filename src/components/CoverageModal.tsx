@@ -22,6 +22,10 @@ export function CoverageModal({
   const [image, setImage] = useState<boolean | null>(topic.image_soc);
   const [discussed, setDiscussed] = useState<boolean | null>(topic.discussed_soc);
   const [skinType, setSkinType] = useState<SkinType | null>(topic.skin_type ?? null);
+  const [nuanceApplicable, setNuanceApplicable] = useState(topic.nuance_applicable);
+  const [nuanceReason, setNuanceReason] = useState(topic.nuance_scope_reason ?? "");
+  const [mgmtApplicable, setMgmtApplicable] = useState(topic.mgmt_applicable);
+  const [mgmtReason, setMgmtReason] = useState(topic.mgmt_scope_reason ?? "");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showDefs, setShowDefs] = useState(false);
@@ -58,6 +62,18 @@ export function CoverageModal({
       return;
     }
 
+    if (covered && !nuanceApplicable && !nuanceReason.trim()) {
+      setBusy(false);
+      setError("Explain why diagnostic nuance was outside this session's scope.");
+      return;
+    }
+
+    if (covered && !mgmtApplicable && !mgmtReason.trim()) {
+      setBusy(false);
+      setError("Explain why management was outside this session's scope.");
+      return;
+    }
+
     const { error: updateError } = await supabase
       .from("topics")
       .update({
@@ -65,6 +81,10 @@ export function CoverageModal({
         image_soc: image,
         discussed_soc: discussed,
         skin_type: covered ? skinType : null,
+        nuance_applicable: covered ? nuanceApplicable : true,
+        nuance_scope_reason: covered && !nuanceApplicable ? nuanceReason.trim() : null,
+        mgmt_applicable: covered ? mgmtApplicable : true,
+        mgmt_scope_reason: covered && !mgmtApplicable ? mgmtReason.trim() : null,
       })
       .eq("id", topic.id);
     setBusy(false);
@@ -184,6 +204,32 @@ export function CoverageModal({
                 )}
               </div>
             )}
+
+            {covered && (
+              <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
+                <h3 className="font-bold text-[#0E1A1C]">Domains outside this session's scope</h3>
+                <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">
+                  Check with the residents present before marking a domain below. Only select a domain when
+                  that area of teaching was genuinely outside the scope of the session, not when it was
+                  relevant but simply wasn't covered for skin of color.
+                </p>
+
+                <ScopeCheckbox
+                  label="Diagnostic nuance"
+                  excluded={!nuanceApplicable}
+                  onToggle={() => setNuanceApplicable((a) => !a)}
+                  reason={nuanceReason}
+                  onReasonChange={setNuanceReason}
+                />
+                <ScopeCheckbox
+                  label="Management"
+                  excluded={!mgmtApplicable}
+                  onToggle={() => setMgmtApplicable((a) => !a)}
+                  reason={mgmtReason}
+                  onReasonChange={setMgmtReason}
+                />
+              </div>
+            )}
           </>
         )}
 
@@ -201,6 +247,48 @@ export function CoverageModal({
           {busy ? "Saving…" : visual === false ? "Skip this topic" : "Save coverage"}
         </button>
       </div>
+    </div>
+  );
+}
+
+function ScopeCheckbox({
+  label,
+  excluded,
+  onToggle,
+  reason,
+  onReasonChange,
+}: {
+  label: string;
+  excluded: boolean;
+  onToggle: () => void;
+  reason: string;
+  onReasonChange: (v: string) => void;
+}) {
+  return (
+    <div className="mt-3 border-t border-[#E2EAE9] pt-3 first:mt-2 first:border-t-0 first:pt-0">
+      <button type="button" onClick={onToggle} className="flex w-full items-center gap-2.5 text-left">
+        <span
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border-[1.5px] text-xs font-bold ${
+            excluded ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#C9D3D2] bg-white"
+          }`}
+        >
+          {excluded ? "✓" : ""}
+        </span>
+        <span className="text-[13.5px] font-semibold text-[#0E1A1C]">{label}</span>
+      </button>
+      {excluded && (
+        <div className="mt-2 pl-[30px]">
+          <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">
+            Why was this outside the session's scope?
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => onReasonChange(e.target.value)}
+            placeholder="e.g. This was a diagnosis-only session; management was not addressed."
+            className="input mt-1 min-h-[56px]"
+          />
+        </div>
+      )}
     </div>
   );
 }

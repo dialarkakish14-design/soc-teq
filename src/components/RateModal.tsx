@@ -19,9 +19,16 @@ export function RateModal({
   const [busy, setBusy] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
 
-  const complete = Object.keys(vals).length === RATING_DOMAINS.length;
+  // A domain the logger marked outside this topic's scope (nuance/mgmt only)
+  // never appears here to rate at all — not skippable, just not offered.
+  const isApplicable = (key: string) =>
+    key === "nuance" ? topic.nuance_applicable : key === "mgmt" ? topic.mgmt_applicable : true;
+  const applicableDomains = RATING_DOMAINS.filter((d) => isApplicable(d.key));
+  const excludedDomains = RATING_DOMAINS.filter((d) => !isApplicable(d.key));
+
+  const complete = Object.keys(vals).length === applicableDomains.length;
   const mean = complete
-    ? RATING_DOMAINS.reduce((s, d) => s + vals[d.key], 0) / RATING_DOMAINS.length
+    ? applicableDomains.reduce((s, d) => s + vals[d.key], 0) / applicableDomains.length
     : null;
 
   async function submit() {
@@ -37,8 +44,8 @@ export function RateModal({
         resident_id: residentId,
         depth: vals.depth,
         clarity: vals.clarity,
-        nuance: vals.nuance,
-        mgmt: vals.mgmt,
+        nuance: topic.nuance_applicable ? vals.nuance : null,
+        mgmt: topic.mgmt_applicable ? vals.mgmt : null,
         conf: vals.conf,
         note: note.trim() || null,
       },
@@ -92,8 +99,22 @@ export function RateModal({
           )}
         </div>
 
+        {excludedDomains.length > 0 && (
+          <div className="mt-3 flex flex-col gap-2">
+            {excludedDomains.map((d) => {
+              const reason = d.key === "nuance" ? topic.nuance_scope_reason : topic.mgmt_scope_reason;
+              return (
+                <div key={d.key} className="rounded-2xl bg-[#EAEFEE] px-3.5 py-3">
+                  <div className="text-[12.5px] font-bold text-[#2E3A3D]">{d.name} · outside this session's scope</div>
+                  {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#5C6B6F]">{reason}</p>}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="mt-3 flex flex-col gap-3">
-          {RATING_DOMAINS.map((d) => {
+          {applicableDomains.map((d) => {
             const set = d.key in vals;
             return (
               <div key={d.key} className="rounded-3xl bg-white p-4 shadow-sm">
@@ -159,7 +180,7 @@ export function RateModal({
           <div>
             <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">My score</div>
             <div className="mt-0.5 text-[11px] opacity-90">
-              {mean == null ? `${Object.keys(vals).length} of ${RATING_DOMAINS.length} items set.` : mean < THRESHOLD ? "Below 3.5 on your rating." : "At or above 3.5."}
+              {mean == null ? `${Object.keys(vals).length} of ${applicableDomains.length} items set.` : mean < THRESHOLD ? "Below 3.5 on your rating." : "At or above 3.5."}
             </div>
           </div>
           <div className="font-mono text-3xl font-semibold">{mean == null ? "—" : mean.toFixed(2)}</div>

@@ -15,6 +15,10 @@ interface CaseTopic {
   incomplete: boolean;
   image_soc: boolean | null;
   discussed_soc: boolean | null;
+  nuance_applicable: boolean;
+  nuance_scope_reason: string | null;
+  mgmt_applicable: boolean;
+  mgmt_scope_reason: string | null;
   ratings: Rating[];
   date: string;
   sessionType: SessionType;
@@ -47,7 +51,9 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
     const [{ data }, { data: cohortRows }] = await Promise.all([
       supabase
         .from("topics")
-        .select("id, title, skin_type, soc_covered, incomplete, image_soc, discussed_soc, ratings(*), sessions(type, days(date))")
+        .select(
+          "id, title, skin_type, soc_covered, incomplete, image_soc, discussed_soc, nuance_applicable, nuance_scope_reason, mgmt_applicable, mgmt_scope_reason, ratings(*), sessions(type, days(date))",
+        )
         .eq("soc_covered", true)
         .order("created_at", { ascending: false }),
       supabase.from("residents").select("id, resident_code").eq("program_id", resident.program_id).eq("pgy", resident.pgy),
@@ -64,6 +70,10 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
       incomplete: boolean;
       image_soc: boolean | null;
       discussed_soc: boolean | null;
+      nuance_applicable: boolean;
+      nuance_scope_reason: string | null;
+      mgmt_applicable: boolean;
+      mgmt_scope_reason: string | null;
       ratings: Rating[];
       sessions: { type: SessionType; days: { date: string } } | null;
     }[]) ?? [])
@@ -76,6 +86,10 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
         incomplete: r.incomplete,
         image_soc: r.image_soc,
         discussed_soc: r.discussed_soc,
+        nuance_applicable: r.nuance_applicable,
+        nuance_scope_reason: r.nuance_scope_reason,
+        mgmt_applicable: r.mgmt_applicable,
+        mgmt_scope_reason: r.mgmt_scope_reason,
         ratings: r.ratings,
         date: r.sessions!.days.date,
         sessionType: r.sessions!.type,

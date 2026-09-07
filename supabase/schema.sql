@@ -68,6 +68,14 @@ create table topics (
   skin_type text check (
     skin_type is null or skin_type in ('Fitzpatrick IV', 'Fitzpatrick V', 'Fitzpatrick VI', 'Mixed across IV–VI', 'Not specified')
   ),
+  -- Set by the logger (with the room) when an entire area of clinical
+  -- teaching was genuinely outside this session's scope — not simply
+  -- because skin-of-color considerations within it went uncovered. Only
+  -- nuance and management are excludable; see patch_scope_exclusion.sql.
+  nuance_applicable boolean not null default true,
+  nuance_scope_reason text,
+  mgmt_applicable boolean not null default true,
+  mgmt_scope_reason text,
   created_at timestamptz not null default now()
 );
 
@@ -77,8 +85,11 @@ create table ratings (
   resident_id uuid not null references residents (id),
   depth int not null check (depth between 1 and 5),
   clarity int not null check (clarity between 1 and 5),
-  nuance int not null check (nuance between 1 and 5),
-  mgmt int not null check (mgmt between 1 and 5),
+  -- Nullable: left unset when the topic's nuance/mgmt was marked outside
+  -- the session's scope, so it's structurally absent rather than a 0 or a
+  -- forced numeric answer to a question that didn't apply.
+  nuance int check (nuance between 1 and 5),
+  mgmt int check (mgmt between 1 and 5),
   conf int not null check (conf between 1 and 5),
   note text,
   created_at timestamptz not null default now(),

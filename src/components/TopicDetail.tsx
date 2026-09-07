@@ -11,6 +11,10 @@ export interface DetailTopic {
   image_soc: boolean | null;
   discussed_soc: boolean | null;
   ratings: Rating[];
+  nuance_applicable: boolean;
+  nuance_scope_reason: string | null;
+  mgmt_applicable: boolean;
+  mgmt_scope_reason: string | null;
 }
 
 export function TopicDetail({
@@ -80,7 +84,18 @@ export function TopicDetail({
               </p>
               {RATING_DOMAINS.map((d) => {
                 const teamVal = sc.perItem[d.key];
-                const mineVal = mine ? (mine[d.key] as number) : null;
+                if (teamVal == null) {
+                  const reason = d.key === "nuance" ? topic.nuance_scope_reason : d.key === "mgmt" ? topic.mgmt_scope_reason : null;
+                  return (
+                    <div key={d.key} className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2">
+                      <div className="text-[12.5px] font-semibold text-[#5C6B6F]">
+                        {d.name} · outside this session's scope
+                      </div>
+                      {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#5C6B6F]">{reason}</p>}
+                    </div>
+                  );
+                }
+                const mineVal = mine ? (mine[d.key] as number | null) : null;
                 return (
                   <div key={d.key} className="mt-2.5">
                     <div className="flex justify-between text-[12.5px] font-semibold">
