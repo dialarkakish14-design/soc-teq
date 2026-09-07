@@ -21,6 +21,21 @@ export const SESSION_TYPE_COLOR: Record<string, string> = {
 
 export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";
 
+export const COVERAGE_DEFINITIONS: { title: string; body: string }[] = [
+  {
+    title: "Visually relevant topic",
+    body: "A topic counts as visually relevant if seeing it actually matters, its morphology, appearance, or visual pattern is central to recognizing it. This includes image-based tools, like AI-assisted dermoscopy or dermatopathology, since the core task is still visual interpretation even though it involves technology.",
+  },
+  {
+    title: "Image of Fitzpatrick IV–VI shown",
+    body: "Any image where the skin shown is Fitzpatrick IV, V, or VI counts, a single slide is enough. Mixed-tone images still count if IV–VI is represented among them.",
+  },
+  {
+    title: "Skin of color explicitly discussed",
+    body: "Any discussion that genuinely connects the topic to skin of color counts, not just appearance. This includes management differences, diagnostic nuance, epidemiology, culturally relevant terminology, socioeconomic factors, or practices specific to certain populations, like hair care routines or skin bleaching. It doesn't need to cover every angle, just genuinely engage with skin of color in some way.",
+  },
+];
+
 export const RM_DEFINITION =
   "RM — Representational Mean. A topic's overall score: the mean of the five rating items (depth, visual clarity, nuance, management, confidence), each averaged across everyone who rated it. Below 3.5 flags it as a priority educational need.";
 

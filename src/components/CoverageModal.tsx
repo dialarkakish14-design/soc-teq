@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
+import { COVERAGE_DEFINITIONS } from "../lib/content";
 import { SKIN_TYPES, type Rating, type SkinType, type Topic } from "../types";
 
 export function CoverageModal({
@@ -23,6 +24,7 @@ export function CoverageModal({
   const [skinType, setSkinType] = useState<SkinType | null>(topic.skin_type ?? null);
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
+  const [showDefs, setShowDefs] = useState(false);
   const isEdit = !topic.incomplete;
 
   const covered = image === true && discussed === true;
@@ -84,6 +86,28 @@ export function CoverageModal({
         <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
           Before marking coverage, check with the residents in the room that you agree on what was
           shown and discussed.
+        </div>
+
+        <div className="mt-3 rounded-2xl bg-white shadow-sm">
+          <button
+            onClick={() => setShowDefs((s) => !s)}
+            className="flex w-full items-center justify-between gap-2 px-3.5 py-3 text-left"
+          >
+            <span className="text-[13px] font-bold text-[#0E7C72]">What counts?</span>
+            <span className={`shrink-0 text-lg font-extrabold text-[#5C6B6F] transition-transform ${showDefs ? "rotate-180" : ""}`}>
+              ▾
+            </span>
+          </button>
+          {showDefs && (
+            <div className="flex flex-col gap-3 px-3.5 pb-3.5">
+              {COVERAGE_DEFINITIONS.map((d) => (
+                <div key={d.title}>
+                  <div className="text-[12.5px] font-bold text-[#0E1A1C]">{d.title}</div>
+                  <p className="mt-0.5 text-[12.5px] leading-relaxed text-[#2E3A3D]">{d.body}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {isEdit && ratings && ratings.length > 0 && (
