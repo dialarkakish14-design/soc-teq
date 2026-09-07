@@ -94,6 +94,7 @@ export const RATING_DOMAINS: RatingDomainKey[] = [
     key: "depth",
     name: "Depth",
     statement: "The SoC content was taught with the same emphasis as non-SoC content.",
+    hint: "Meaning: how much emphasis skin of color actually received relative to the rest of the topic, not how advanced the content was. A topic can score well on nuance or management while still scoring low here, if skin of color only got a brief mention compared to the depth given to everything else covered.",
   },
   {
     key: "clarity",
@@ -110,6 +111,7 @@ export const RATING_DOMAINS: RatingDomainKey[] = [
     key: "mgmt",
     name: "Management",
     statement: "Management considerations specific to skin of color were clearly discussed.",
+    hint: "Meaning: whether treatment, monitoring, or care considerations that can differ for skin of color were addressed, not just how the condition looks or is diagnosed.",
   },
   {
     key: "conf",

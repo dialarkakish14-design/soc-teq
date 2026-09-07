@@ -24,15 +24,15 @@ export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";
 export const COVERAGE_DEFINITIONS: { title: string; body: string }[] = [
   {
     title: "Visually relevant topic",
-    body: "A topic counts as visually relevant if seeing it actually matters, its morphology, appearance, or visual pattern is central to recognizing it. This includes image-based tools, like AI-assisted dermoscopy or dermatopathology, since the core task is still visual interpretation even though it involves technology.",
+    body: "A topic counts as visually relevant when its appearance, morphology, or visual pattern is important to recognizing or interpreting it. This includes visual modalities such as dermoscopy, AI-assisted image analysis, and dermatopathology.",
   },
   {
     title: "Image of Fitzpatrick IV–VI shown",
-    body: "Any image where the skin shown is Fitzpatrick IV, V, or VI counts, a single slide is enough. Mixed-tone images still count if IV–VI is represented among them.",
+    body: "A clinical image depicting skin consistent with Fitzpatrick IV–VI counts. One clearly visible image is enough. Composite or mixed-tone images also count if at least one clinically relevant example represents IV–VI.",
   },
   {
     title: "Skin of color explicitly discussed",
-    body: "Any discussion that genuinely connects the topic to skin of color counts, not just appearance. This includes management differences, diagnostic nuance, epidemiology, culturally relevant terminology, socioeconomic factors, or practices specific to certain populations, like hair care routines or skin bleaching. It doesn't need to cover every angle, just genuinely engage with skin of color in some way.",
+    body: "A discussion counts when it meaningfully connects the topic to skin of color. This may include differences in clinical presentation or management, diagnostic considerations, epidemiology, culturally relevant terminology, socioeconomic factors, or population-specific practices such as hair care or skin bleaching. It does not need to cover every aspect; it just needs to include a substantive skin-of-color-specific point.",
   },
 ];
 
