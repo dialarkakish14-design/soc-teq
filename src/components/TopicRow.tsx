@@ -36,7 +36,7 @@ export function TopicRow({
   let meta: string;
   let badge: React.ReactNode;
   if (topic.incomplete) {
-    meta = "captured — coverage questions still needed";
+    meta = "captured · coverage questions still needed";
     badge = <Pill tone="violet">Finish</Pill>;
   } else if (!topic.soc_covered) {
     meta = `image ${topic.image_soc ? "yes" : "no"} · discussed ${topic.discussed_soc ? "yes" : "no"}`;

@@ -143,7 +143,7 @@ export function Today({
     if (error) return flash(error.message);
     setDay({ ...day, logger_id: null });
     setLogger(null);
-    flash("Released — anyone else can claim it. Nothing you've logged is affected.");
+    flash("Released · anyone else can claim it. Nothing you've logged is affected.");
   }
 
   async function capture() {
