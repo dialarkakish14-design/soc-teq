@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
-import { FAQ_ITEMS } from "../lib/content";
+import { EQUITY_NOTE, FAQ_ITEMS } from "../lib/content";
 import type { Resident } from "../types";
 
 export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => void }) {
@@ -76,13 +76,11 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
         <div className="mt-6 rounded-3xl bg-[#DCEFEB] p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Got feedback?</h3>
           <p className="mt-1 text-[12.5px] leading-relaxed text-[#16211F]">
-            SoC-TEQ is continuing to evolve, and resident feedback helps shape what comes next.
+            SoC-TEQ will continue to evolve with resident input. Share what's working, what could
+            be improved, or what you'd like to see next.
           </p>
           <p className="mt-2 text-[12.5px] leading-relaxed text-[#16211F]">
-            Share what's working, what could be improved, or what you'd like to see in a future version.
-          </p>
-          <p className="mt-2 text-[12.5px] leading-relaxed text-[#16211F]">
-            You can submit feedback here or email me directly at{" "}
+            Submit feedback below or email me directly at{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
               dialarkakish1@hotmail.com
             </a>
@@ -97,7 +95,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
               <textarea
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                placeholder="What's working, what isn't, what you'd want to see next…"
+                placeholder="What's working? What could be better?"
                 className="input mt-3 min-h-[90px]"
               />
               {error && (
@@ -114,6 +112,18 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
               </button>
             </>
           )}
+        </div>
+
+        <div className="mt-10 px-1 pb-2">
+          <div className="font-mono text-[11px] font-semibold uppercase tracking-widest text-[#0E7C72]">
+            {EQUITY_NOTE.eyebrow}
+          </div>
+          <h2 className="mt-1.5 text-[16px] font-bold leading-tight tracking-tight text-[#0E1A1C]">
+            {EQUITY_NOTE.title}
+          </h2>
+          <p className="mt-2 whitespace-pre-line text-[12.5px] leading-relaxed text-[#5C6B6F]">
+            {EQUITY_NOTE.body}
+          </p>
         </div>
       </div>
     </div>

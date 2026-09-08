@@ -156,6 +156,12 @@ export const WHY_CARDS: MissionCard[] = [
   },
 ];
 
+export const EQUITY_NOTE = {
+  eyebrow: "One piece of a larger picture",
+  title: "Equity in dermatology goes further than this",
+  body: "Skin of color representation is one part of a much broader equity conversation in dermatology and medicine. Language and communication barriers, care for Deaf and hard of hearing patients, access in under-resourced communities, disability inclusion, and global dermatology all deserve dedicated attention.\n\nSoC-TEQ focuses on one part of that picture: how diverse skin tones are represented within dermatology teaching.",
+};
+
 export const WHY_AGENCY_CARD = {
   eyebrow: "You're part of the curriculum too",
   title: "You don't have to wait to be faculty",
