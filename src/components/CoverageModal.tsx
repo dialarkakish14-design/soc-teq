@@ -236,6 +236,7 @@ export function CoverageModal({
                   onToggle={() => setNuanceApplicable((a) => !a)}
                   reason={nuanceReason}
                   onReasonChange={setNuanceReason}
+                  placeholder="e.g. This session focused on treatment; differences in presentation across skin tones were not part of the teaching objective."
                 />
                 <ScopeCheckbox
                   label="Management"
@@ -244,6 +245,7 @@ export function CoverageModal({
                   onToggle={() => setMgmtApplicable((a) => !a)}
                   reason={mgmtReason}
                   onReasonChange={setMgmtReason}
+                  placeholder="e.g. This was a diagnosis-only session; management was not addressed."
                 />
               </div>
             )}
@@ -275,6 +277,7 @@ function ScopeCheckbox({
   onToggle,
   reason,
   onReasonChange,
+  placeholder,
 }: {
   label: string;
   hint?: string;
@@ -282,6 +285,7 @@ function ScopeCheckbox({
   onToggle: () => void;
   reason: string;
   onReasonChange: (v: string) => void;
+  placeholder: string;
 }) {
   const [showHint, setShowHint] = useState(false);
   return (
@@ -325,7 +329,7 @@ function ScopeCheckbox({
         <textarea
           value={reason}
           onChange={(e) => onReasonChange(e.target.value)}
-          placeholder="e.g. This was a diagnosis-only session; management was not addressed."
+          placeholder={placeholder}
           className="input mt-1 min-h-[56px]"
         />
       </div>
