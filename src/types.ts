@@ -63,12 +63,13 @@ export const SKIN_TYPES = [
   "Fitzpatrick V",
   "Fitzpatrick VI",
   "Mixed across IV–VI",
-  "Not specified",
 ] as const;
 export type SkinType = (typeof SKIN_TYPES)[number];
 
 // The three tones tracked for coverage purposes — "Mixed across IV–VI" counts
-// toward all three, "Not specified" toward none.
+// toward all three. A topic marked as covered always names a real tone —
+// there's no "not sure" option, since covered already means the logger
+// confirmed a IV–VI image was shown.
 export const FITZPATRICK_TONES: SkinType[] = ["Fitzpatrick IV", "Fitzpatrick V", "Fitzpatrick VI"];
 
 export interface Topic {

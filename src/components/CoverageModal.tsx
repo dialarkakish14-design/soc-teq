@@ -64,7 +64,7 @@ export function CoverageModal({
 
     if (covered && skinType == null) {
       setBusy(false);
-      setError("Choose which skin type was shown (or Not sure).");
+      setError("Choose which skin type was shown.");
       return;
     }
 
@@ -199,7 +199,7 @@ export function CoverageModal({
                               : "border-[#E2EAE9] bg-white text-[#2E3A3D]"
                           }`}
                         >
-                          {s === "Not specified" ? "Not sure" : s.replace("Fitzpatrick ", "")}
+                          {s.replace("Fitzpatrick ", "")}
                         </button>
                       ))}
                     </div>
