@@ -229,7 +229,7 @@ export function Today({
   );
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
   }
 
   return (
@@ -245,19 +245,19 @@ export function Today({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <div className="text-right">
-            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
             <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
               SoC-TEQ
             </button>
           </div>
-          <button onClick={onLogout} className="text-xs font-bold text-[#5C6B6F]">
+          <button onClick={onLogout} className="text-xs font-bold text-[#4C5B5F]">
             Log out
           </button>
         </div>
       </div>
 
       <div className="px-5">
-        <div className="mt-2 text-xs text-[#5C6B6F]">
+        <div className="mt-2 text-xs text-[#4C5B5F]">
           You are <b className="text-[#0E1A1C]">{resident.resident_code}</b> · {open ? `open until ${closesAtLabel(date)}` : "closed"}
         </div>
 
@@ -297,7 +297,7 @@ export function Today({
                     rest rate.
                   </p>
                 </div>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
                   Open
                 </span>
               </div>
@@ -309,7 +309,7 @@ export function Today({
                   Claim logger
                 </button>
               ) : (
-                <div className="mt-2 text-[11px] text-[#5C6B6F]">This day closed without a logger.</div>
+                <div className="mt-2 text-[11px] text-[#4C5B5F]">This day closed without a logger.</div>
               )}
             </>
           ) : (
@@ -409,7 +409,7 @@ export function Today({
         )}
         <div className="mt-4 flex flex-col gap-3">
           {sessions.length === 0 && (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
               Nothing registered for this day yet.
             </div>
           )}
@@ -422,14 +422,14 @@ export function Today({
             .map((s) => (
               <div key={s.id} className="overflow-hidden rounded-3xl bg-white shadow-sm">
                 <div className="flex items-center justify-between px-4 py-3.5">
-                  <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                  <span className="flex items-center text-[13.5px] font-extrabold text-[#0E1A1C]">
                     <span
                       className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#5C6B6F" }}
+                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#4C5B5F" }}
                     />
                     {s.type}
                   </span>
-                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
                     {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                   </span>
                 </div>
@@ -447,7 +447,7 @@ export function Today({
           {sessions.length > 0 &&
             search.trim() &&
             sessions.every((s) => !s.topics.some((t) => t.title.toLowerCase().includes(search.trim().toLowerCase()))) && (
-              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
                 No topics match "{search.trim()}".
               </div>
             )}

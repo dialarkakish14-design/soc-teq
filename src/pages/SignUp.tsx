@@ -165,7 +165,7 @@ export function SignUp({
               {showPassword ? "hide" : "show"}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-[#5C6B6F]">Forgotten passwords are reset by email.</div>
+          <div className="mt-1.5 text-xs text-[#4C5B5F]">Forgotten passwords are reset by email.</div>
         </Field>
 
         <Field label="Email">
@@ -199,7 +199,7 @@ export function SignUp({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11.5px] text-[#5C6B6F]">
+          <p className="mt-1.5 text-[11.5px] text-[#4C5B5F]">
             SoC-TEQ is in early pilot with a small number of programs. Interested in piloting it at
             yours? Email{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
@@ -248,7 +248,7 @@ export function SignUp({
           {busy ? "Creating…" : "Create account"}
         </button>
 
-        <div className="text-xs text-[#5C6B6F]">
+        <div className="text-xs text-[#4C5B5F]">
           Your name is visible to your cohort. It never appears next to a rating or in exported
           data.
         </div>

@@ -55,7 +55,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
 
         <div className="mt-7 flex items-center gap-3">
           <div className="h-px flex-1 bg-[#E2EAE9]" />
-          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
+          <span className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#4C5B5F]">
             The daily flow
           </span>
           <div className="h-px flex-1 bg-[#E2EAE9]" />
@@ -71,7 +71,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
                     {i + 1}
                   </div>
                   <h3 className="flex-1 text-[15px] font-bold text-[#0E1A1C]">{s.title}</h3>
-                  <span className={`shrink-0 text-xl font-extrabold text-[#5C6B6F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                  <span className={`shrink-0 text-xl font-extrabold text-[#4C5B5F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                     ▾
                   </span>
                 </button>
@@ -86,7 +86,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
         </div>
 
         <div className="mt-5 rounded-2xl bg-[#EAEFEE] p-4">
-          <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
+          <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#4C5B5F]">
             What happens next
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#16211F]">

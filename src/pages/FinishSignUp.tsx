@@ -142,7 +142,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
           {busy ? "Joining…" : "Finish joining"}
         </button>
 
-        <button type="button" onClick={() => supabase.auth.signOut()} className="mt-1 text-sm font-semibold text-[#5C6B6F]">
+        <button type="button" onClick={() => supabase.auth.signOut()} className="mt-1 text-sm font-semibold text-[#4C5B5F]">
           Log out
         </button>
       </form>

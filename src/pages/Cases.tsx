@@ -111,7 +111,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
   }, [active, load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
   }
 
   const titleKey = (t: string) => t.trim().toLowerCase();
@@ -175,7 +175,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
           <p className="mt-1 text-[13px] text-[#2E3A3D]">Which skin types each condition has been shown in.</p>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -184,7 +184,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
 
       <div className="px-5">
         {conditions.length === 0 ? (
-          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
             Nothing here yet.
           </div>
         ) : (
@@ -216,18 +216,18 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
                       onClick={() => toggleSession(g.type)}
                       className="flex w-full items-center justify-between gap-2 px-4 py-3.5"
                     >
-                      <span className="flex items-center text-[15.5px] font-extrabold text-[#0E1A1C]">
+                      <span className="flex items-center text-[13.5px] font-extrabold text-[#0E1A1C]">
                         <span
                           className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                          style={{ background: SESSION_TYPE_COLOR[g.type] ?? "#5C6B6F" }}
+                          style={{ background: SESSION_TYPE_COLOR[g.type] ?? "#4C5B5F" }}
                         />
                         {g.type}
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                        <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
                           {g.conditions.length} condition{g.conditions.length === 1 ? "" : "s"}
                         </span>
-                        <span className={`text-xl font-extrabold text-[#5C6B6F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                        <span className={`text-xl font-extrabold text-[#4C5B5F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                           ▾
                         </span>
                       </span>
@@ -261,7 +261,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-          <div className="mt-0.5 text-xs text-[#5C6B6F]">
+          <div className="mt-0.5 text-xs text-[#4C5B5F]">
             {c.instances.length} session{c.instances.length > 1 ? "s" : ""} · {formatDateShort(c.latest.date)}
           </div>
         </div>
@@ -278,7 +278,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
           <span
             key={t}
             className={`flex-1 rounded-lg py-1.5 text-center font-mono text-[10.5px] font-semibold ${
-              c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#5C6B6F]"
+              c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#4C5B5F]"
             }`}
           >
             {t.replace("Fitzpatrick ", "")}
@@ -286,7 +286,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
         ))}
       </div>
       {missing.length > 0 && (
-        <div className="mt-2 text-[11px] text-[#5C6B6F]">
+        <div className="mt-2 text-[11px] text-[#4C5B5F]">
           Not yet shown in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
         </div>
       )}

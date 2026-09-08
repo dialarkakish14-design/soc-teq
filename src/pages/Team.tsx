@@ -117,11 +117,11 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
   }
 
   if (!program) {
-    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Program not found.</div>;
+    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Program not found.</div>;
   }
 
   const isLead = resident.role === "program_lead";
@@ -158,7 +158,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
           </p>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -180,7 +180,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
             <div className="mt-3 flex flex-col gap-3">
               {PROFILE_FIELDS.map((f) => (
                 <div key={f.key}>
-                  <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">{f.label}</label>
+                  <label className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">{f.label}</label>
                   <textarea
                     value={form[f.key]}
                     onChange={(e) => setForm((s) => ({ ...s, [f.key]: e.target.value }))}
@@ -190,7 +190,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                 </div>
               ))}
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Location</label>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Location</label>
                 <input
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
@@ -199,8 +199,8 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                 />
               </div>
               <div>
-                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Time zone</label>
-                <p className="mt-0.5 text-[11px] text-[#5C6B6F]">
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Time zone</label>
+                <p className="mt-0.5 text-[11px] text-[#4C5B5F]">
                   Sets when this program's 4am rating cutoff actually falls, in local time.
                 </p>
                 <select value={timezone} onChange={(e) => setTimezone(e.target.value)} className="input mt-1">
@@ -241,35 +241,35 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
             <>
               {PROFILE_FIELDS.map((f) => (
                 <div key={f.key} className="border-t border-[#E2EAE9] py-2.5">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">{f.label}</div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">{f.label}</div>
                   <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">{program[f.key]}</div>
                 </div>
               ))}
               <div className="border-t border-[#E2EAE9] py-2.5">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Location</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Location</div>
                 <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">{program.location || "Pending"}</div>
               </div>
               <div className="border-t border-[#E2EAE9] py-2.5">
-                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Time zone</div>
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Time zone</div>
                 <div className="mt-0.5 text-[13.5px] text-[#0E1A1C]">
                   {timezoneLabel(program.timezone || "America/Detroit")}
                 </div>
               </div>
               {program.profile_updated_at && (
-                <div className="mt-2.5 text-[11px] text-[#5C6B6F]">Last updated {formatDateShort(program.profile_updated_at)}</div>
+                <div className="mt-2.5 text-[11px] text-[#4C5B5F]">Last updated {formatDateShort(program.profile_updated_at)}</div>
               )}
             </>
           ) : (
-            <p className="mt-2 text-[13px] text-[#5C6B6F]">
+            <p className="mt-2 text-[13px] text-[#4C5B5F]">
               {isLead
                 ? "Tap Complete to describe your program's setting, patient mix, existing curriculum and number of residents."
                 : "Your program lead hasn't filled this in yet."}
             </p>
           )}
-          <div className="mt-3 text-[11px] text-[#5C6B6F]">Completed once by the program lead. Exports with your data.</div>
+          <div className="mt-3 text-[11px] text-[#4C5B5F]">Completed once by the program lead. Exports with your data.</div>
         </div>
 
-        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">
+        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#4C5B5F]">
           Cohort directory
         </div>
         <div className="mt-3 flex flex-col gap-3">
@@ -284,21 +284,21 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
                     {r.full_name}
                     {r.id === resident.id ? " (you)" : ""}
                   </h3>
-                  <div className="text-xs text-[#5C6B6F]">{r.email}</div>
+                  <div className="text-xs text-[#4C5B5F]">{r.email}</div>
                 </div>
               </div>
               <div className="mt-3 flex items-center justify-between border-t border-[#E2EAE9] pt-3">
-                <span className="text-xs text-[#5C6B6F]">
+                <span className="text-xs text-[#4C5B5F]">
                   {ratedCounts[r.id] ?? 0} topic{(ratedCounts[r.id] ?? 0) === 1 ? "" : "s"} rated
                 </span>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5C6B6F]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
                   {loggedCounts[r.id] ?? 0} day{(loggedCounts[r.id] ?? 0) === 1 ? "" : "s"} as logger
                 </span>
               </div>
             </div>
           ))}
         </div>
-        <div className="mt-3 text-[11px] text-[#5C6B6F]">
+        <div className="mt-3 text-[11px] text-[#4C5B5F]">
           Names appear here so you know who's in your cohort. They never appear next to a rating or in exported data.
         </div>
       </div>

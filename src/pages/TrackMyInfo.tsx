@@ -73,7 +73,7 @@ export function TrackMyInfo({
   }, [active, load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#5C6B6F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
   }
 
   const codeById = Object.fromEntries(cohort.map((c) => [c.id, c.resident_code]));
@@ -203,7 +203,7 @@ export function TrackMyInfo({
           My profile
         </div>
         <div className="text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#5C6B6F]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -217,7 +217,7 @@ export function TrackMyInfo({
           </div>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-[#0E1A1C]">{resident.full_name}</h1>
-            <div className="text-xs text-[#5C6B6F]">
+            <div className="text-xs text-[#4C5B5F]">
               {resident.pgy} · @{resident.username} · you appear as <b className="text-[#0E1A1C]">{resident.resident_code}</b> in all
               data
             </div>
@@ -269,7 +269,7 @@ export function TrackMyInfo({
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
               <button onClick={() => setShowRated((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
                 <h3 className="font-bold text-[#0E1A1C]">Topics you rated</h3>
-                <span className={`shrink-0 text-xl font-extrabold text-[#5C6B6F] transition-transform ${showRated ? "rotate-180" : ""}`}>
+                <span className={`shrink-0 text-xl font-extrabold text-[#4C5B5F] transition-transform ${showRated ? "rotate-180" : ""}`}>
                   ▾
                 </span>
               </button>
@@ -285,7 +285,7 @@ export function TrackMyInfo({
                   >
                     <div>
                       <div className="text-[14px] font-bold text-[#0E1A1C]">{r.title}</div>
-                      <div className="text-[11.5px] text-[#5C6B6F]">
+                      <div className="text-[11.5px] text-[#4C5B5F]">
                         {r.sessions!.type} · {formatDateShort(r.sessions!.days.date)} · team {sc?.overall.toFixed(2)}
                       </div>
                     </div>
@@ -302,22 +302,22 @@ export function TrackMyInfo({
             </div>
           </>
         ) : (
-          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#5C6B6F] shadow-sm">
+          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
             You haven't rated anything yet.
           </div>
         )}
 
-        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#5C6B6F]">Export</div>
+        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#4C5B5F]">Export</div>
         <button onClick={exportTopicCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export topic data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#5C6B6F]">
+        <div className="mt-1.5 text-[11px] text-[#4C5B5F]">
           One row per topic. No rater identities — this is the analysis file.
         </div>
         <button onClick={exportRaterCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export rating-level data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#5C6B6F]">
+        <div className="mt-1.5 text-[11px] text-[#4C5B5F]">
           One row per rating, resident codes only. Needed for inter-rater reliability.
         </div>
 
@@ -339,7 +339,7 @@ export function TrackMyInfo({
 function AccountRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-t border-[#E2EAE9] pt-2 first:border-t-0 first:pt-0">
-      <span className="text-[#5C6B6F]">{label}</span>
+      <span className="text-[#4C5B5F]">{label}</span>
       <span className="font-semibold text-[#0E1A1C]">{value}</span>
     </div>
   );
@@ -349,7 +349,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-2xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#5C6B6F]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#4C5B5F]">{label}</div>
     </div>
   );
 }

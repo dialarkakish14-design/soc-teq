@@ -17,7 +17,7 @@ export function BottomNav({ active, onChange }: { active: NavScreen; onChange: (
           key={t.id}
           onClick={() => onChange(t.id)}
           className={`flex flex-1 flex-col items-center gap-1.5 py-3 text-[9px] font-bold uppercase tracking-wide ${
-            active === t.id ? "text-[#064B45]" : "text-[#5C6B6F]"
+            active === t.id ? "text-[#064B45]" : "text-[#4C5B5F]"
           }`}
         >
           <span className={`h-5 w-5 rounded-lg ${active === t.id ? "bg-[#0E7C72]" : "bg-[#DCEFEB]"}`} />
