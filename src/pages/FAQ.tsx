@@ -115,10 +115,13 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
         </div>
 
         <div className="mt-10 px-1 pb-2">
-          <div className="font-mono text-[11px] font-semibold uppercase tracking-widest text-[#0E7C72]">
+          <span
+            className="inline-block rounded-full px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-white"
+            style={{ background: "linear-gradient(90deg,#B5652E,#8F5205,#5E3F73,#2B5F8A,#3D6B49)" }}
+          >
             {EQUITY_NOTE.eyebrow}
-          </div>
-          <h2 className="mt-1.5 text-[16px] font-bold leading-tight tracking-tight text-[#0E1A1C]">
+          </span>
+          <h2 className="mt-2.5 text-[16px] font-bold leading-tight tracking-tight text-[#0E1A1C]">
             {EQUITY_NOTE.title}
           </h2>
           <p className="mt-2 whitespace-pre-line text-[12.5px] leading-relaxed text-[#5C6B6F]">

@@ -101,9 +101,6 @@ export const MISSION_CARDS: MissionCard[] = [
   },
 ];
 
-export const WHY_INTRO =
-  "Dermatology is learned through repeated exposure to patterns, images, cases, and clinical experiences. Research suggests that representation across skin tones remains variable across training, creating an opportunity to better understand what residents encounter over time.\n\nSoC-TEQ was designed to help make those learning experiences easier to see, reflect on, and strengthen.";
-
 export const WHY_CARDS: MissionCard[] = [
   {
     eyebrow: "Dermatology trains the eye",
