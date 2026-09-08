@@ -47,10 +47,12 @@ function App() {
     supabase.rpc("complete_signup", pending).then(({ error }) => {
       if (!error) {
         clearPendingSignupFromUrl();
-        // Mirrors the name into auth's own user_metadata so Supabase's auth
-        // emails (password reset, etc.) can personalize with {{ .Data.full_name }} —
-        // the residents table isn't reachable from that email templating.
-        supabase.auth.updateUser({ data: { full_name: pending.p_full_name } });
+        // Mirrors the name/username into auth's own user_metadata so Supabase's
+        // auth emails (password reset, etc.) can personalize with
+        // {{ .Data.full_name }} / {{ .Data.username }} — the residents table
+        // isn't reachable from that email templating, and login is by
+        // username, so a reset email is also a resident's best reminder of it.
+        supabase.auth.updateUser({ data: { full_name: pending.p_full_name, username: pending.p_username } });
       }
       setFinishingSignup(false);
       setAutoAttempted(true);

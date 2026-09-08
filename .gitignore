@@ -18,6 +18,7 @@ dist-ssr
 # Credentials saved locally — never commit these
 SMTP key.pdf
 *.pdf
+namecheap backup codes.docx
 
 # Editor directories and files
 .vscode/*
