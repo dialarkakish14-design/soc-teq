@@ -24,15 +24,15 @@ export const PAPER_URL = "https://doi.org/10.1080/0142159X.2026.2637609";
 export const COVERAGE_DEFINITIONS: { title: string; body: string }[] = [
   {
     title: "Visually relevant topic",
-    body: "A topic counts as visually relevant when its appearance, morphology, or visual pattern is important to recognizing or interpreting it. This includes visual modalities such as dermoscopy, AI-assisted image analysis, and dermatopathology.",
+    body: "Counts when visual appearance, morphology, or pattern is important to recognition or interpretation, including dermoscopy, AI-assisted image analysis, and dermatopathology.",
   },
   {
     title: "Image of Fitzpatrick IV–VI shown",
-    body: "A clinical image depicting skin consistent with Fitzpatrick IV–VI counts. One clearly visible image is enough. Composite or mixed-tone images also count if at least one clinically relevant example represents IV–VI.",
+    body: "Counts when at least one clearly visible, clinically relevant image represents Fitzpatrick IV–VI, including within composite or mixed-tone images.",
   },
   {
     title: "Skin of color explicitly discussed",
-    body: "A discussion counts when it meaningfully connects the topic to skin of color. This may include differences in clinical presentation or management, diagnostic considerations, epidemiology, culturally relevant terminology, socioeconomic factors, or population-specific practices such as hair care or skin bleaching. It does not need to cover every aspect; it just needs to include a substantive skin-of-color-specific point.",
+    body: "Counts when the discussion includes a meaningful skin-of-color-specific point, such as presentation, diagnosis or management, epidemiology, terminology, socioeconomic context, or population-specific practices. One substantive point is enough.",
   },
 ];
 
