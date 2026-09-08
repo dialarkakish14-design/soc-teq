@@ -340,7 +340,7 @@ export function Today({
                     onClick={releaseLogger}
                     className="mt-3 w-full rounded-2xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#2E3A3D]"
                   >
-                    Release logger — wrong tap, or had to leave
+                    Release logger · wrong tap, or had to leave
                   </button>
                 </>
               )}

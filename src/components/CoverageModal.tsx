@@ -148,8 +148,7 @@ export function CoverageModal({
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">No need to register this</h3>
             <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
-              Non-visual topics sit outside SoC-TEQ. Skip it and carry on with the day — nothing is
-              lost.
+              Non-visual topics sit outside SoC-TEQ. No need to register it.
             </p>
           </div>
         )}

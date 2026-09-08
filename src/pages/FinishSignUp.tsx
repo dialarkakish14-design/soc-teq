@@ -52,6 +52,9 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
       setError(rpcError.message);
       return;
     }
+    // Mirrors the name into auth's own user_metadata so Supabase's auth
+    // emails (password reset, etc.) can personalize with {{ .Data.full_name }}.
+    supabase.auth.updateUser({ data: { full_name: fullName.trim() } });
     onDone();
   }
 
