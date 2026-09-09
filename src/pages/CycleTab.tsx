@@ -107,7 +107,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   if (loading || !cycle) {
-    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">Loading…</div>;
+    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">Loading…</div>;
   }
 
   const phase = cyclePhase(cycle.start_date);
@@ -178,7 +178,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-[#0E1A1C]">Cycle 1</h3>
-            <div className="text-xs text-[#4C5B5F]">
+            <div className="text-xs text-[#3F4C50]">
               Month {month} of 6 · started {formatDateShort(cycle.start_date)}
             </div>
           </div>
@@ -234,7 +234,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[10.5px] text-[#4C5B5F]">{label}</div>
+      <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">{label}</div>
     </div>
   );
 }
@@ -243,7 +243,7 @@ function Phase1({ count }: { count: number }) {
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">Keep logging</h3>
-      <p className="mt-1.5 text-[13px] text-[#2E3A3D]">
+      <p className="mt-1.5 text-[13px] text-[#232D30]">
         {count} skin of color topic{count === 1 ? "" : "s"} logged so far this cycle. At the end of month 3
         everything scoring below {THRESHOLD} becomes your cohort's priority list.
       </p>
@@ -273,9 +273,9 @@ function Phase2({
     <>
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
-        <p className="mt-1 text-[12.5px] text-[#2E3A3D]">Claim the ones you'll build something on over months 4–6.</p>
+        <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
         {priority.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#4C5B5F]">Nothing scored below {THRESHOLD} this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
           priority.map((p) => {
             const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
@@ -285,7 +285,7 @@ function Phase2({
                 <div className="flex items-center justify-between">
                   <div>
                     <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                    <div className="text-xs text-[#4C5B5F]">
+                    <div className="text-xs text-[#3F4C50]">
                       {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
                     </div>
                   </div>
@@ -295,10 +295,10 @@ function Phase2({
                 </div>
                 {mine ? (
                   <>
-                    <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#2E3A3D]">
+                    <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
                       You claimed this — {mine.format}.
                     </div>
-                    <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#4C5B5F]">
+                    <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
                       Release this topic
                     </button>
                   </>
@@ -355,18 +355,18 @@ function Phase3({
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
       {mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#4C5B5F]">You didn't claim any topics this cycle.</div>
+        <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
       ) : (
         mine.map((c) => (
           <div key={c.id} className="border-t border-[#E2EAE9] py-3">
             <div className="flex items-center justify-between">
               <div>
                 <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#4C5B5F]">{c.format}</div>
+                <div className="text-xs text-[#3F4C50]">{c.format}</div>
               </div>
               <span
                 className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#4C5B5F]"
+                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
                 }`}
               >
                 {c.status === "delivered" ? "Delivered" : "Planned"}
@@ -374,12 +374,12 @@ function Phase3({
             </div>
             <div className="mt-2 flex gap-2">
               {c.status !== "delivered" && (
-                <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#2E3A3D]">
+                <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
                   Mark delivered
                 </button>
               )}
               {c.status === "delivered" && !c.scholarly && (
-                <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#2E3A3D]">
+                <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
                   Became scholarly work
                 </button>
               )}
@@ -410,13 +410,13 @@ function ResourceShare({
   return (
     <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-[#2E3A3D]">{resources.length} shared reading on this condition</span>
+        <span className="text-xs font-semibold text-[#232D30]">{resources.length} shared reading on this condition</span>
         <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
           {open ? "Cancel" : "Share a paper"}
         </button>
       </div>
       {resources.map((r) => (
-        <div key={r.id} className="mt-2 border-t border-[#E2EAE9] pt-2 text-[12px] text-[#2E3A3D]">
+        <div key={r.id} className="mt-2 border-t border-[#E2EAE9] pt-2 text-[12px] text-[#232D30]">
           <div className="font-semibold">{r.source}</div>
           <p className="mt-0.5">{r.takeaway}</p>
         </div>
@@ -481,17 +481,17 @@ function Phase4({
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <h3 className="font-bold text-[#0E1A1C]">What was claimed this cycle</h3>
         {claims.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#4C5B5F]">No topics were claimed this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#3F4C50]">No topics were claimed this cycle.</div>
         ) : (
           claims.map((c) => (
             <div key={c.id} className="flex items-center justify-between border-t border-[#E2EAE9] py-3">
               <div>
                 <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#4C5B5F]">{c.format}</div>
+                <div className="text-xs text-[#3F4C50]">{c.format}</div>
               </div>
               <span
                 className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#4C5B5F]"
+                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
                 }`}
               >
                 {c.status === "delivered" ? "Delivered" : "Not delivered"}
@@ -529,18 +529,18 @@ function AssessmentCard({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{label}</h3>
-          <p className="mt-0.5 text-[12.5px] text-[#4C5B5F]">{desc}</p>
+          <p className="mt-0.5 text-[12.5px] text-[#3F4C50]">{desc}</p>
         </div>
         <span
           className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#4C5B5F]"
+            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
           }`}
         >
           {mine ? `${mine.score}%` : "Not taken"}
         </span>
       </div>
       {mean != null && (
-        <div className="mt-3 flex items-center justify-between border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#2E3A3D]">
+        <div className="mt-3 flex items-center justify-between border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#232D30]">
           <span>Cohort mean · {phaseAssessments.length} taken</span>
           <b className="font-mono">{mean.toFixed(1)}%</b>
         </div>
@@ -598,13 +598,13 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
             </div>
             <span
               className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#4C5B5F]"
+                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
               }`}
             >
               {phase === c.n ? "Now" : phase > c.n ? "Done" : "Ahead"}
             </span>
           </div>
-          <p className="mt-1.5 text-[12.5px] text-[#2E3A3D]">{c.desc}</p>
+          <p className="mt-1.5 text-[12.5px] text-[#232D30]">{c.desc}</p>
         </div>
       ))}
     </div>

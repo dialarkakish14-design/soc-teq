@@ -229,7 +229,7 @@ export function Today({
   );
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
   }
 
   return (
@@ -245,19 +245,19 @@ export function Today({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <div className="text-right">
-            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
+            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
             <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
               SoC-TEQ
             </button>
           </div>
-          <button onClick={onLogout} className="text-xs font-bold text-[#4C5B5F]">
+          <button onClick={onLogout} className="text-xs font-bold text-[#3F4C50]">
             Log out
           </button>
         </div>
       </div>
 
       <div className="px-5">
-        <div className="mt-2 text-xs text-[#4C5B5F]">
+        <div className="mt-2 text-xs text-[#3F4C50]">
           You are <b className="text-[#0E1A1C]">{resident.resident_code}</b> · {open ? `open until ${closesAtLabel(date)}` : "closed"}
         </div>
 
@@ -292,12 +292,12 @@ export function Today({
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <h3 className="font-bold text-[#0E1A1C]">Logger not claimed</h3>
-                  <p className="mt-1 text-[12.5px] text-[#2E3A3D]">
+                  <p className="mt-1 text-[12.5px] text-[#232D30]">
                     One {resident.pgy} resident registers the day's topics and marks SoC coverage. The
                     rest rate.
                   </p>
                 </div>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
                   Open
                 </span>
               </div>
@@ -309,7 +309,7 @@ export function Today({
                   Claim logger
                 </button>
               ) : (
-                <div className="mt-2 text-[11px] text-[#4C5B5F]">This day closed without a logger.</div>
+                <div className="mt-2 text-[11px] text-[#3F4C50]">This day closed without a logger.</div>
               )}
             </>
           ) : (
@@ -321,7 +321,7 @@ export function Today({
                   </div>
                   <div>
                     <h3 className="font-bold text-[#0E1A1C]">{iAmLogger ? "You are the logger" : logger?.full_name}</h3>
-                    <div className="text-xs text-[#2E3A3D]">
+                    <div className="text-xs text-[#232D30]">
                       {iAmLogger ? "Register each topic as it happens." : `Marks SoC coverage for ${resident.pgy}`}
                     </div>
                   </div>
@@ -338,7 +338,7 @@ export function Today({
                   </div>
                   <button
                     onClick={releaseLogger}
-                    className="mt-3 w-full rounded-2xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#2E3A3D]"
+                    className="mt-3 w-full rounded-2xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#232D30]"
                   >
                     Release logger · wrong tap, or had to leave
                   </button>
@@ -354,7 +354,7 @@ export function Today({
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="font-bold text-[#0E1A1C]">Quick capture</h3>
-                <p className="mt-1 text-[12.5px] text-[#2E3A3D]">Name it now, finish it later.</p>
+                <p className="mt-1 text-[12.5px] text-[#232D30]">Name it now, finish it later.</p>
               </div>
               <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
                 5 sec
@@ -409,7 +409,7 @@ export function Today({
         )}
         <div className="mt-4 flex flex-col gap-3">
           {sessions.length === 0 && (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
               Nothing registered for this day yet.
             </div>
           )}
@@ -425,11 +425,11 @@ export function Today({
                   <span className="flex items-center text-[13.5px] font-extrabold text-[#0E1A1C]">
                     <span
                       className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#4C5B5F" }}
+                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#3F4C50" }}
                     />
                     {s.type}
                   </span>
-                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
+                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
                     {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                   </span>
                 </div>
@@ -447,7 +447,7 @@ export function Today({
           {sessions.length > 0 &&
             search.trim() &&
             sessions.every((s) => !s.topics.some((t) => t.title.toLowerCase().includes(search.trim().toLowerCase()))) && (
-              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
                 No topics match "{search.trim()}".
               </div>
             )}

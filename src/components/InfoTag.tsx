@@ -10,7 +10,7 @@ export function InfoTag({ label, definition, dark }: { label: string; definition
     <div className="inline-block">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-widest ${dark ? "opacity-85" : "text-[#4C5B5F]"}`}
+        className={`flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-widest ${dark ? "opacity-85" : "text-[#3F4C50]"}`}
       >
         {label}
         <span
@@ -24,7 +24,7 @@ export function InfoTag({ label, definition, dark }: { label: string; definition
       {open && (
         <div
           className={`mt-1.5 max-w-[240px] rounded-xl px-3 py-2.5 text-[11.5px] font-normal normal-case leading-relaxed ${
-            dark ? "bg-black/20 text-white" : "bg-[#F0F5F4] text-[#2E3A3D]"
+            dark ? "bg-black/20 text-white" : "bg-[#F0F5F4] text-[#232D30]"
           }`}
         >
           {definition}

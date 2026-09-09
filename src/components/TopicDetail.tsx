@@ -41,20 +41,20 @@ export function TopicDetail({
         {topic.incomplete ? (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">Not finished</h3>
-            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
+            <p className="mt-1 text-[13.5px] text-[#232D30]">
               Captured, but the coverage questions were never answered.
             </p>
           </div>
         ) : !topic.soc_covered ? (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">Not covered</h3>
-            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
+            <p className="mt-1 text-[13.5px] text-[#232D30]">
               Image of Fitzpatrick IV–VI: {topic.image_soc ? "yes" : "no"} · Explicitly discussed:{" "}
               {topic.discussed_soc ? "yes" : "no"}
             </p>
           </div>
         ) : !sc ? (
-          <div className="mt-4 rounded-2xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+          <div className="mt-4 rounded-2xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
             No one has rated this yet.
           </div>
         ) : (
@@ -72,7 +72,7 @@ export function TopicDetail({
             </div>
             <div className="mt-3 rounded-2xl bg-white p-4 shadow-sm">
               <h3 className="font-bold text-[#0E1A1C]">{mine ? "Your rating vs. team" : "Team item averages"}</h3>
-              <p className="mt-0.5 text-[11.5px] text-[#4C5B5F]">
+              <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">
                 {mine ? (
                   <>
                     The black marker is your team's average, visible to everyone. The{" "}
@@ -88,10 +88,10 @@ export function TopicDetail({
                   const reason = d.key === "nuance" ? topic.nuance_scope_reason : d.key === "mgmt" ? topic.mgmt_scope_reason : null;
                   return (
                     <div key={d.key} className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2">
-                      <div className="text-[12.5px] font-semibold text-[#4C5B5F]">
+                      <div className="text-[12.5px] font-semibold text-[#3F4C50]">
                         {d.name} · outside this session's scope
                       </div>
-                      {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#4C5B5F]">{reason}</p>}
+                      {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#3F4C50]">{reason}</p>}
                     </div>
                   );
                 }
@@ -103,7 +103,7 @@ export function TopicDetail({
                       <span className="font-mono">
                         {mineVal != null ? (
                           <>
-                            {mineVal.toFixed(2)} <span className="text-[#4C5B5F]">/ {teamVal.toFixed(2)}</span>
+                            {mineVal.toFixed(2)} <span className="text-[#3F4C50]">/ {teamVal.toFixed(2)}</span>
                           </>
                         ) : (
                           teamVal.toFixed(2)
@@ -137,10 +137,10 @@ export function TopicDetail({
                 <h3 className="font-bold text-[#0E1A1C]">Notes</h3>
                 {notes.map((r) => (
                   <div key={r.id} className="border-t border-[#E2EAE9] py-2.5 first:border-t-0 first:pt-0">
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
                       {codeById[r.resident_id] ?? "Resident"}
                     </div>
-                    <p className="mt-0.5 text-[13.5px] leading-relaxed text-[#2E3A3D]">{r.note}</p>
+                    <p className="mt-0.5 text-[13.5px] leading-relaxed text-[#232D30]">{r.note}</p>
                   </div>
                 ))}
               </div>
@@ -233,7 +233,7 @@ function PrivateNoteCard({ topicId, residentId }: { topicId: string; residentId:
                 setDraft(saved ?? "");
                 setError("");
               }}
-              className="flex-1 rounded-xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#2E3A3D]"
+              className="flex-1 rounded-xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#232D30]"
             >
               Cancel
             </button>
@@ -248,7 +248,7 @@ function PrivateNoteCard({ topicId, residentId }: { topicId: string; residentId:
         </>
       ) : saved ? (
         <>
-          <p className="mt-2 text-[13px] leading-relaxed text-[#2E3A3D]">{saved}</p>
+          <p className="mt-2 text-[13px] leading-relaxed text-[#232D30]">{saved}</p>
           <div className="mt-2 flex gap-2">
             <button onClick={() => setEditing(true)} className="text-xs font-bold text-[#0E7C72]">
               Edit

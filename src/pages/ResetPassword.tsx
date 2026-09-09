@@ -29,7 +29,7 @@ export function ResetPassword({ onDone }: { onDone: () => void }) {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6 text-center">
         <h1 className="text-2xl font-bold text-[#0E1A1C]">Password updated</h1>
-        <p className="text-sm text-[#2E3A3D]">You can now continue with your new password.</p>
+        <p className="text-sm text-[#232D30]">You can now continue with your new password.</p>
         <button onClick={onDone} className="mt-2 rounded-2xl bg-[#0E7C72] py-3 font-semibold text-white">
           Continue
         </button>
@@ -40,7 +40,7 @@ export function ResetPassword({ onDone }: { onDone: () => void }) {
   return (
     <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center px-5 py-8">
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Choose a new password</h1>
-      <p className="mt-2 text-sm text-[#2E3A3D]">This replaces your old password immediately.</p>
+      <p className="mt-2 text-sm text-[#232D30]">This replaces your old password immediately.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">

@@ -7,7 +7,7 @@ export function Pill({
 }) {
   const styles = {
     default: "bg-[#DCEFEB] text-[#064B45]",
-    off: "bg-[#EAEFEE] text-[#4C5B5F]",
+    off: "bg-[#EAEFEE] text-[#3F4C50]",
     violet: "bg-[#EEE7F3] text-[#5E3F73]",
     flag: "bg-[#FAEBD4] text-[#8F5205]",
   }[tone];

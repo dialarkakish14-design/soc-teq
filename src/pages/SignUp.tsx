@@ -106,7 +106,7 @@ export function SignUp({
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6 text-center">
         <h1 className="text-2xl font-bold text-[#0E1A1C]">Check your email</h1>
-        <p className="text-sm text-[#2E3A3D]">
+        <p className="text-sm text-[#232D30]">
           We sent a confirmation link to {email}. Confirm it, then log in to finish joining your
           program.
         </p>
@@ -126,7 +126,7 @@ export function SignUp({
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Create your account</h1>
-      <p className="mt-2 text-sm text-[#2E3A3D]">You'll need your program's access code to join.</p>
+      <p className="mt-2 text-sm text-[#232D30]">You'll need your program's access code to join.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <Field label="Full name">
@@ -165,7 +165,7 @@ export function SignUp({
               {showPassword ? "hide" : "show"}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-[#4C5B5F]">Forgotten passwords are reset by email.</div>
+          <div className="mt-1.5 text-xs text-[#3F4C50]">Forgotten passwords are reset by email.</div>
         </Field>
 
         <Field label="Email">
@@ -199,7 +199,7 @@ export function SignUp({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11.5px] text-[#4C5B5F]">
+          <p className="mt-1.5 text-[11.5px] text-[#3F4C50]">
             SoC-TEQ is in early pilot with a small number of programs. Interested in piloting it at
             yours? Email{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
@@ -222,7 +222,7 @@ export function SignUp({
         <button
           type="button"
           onClick={() => setPrecourse((v) => !v)}
-          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#2E3A3D] shadow-sm"
+          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#232D30] shadow-sm"
         >
           <span
             className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${
@@ -248,7 +248,7 @@ export function SignUp({
           {busy ? "Creating…" : "Create account"}
         </button>
 
-        <div className="text-xs text-[#4C5B5F]">
+        <div className="text-xs text-[#3F4C50]">
           Your name is visible to your cohort. It never appears next to a rating or in exported
           data.
         </div>

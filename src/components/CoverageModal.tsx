@@ -108,7 +108,7 @@ export function CoverageModal({
             className="flex w-full items-center justify-between gap-2 px-3.5 py-3 text-left"
           >
             <span className="text-[13px] font-bold text-[#0E7C72]">What counts?</span>
-            <span className={`shrink-0 text-lg font-extrabold text-[#4C5B5F] transition-transform ${showDefs ? "rotate-180" : ""}`}>
+            <span className={`shrink-0 text-lg font-extrabold text-[#3F4C50] transition-transform ${showDefs ? "rotate-180" : ""}`}>
               ▾
             </span>
           </button>
@@ -126,7 +126,7 @@ export function CoverageModal({
                     <div className="text-[12.5px] font-bold" style={{ color: tone.text }}>
                       {d.title}
                     </div>
-                    <p className="mt-1.5 text-[13px] leading-[1.6] text-[#2E3A3D]">{d.body}</p>
+                    <p className="mt-1.5 text-[13px] leading-[1.6] text-[#232D30]">{d.body}</p>
                   </div>
                 );
               })}
@@ -147,7 +147,7 @@ export function CoverageModal({
         {visual === false && (
           <div className="mt-4 rounded-2xl bg-white p-4 shadow-sm">
             <h3 className="font-bold text-[#0E1A1C]">No need to register this</h3>
-            <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
+            <p className="mt-1 text-[13.5px] text-[#232D30]">
               Non-visual topics sit outside SoC-TEQ. No need to register it.
             </p>
           </div>
@@ -172,13 +172,13 @@ export function CoverageModal({
                     <h3 className="font-bold text-[#0E1A1C]">
                       Skin of color {covered ? "covered" : "not covered"}
                     </h3>
-                    <p className="mt-1 text-[13.5px] text-[#2E3A3D]">
+                    <p className="mt-1 text-[13.5px] text-[#232D30]">
                       {covered ? "Your cohort can rate it now." : "Counts as a visually relevant topic that wasn't covered."}
                     </p>
                   </div>
                   <span
                     className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#4C5B5F]"
+                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
                     }`}
                   >
                     {covered ? "Yes" : "No"}
@@ -196,7 +196,7 @@ export function CoverageModal({
                           className={`rounded-2xl border-[1.5px] px-3.5 py-2.5 text-[13px] font-bold ${
                             skinType === s
                               ? "border-[#0E7C72] bg-[#0E7C72] text-white"
-                              : "border-[#E2EAE9] bg-white text-[#2E3A3D]"
+                              : "border-[#E2EAE9] bg-white text-[#232D30]"
                           }`}
                         >
                           {s.replace("Fitzpatrick ", "")}
@@ -216,13 +216,13 @@ export function CoverageModal({
                 >
                   <h3 className="font-bold text-[#0E1A1C]">Domains outside this session's scope</h3>
                   <span
-                    className={`shrink-0 text-lg font-extrabold text-[#4C5B5F] transition-transform ${showScopeInfo ? "rotate-180" : ""}`}
+                    className={`shrink-0 text-lg font-extrabold text-[#3F4C50] transition-transform ${showScopeInfo ? "rotate-180" : ""}`}
                   >
                     ▾
                   </span>
                 </button>
                 {showScopeInfo && (
-                  <p className="mt-1 text-[12.5px] leading-relaxed text-[#2E3A3D]">
+                  <p className="mt-1 text-[12.5px] leading-relaxed text-[#232D30]">
                     Check with the residents present before marking a domain below. Only select a domain when
                     that area of teaching was genuinely outside the scope of the session, not when it was
                     relevant but simply wasn't covered for skin of color.
@@ -311,7 +311,7 @@ function ScopeCheckbox({
             type="button"
             onClick={() => setShowHint((s) => !s)}
             className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-              showHint ? "bg-[#0E7C72] text-white" : "bg-[#EAEFEE] text-[#4C5B5F]"
+              showHint ? "bg-[#0E7C72] text-white" : "bg-[#EAEFEE] text-[#3F4C50]"
             }`}
             aria-label={`What does ${label} mean?`}
           >
@@ -320,10 +320,10 @@ function ScopeCheckbox({
         )}
       </div>
       {showHint && hint && (
-        <p className="mt-1.5 pl-[30px] text-[11.5px] italic leading-relaxed text-[#4C5B5F]">{hint}</p>
+        <p className="mt-1.5 pl-[30px] text-[11.5px] italic leading-relaxed text-[#3F4C50]">{hint}</p>
       )}
       <div className="mt-2 pl-[30px]">
-        <label className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
           Why was this outside the session's scope? <span className="font-normal normal-case">· optional</span>
         </label>
         <textarea
@@ -351,7 +351,7 @@ function SegButtons({
           key={String(v)}
           onClick={() => onChange(v)}
           className={`flex-1 rounded-2xl border-[1.5px] py-3 text-sm font-bold ${
-            value === v ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9] bg-white text-[#2E3A3D]"
+            value === v ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9] bg-white text-[#232D30]"
           }`}
         >
           {v ? "Yes" : "No"}

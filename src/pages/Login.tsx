@@ -61,7 +61,7 @@ export function Login({
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Log in</h1>
-      <p className="mt-2 text-sm text-[#2E3A3D]">Use the username and password you signed up with.</p>
+      <p className="mt-2 text-sm text-[#232D30]">Use the username and password you signed up with.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">
@@ -156,7 +156,7 @@ function ForgotPassword({ onBack }: { onBack: () => void }) {
     return (
       <div className="mx-auto flex min-h-dvh max-w-md flex-col justify-center gap-4 px-6 text-center">
         <h1 className="text-2xl font-bold text-[#0E1A1C]">Check your email</h1>
-        <p className="text-sm text-[#2E3A3D]">
+        <p className="text-sm text-[#232D30]">
           If an account exists for {email}, a reset link has been sent to it.
         </p>
         <button onClick={onBack} className="mt-2 rounded-2xl bg-[#0E7C72] py-3 font-semibold text-white">
@@ -172,7 +172,7 @@ function ForgotPassword({ onBack }: { onBack: () => void }) {
         ‹ Back
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Reset your password</h1>
-      <p className="mt-2 text-sm text-[#2E3A3D]">Enter the email you signed up with.</p>
+      <p className="mt-2 text-sm text-[#232D30]">Enter the email you signed up with.</p>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">

@@ -124,7 +124,7 @@ export function Summary({
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#4C5B5F]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
   }
 
   const mine = rows.filter((r) => r.sessions?.days);
@@ -140,7 +140,7 @@ export function Summary({
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Team record</h1>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#4C5B5F]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -154,7 +154,7 @@ export function Summary({
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 rounded-xl py-2.5 text-[13px] font-bold capitalize ${
-                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#4C5B5F]"
+                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#3F4C50]"
               }`}
             >
               {t}
@@ -235,7 +235,7 @@ function SessionDot({ type }: { type: string }) {
   return (
     <span
       className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
-      style={{ background: SESSION_TYPE_COLOR[type] ?? "#4C5B5F" }}
+      style={{ background: SESSION_TYPE_COLOR[type] ?? "#3F4C50" }}
     />
   );
 }
@@ -305,7 +305,7 @@ function DayTab({
         {filterDate && (
           <button
             onClick={() => onFilterDateChange(null)}
-            className="whitespace-nowrap rounded-xl bg-[#EAEFEE] px-3 py-3 text-xs font-bold text-[#2E3A3D]"
+            className="whitespace-nowrap rounded-xl bg-[#EAEFEE] px-3 py-3 text-xs font-bold text-[#232D30]"
           >
             Show all
           </button>
@@ -324,7 +324,7 @@ function DayTab({
             key={f}
             onClick={() => setCoverageFilter(f)}
             className={`flex-1 rounded-xl py-2 text-[12px] font-bold ${
-              coverageFilter === f ? "bg-white text-[#064B45] shadow-sm" : "text-[#4C5B5F]"
+              coverageFilter === f ? "bg-white text-[#064B45] shadow-sm" : "text-[#3F4C50]"
             }`}
           >
             {label}
@@ -333,7 +333,7 @@ function DayTab({
       </div>
 
       {days.length === 0 && (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
           {filterDate ? "Nothing logged on that day." : "Nothing logged yet."}
         </div>
       )}
@@ -359,7 +359,7 @@ function DayTab({
 
         return (
           <div key={date}>
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#4C5B5F]">
+            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#3F4C50]">
               {date === todayLocalDate() ? "Today, " : ""}
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
               {isDayOpen(date, programTimezone) ? " · open" : ""}
@@ -368,12 +368,12 @@ function DayTab({
             {coverageFilter === "all" && (
               <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
                 <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
-                <p className="mt-0.5 text-[11.5px] text-[#4C5B5F]">Everything logged and rated on this day.</p>
+                <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Everything logged and rated on this day.</p>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {[...sessionTypeCounts.entries()].map(([type, count]) => (
                     <span
                       key={type}
-                      className="flex items-center gap-1.5 rounded-lg bg-[#F5F8F7] px-2.5 py-1.5 text-[12px] font-semibold text-[#2E3A3D]"
+                      className="flex items-center gap-1.5 rounded-lg bg-[#F5F8F7] px-2.5 py-1.5 text-[12px] font-semibold text-[#232D30]"
                     >
                       <SessionDot type={type} />
                       {count} {type}
@@ -382,7 +382,7 @@ function DayTab({
                   ))}
                 </div>
                 <div className="mt-3 border-t border-[#E2EAE9] pt-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
                     Fitzpatrick tones shown
                   </div>
                   <div className="mt-2 flex gap-1.5">
@@ -396,7 +396,7 @@ function DayTab({
                           onClick={() => count > 0 && toggleTone(key)}
                           disabled={count === 0}
                           className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold transition-colors ${
-                            count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#4C5B5F]"
+                            count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#3F4C50]"
                           } ${isOpen ? "ring-2 ring-[#0E7C72]" : ""}`}
                         >
                           {t.replace("Fitzpatrick ", "")}
@@ -406,7 +406,7 @@ function DayTab({
                     })}
                   </div>
                   {FITZPATRICK_TONES.filter((t) => openTones.has(`${date}:${t}`) && toneTopics[t].length > 0).map((t) => (
-                    <div key={t} className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] leading-relaxed text-[#2E3A3D]">
+                    <div key={t} className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] leading-relaxed text-[#232D30]">
                       <span className="font-semibold">{t} shown in:</span>{" "}
                       {toneTopics[t].join(", ")}
                     </div>
@@ -422,7 +422,7 @@ function DayTab({
             )}
 
             {sessions.length === 0 ? (
-              <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+              <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
                 Nothing matches this filter on this day.
               </div>
             ) : (
@@ -440,10 +440,10 @@ function DayTab({
                           {s.type}
                         </span>
                         <span className="flex items-center gap-2">
-                          <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
+                          <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
                             {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                           </span>
-                          <span className={`text-xl font-extrabold text-[#4C5B5F] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                          <span className={`text-xl font-extrabold text-[#3F4C50] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                             ▾
                           </span>
                         </span>
@@ -496,7 +496,7 @@ function NotesTab({
 
   if (conditions.length === 0) {
     return (
-      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
         No notes yet. Notes left while rating a topic will collect here by condition.
       </div>
     );
@@ -508,7 +508,7 @@ function NotesTab({
         <div key={c.title} className="rounded-3xl bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between">
             <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-            <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#4C5B5F]">
+            <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
               {c.noteCount} note{c.noteCount === 1 ? "" : "s"}
             </span>
           </div>
@@ -517,15 +517,15 @@ function NotesTab({
             if (notes.length === 0) return null;
             return (
               <div key={t.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
-                <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#4C5B5F]">
+                <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#3F4C50]">
                   {t.sessions!.type} · {formatDateShort(t.sessions!.days.date)}
                 </button>
                 {notes.map((rt) => (
                   <div key={rt.id} className="mt-1.5">
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#4C5B5F]">
+                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
                       {codeById[rt.resident_id] ?? "Resident"}
                     </div>
-                    <p className="mt-0.5 text-[13px] leading-relaxed text-[#2E3A3D]">{rt.note}</p>
+                    <p className="mt-0.5 text-[13px] leading-relaxed text-[#232D30]">{rt.note}</p>
                   </div>
                 ))}
               </div>
@@ -581,7 +581,7 @@ function PeriodTab({
           onClick={() =>
             period === "week" ? onWeekAnchorChange(shiftDate(weekAnchor, -7)) : onMonthAnchorChange(shiftMonth(monthAnchor, -1))
           }
-          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#2E3A3D]"
+          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#232D30]"
         >
           ‹
         </button>
@@ -607,7 +607,7 @@ function PeriodTab({
             period === "week" ? onWeekAnchorChange(shiftDate(weekAnchor, 7)) : onMonthAnchorChange(shiftMonth(monthAnchor, 1))
           }
           disabled={atPresent}
-          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#2E3A3D] disabled:opacity-40"
+          className="rounded-xl bg-[#EAEFEE] px-3 py-3 text-sm font-bold text-[#232D30] disabled:opacity-40"
         >
           ›
         </button>
@@ -616,7 +616,7 @@ function PeriodTab({
       {engagementPoints && <EngagementTrendCard points={engagementPoints} />}
 
       {!entries.length ? (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#4C5B5F] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
           Nothing logged in this period.
         </div>
       ) : (
@@ -635,7 +635,7 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
   const previous = points[points.length - 2];
   const delta = previous ? latest.pct - previous.pct : 0;
   const trendWord = !previous || delta === 0 ? "holding steady" : delta > 0 ? "rising" : "falling";
-  const trendColor = delta > 0 ? "#0E7C72" : delta < 0 ? "#8F5205" : "#4C5B5F";
+  const trendColor = delta > 0 ? "#0E7C72" : delta < 0 ? "#8F5205" : "#3F4C50";
   const weekLabel = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
   return (
@@ -643,7 +643,7 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">Your engagement over time</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#4C5B5F]">Response rate, last 8 weeks</p>
+          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Response rate, last 8 weeks</p>
         </div>
         <div className="text-right">
           <div className="font-mono text-2xl font-extrabold text-[#0E1A1C]">{latest.pct}%</div>
@@ -666,13 +666,13 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
       </div>
       <div className="mt-1 flex gap-1.5">
         {points.map((p, i) => (
-          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#4C5B5F]">
+          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#3F4C50]">
             {i % 2 === 0 ? weekLabel(p.weekStart) : ""}
           </div>
         ))}
       </div>
 
-      <p className="mt-3.5 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#2E3A3D]">
+      <p className="mt-3.5 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#232D30]">
         This is visible only within your PGY year — never to faculty or a program lead. It might feel like one
         more thing to check, but think of it as a mirror on your own training: closing these gaps benefits you
         directly, and you're the one with the power to do it.
@@ -708,7 +708,7 @@ function PeriodContent({
         <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
           {period === "week" ? "Weekly summary" : "Monthly summary"}
         </div>
-        <p className="mt-1 text-[12px] text-[#4C5B5F]">
+        <p className="mt-1 text-[12px] text-[#3F4C50]">
           Everything logged and rated across this {period} as a whole, not broken out by individual day.
         </p>
       </div>
@@ -721,7 +721,7 @@ function PeriodContent({
             <h2 className={`text-2xl font-extrabold ${stats.avgScore != null && stats.avgScore < THRESHOLD ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>
               {stats.avgScore ? stats.avgScore.toFixed(2) : "—"}
             </h2>
-            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#4C5B5F]">
+            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#3F4C50]">
               Mean RM
               <span className={`flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-bold ${showRmInfo ? "bg-[#0E7C72] text-white" : "bg-[#DCEFEB] text-[#064B45]"}`}>
                 i
@@ -730,11 +730,11 @@ function PeriodContent({
           </div>
         </div>
         {showRmInfo && (
-          <div className="mt-3 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#2E3A3D]">
+          <div className="mt-3 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#232D30]">
             {RM_DEFINITION}
           </div>
         )}
-        <p className="mt-3 text-[12.5px] text-[#2E3A3D]">
+        <p className="mt-3 text-[12.5px] text-[#232D30]">
           {label} · {stats.coveredCount} of {stats.visualCount} visually relevant topics fully SoC-covered.{" "}
           {stats.gaps.length} flagged below {THRESHOLD}.
         </p>
@@ -743,7 +743,7 @@ function PeriodContent({
       {perItem && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Team item averages</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#4C5B5F]">Mean across every resident's rating this period — not an individual score.</p>
+          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean across every resident's rating this period — not an individual score.</p>
           {Object.entries(perItem).map(([k, v]) => (
             <div key={k} className="mt-2.5">
               <div className="flex justify-between text-[12.5px] font-semibold">
@@ -770,20 +770,20 @@ function PeriodContent({
             {response.noResponse > 0 && <div style={{ width: `${(response.noResponse / response.total) * 100}%` }} className="bg-[#8F5205]" />}
             {response.waiting > 0 && <div style={{ width: `${(response.waiting / response.total) * 100}%` }} className="bg-[#C9D3D2]" />}
           </div>
-          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] text-[#2E3A3D]">
+          <div className="mt-3 flex flex-wrap gap-3 text-[11.5px] text-[#232D30]">
             <Legend color="#0E7C72" label={`Rated ${response.rated}`} />
             <Legend color="#3D6B49" label={`Absent, declared ${response.declared}`} />
             <Legend color="#8F5205" label={`Forgot to rate ${response.noResponse}`} />
             {response.waiting > 0 && <Legend color="#C9D3D2" label={`Still open ${response.waiting}`} />}
           </div>
-          <p className="mt-3 text-[12.5px] text-[#2E3A3D]">Response rate {response.responseRatePct}%.</p>
+          <p className="mt-3 text-[12.5px] text-[#232D30]">Response rate {response.responseRatePct}%.</p>
         </div>
       )}
 
       {stats.gaps.length > 0 && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">
-            Priority educational needs <span className="font-normal text-[#4C5B5F]">· below {THRESHOLD}</span>
+            Priority educational needs <span className="font-normal text-[#3F4C50]">· below {THRESHOLD}</span>
           </h3>
           {stats.gaps.map(({ entry, score }) => {
             const full = byId.get(entry.id);
@@ -795,7 +795,7 @@ function PeriodContent({
               >
                 <div>
                   <div className="text-[14px] font-bold text-[#0E1A1C]">{entry.title}</div>
-                  <div className="text-[11.5px] text-[#4C5B5F]">
+                  <div className="text-[11.5px] text-[#3F4C50]">
                     {entry.sessionType} · {formatDateShort(entry.date)}
                   </div>
                 </div>
@@ -821,7 +821,7 @@ function Stat({ n, label, tone }: { n: string | number; label: string; tone?: "t
   return (
     <div className="flex-1">
       <h2 className={`text-2xl font-extrabold ${tone === "amber" ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#4C5B5F]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#3F4C50]">{label}</div>
     </div>
   );
 }
