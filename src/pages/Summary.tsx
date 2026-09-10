@@ -1154,7 +1154,7 @@ function BriefCard({
       </div>
       <h3 className="mt-2 text-lg font-bold text-white">What to work on next</h3>
       <p className="mt-2 text-[13.5px] text-[#BEDCD6]">
-        Across {brief.coveredCount} skin of color topic{brief.coveredCount === 1 ? "" : "s"} {periodWord}, your cohort
+        Across {brief.coveredCount} skin of color topic{brief.coveredCount === 1 ? "" : "s"} {periodWord}, your group
         scored {brief.weakest.name.toLowerCase()} lowest ({brief.weakestVal.toFixed(2)}) and{" "}
         {brief.strongest.name.toLowerCase()} highest ({brief.strongestVal.toFixed(2)}).
       </p>

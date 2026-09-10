@@ -18,6 +18,15 @@ export function RateModal({
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const [showReminder, setShowReminder] = useState(false);
+  const [expandedHints, setExpandedHints] = useState<Set<string>>(new Set());
+  function toggleHint(key: string) {
+    setExpandedHints((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
+  }
 
   // A domain the logger marked outside this topic's scope (nuance/mgmt only)
   // never appears here to rate at all — not skippable, just not offered.
@@ -130,7 +139,23 @@ export function RateModal({
                 </div>
                 <p className="mt-1 text-[12.5px] leading-relaxed text-[#16211F]">{d.statement}</p>
                 {d.hint && (
-                  <p className="mt-1 text-[11.5px] italic leading-relaxed text-[#3F4C50]">{d.hint}</p>
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => toggleHint(d.key)}
+                      className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-[#3F4C50]"
+                    >
+                      More info
+                      <span
+                        className={`text-sm font-extrabold transition-transform ${expandedHints.has(d.key) ? "rotate-180" : ""}`}
+                      >
+                        ▾
+                      </span>
+                    </button>
+                    {expandedHints.has(d.key) && (
+                      <p className="mt-1 text-[11.5px] italic leading-relaxed text-[#3F4C50]">{d.hint}</p>
+                    )}
+                  </>
                 )}
                 <input
                   type="range"

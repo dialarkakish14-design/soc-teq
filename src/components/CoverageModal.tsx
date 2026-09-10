@@ -164,7 +164,7 @@ export function CoverageModal({
                       Skin of color {covered ? "covered" : "not covered"}
                     </h3>
                     <p className="mt-1 text-[13.5px] text-[#232D30]">
-                      {covered ? "Your cohort can rate it now." : "Counts as a visually relevant topic that wasn't covered."}
+                      {covered ? "Your group can rate it now." : "Counts as a visually relevant topic that wasn't covered."}
                     </p>
                   </div>
                   <span

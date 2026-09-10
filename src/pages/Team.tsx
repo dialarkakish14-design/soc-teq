@@ -154,7 +154,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
             {program.name.replace(/\s+—\s+/g, " · ")}
           </h1>
           <p className="mt-1 text-[13px] text-[#232D30]">
-            Your {resident.pgy} cohort only. Other PGY years keep separate directories and separate data.
+            Your {resident.pgy} group only. Other PGY years keep separate directories and separate data.
           </p>
         </div>
         <div className="mt-0.5 text-right">
@@ -270,7 +270,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
         </div>
 
         <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#3F4C50]">
-          Cohort directory
+          Group directory
         </div>
         <div className="mt-3 flex flex-col gap-3">
           {cohort.map((r) => (
@@ -299,7 +299,7 @@ export function Team({ resident, active, onAbout }: { resident: Resident; active
           ))}
         </div>
         <div className="mt-3 text-[11px] text-[#3F4C50]">
-          Names appear here so you know who's in your cohort. They never appear next to a rating or in exported data.
+          Names appear here so you know who's in your group. They never appear next to a rating or in exported data.
         </div>
       </div>
 

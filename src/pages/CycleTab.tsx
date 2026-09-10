@@ -168,7 +168,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       takeaway: takeaway.trim(),
     });
     if (error) return flash(error.message);
-    flash("Shared with your cohort.");
+    flash("Shared with your group.");
     await load();
   }
 
@@ -245,7 +245,7 @@ function Phase1({ count }: { count: number }) {
       <h3 className="font-bold text-[#0E1A1C]">Keep logging</h3>
       <p className="mt-1.5 text-[13px] text-[#232D30]">
         {count} skin of color topic{count === 1 ? "" : "s"} logged so far this cycle. At the end of month 3
-        everything scoring below {THRESHOLD} becomes your cohort's priority list.
+        everything scoring below {THRESHOLD} becomes your group's priority list.
       </p>
     </div>
   );
@@ -541,7 +541,7 @@ function AssessmentCard({
       </div>
       {mean != null && (
         <div className="mt-3 flex items-center justify-between border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#232D30]">
-          <span>Cohort mean · {phaseAssessments.length} taken</span>
+          <span>Group mean · {phaseAssessments.length} taken</span>
           <b className="font-mono">{mean.toFixed(1)}%</b>
         </div>
       )}

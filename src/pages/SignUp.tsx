@@ -249,7 +249,7 @@ export function SignUp({
         </button>
 
         <div className="text-xs text-[#3F4C50]">
-          Your name is visible to your cohort. It never appears next to a rating or in exported
+          Your name is visible to your group. It never appears next to a rating or in exported
           data.
         </div>
 
