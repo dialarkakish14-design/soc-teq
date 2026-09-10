@@ -564,7 +564,7 @@ function NotesTab({
               {privateCount}
             </span>
           </div>
-          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you, never shown to anyone else.</p>
+          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you.</p>
         </button>
         <button onClick={exportPrivateNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
           Export private notes (CSV)
@@ -578,7 +578,7 @@ function NotesTab({
               {publicCount}
             </span>
           </div>
-          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole cohort.</p>
+          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole group.</p>
         </button>
         <button onClick={exportPublicNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
           Export public notes (CSV)
