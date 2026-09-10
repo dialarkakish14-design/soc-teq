@@ -135,6 +135,23 @@ export interface TopicEntry {
   sessionType: string;
   ratings: Rating[];
   absences: Absence[];
+  nuanceApplicable: boolean;
+  mgmtApplicable: boolean;
+}
+
+export interface ExclusionSummary {
+  withExclusion: number;
+  covered: number;
+}
+
+// How many covered topics in this set had Nuance and/or Management marked
+// outside scope — surfaced so a period's blended average score is never read
+// as a like-for-like mean of full 5-domain topics without that context.
+export function exclusionSummary(entries: TopicEntry[]): ExclusionSummary | null {
+  const covered = entries.filter((e) => e.socCovered);
+  if (!covered.length) return null;
+  const withExclusion = covered.filter((e) => !e.nuanceApplicable || !e.mgmtApplicable).length;
+  return { withExclusion, covered: covered.length };
 }
 
 export interface SummaryStats {

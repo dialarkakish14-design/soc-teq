@@ -115,6 +115,7 @@ export function TrackMyInfo({
       "n_no_response",
       "cohort_size",
       "flagged",
+      "domains_averaged",
       "nuance_applicable",
       "nuance_scope_reason",
       "mgmt_applicable",
@@ -124,6 +125,7 @@ export function TrackMyInfo({
       const sc = scoreTopic(r.ratings);
       const decl = r.absences.filter((a) => a.reason === "declared").length;
       const nores = r.absences.filter((a) => a.reason === "no_response").length;
+      const domainsAveraged = 5 - (r.nuance_applicable ? 0 : 1) - (r.mgmt_applicable ? 0 : 1);
       return [
         r.sessions!.days.date,
         r.sessions!.type,
@@ -140,6 +142,7 @@ export function TrackMyInfo({
         nores,
         cohort.length,
         sc ? (isBelowThreshold(sc.overall) ? 1 : 0) : "",
+        r.soc_covered ? domainsAveraged : "",
         r.nuance_applicable ? 1 : 0,
         r.nuance_scope_reason ?? "",
         r.mgmt_applicable ? 1 : 0,
@@ -163,11 +166,15 @@ export function TrackMyInfo({
       "team_mean",
       "n_rated",
       "flagged",
+      "domains_averaged",
+      "nuance_applicable",
+      "mgmt_applicable",
       "note",
     ];
     const dataRows: (string | number)[][] = [];
     for (const r of covered) {
       const sc = scoreTopic(r.ratings);
+      const domainsAveraged = 5 - (r.nuance_applicable ? 0 : 1) - (r.mgmt_applicable ? 0 : 1);
       for (const c of cohort) {
         const v = r.ratings.find((rt) => rt.resident_id === c.id);
         const absence = r.absences.find((a) => a.resident_id === c.id);
@@ -189,6 +196,9 @@ export function TrackMyInfo({
           sc ? sc.overall.toFixed(2) : "",
           sc ? sc.n : 0,
           sc ? (isBelowThreshold(sc.overall) ? 1 : 0) : "",
+          domainsAveraged,
+          r.nuance_applicable ? 1 : 0,
+          r.mgmt_applicable ? 1 : 0,
           v?.note ?? "",
         ]);
       }

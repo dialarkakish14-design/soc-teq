@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import {
   engagementTrend,
+  exclusionSummary,
   formatDateLong,
   formatDateShort,
   formatMonthLabel,
@@ -41,6 +42,8 @@ function toEntry(r: TopicFull): TopicEntry {
     sessionType: r.sessions!.type,
     ratings: r.ratings,
     absences: r.absences,
+    nuanceApplicable: r.nuance_applicable,
+    mgmtApplicable: r.mgmt_applicable,
   };
 }
 
@@ -331,6 +334,27 @@ function DayTab({
           </button>
         ))}
       </div>
+
+      {(() => {
+        const inView = days.flatMap(([, sessMap]) => [...sessMap.values()].flatMap((s) => s.topics));
+        if (!inView.length) return null;
+        const viewStats = summaryStats(inView.map(toEntry));
+        const viewExclusions = exclusionSummary(inView.map(toEntry));
+        return (
+          <div className="rounded-2xl bg-white px-3.5 py-2.5 shadow-sm">
+            <p className="text-[11.5px] font-semibold text-[#3F4C50]">
+              Teaching exposure: <span className="text-[#0E1A1C]">{viewStats.exposurePct}%</span> of visually relevant
+              topics {filterDate ? "on this day" : "logged"} were SoC-covered.
+            </p>
+            {viewExclusions && viewExclusions.withExclusion > 0 && (
+              <p className="mt-1 text-[11px] leading-relaxed text-[#3F4C50]">
+                {viewExclusions.withExclusion} of {viewExclusions.covered} covered topic
+                {viewExclusions.covered === 1 ? "" : "s"} had Nuance and/or Management marked outside scope.
+              </p>
+            )}
+          </div>
+        );
+      })()}
 
       {days.length === 0 && (
         <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
@@ -700,6 +724,7 @@ function PeriodContent({
   const response = responseRecord(entries, cohortSize);
   const perItem = itemAverages(entries);
   const brief = monthlyBrief(entries);
+  const exclusions = exclusionSummary(entries);
   const [showRmInfo, setShowRmInfo] = useState(false);
 
   return (
@@ -738,6 +763,13 @@ function PeriodContent({
           {label} · {stats.coveredCount} of {stats.visualCount} visually relevant topics fully SoC-covered.{" "}
           {stats.gaps.length} flagged below {THRESHOLD}.
         </p>
+        {exclusions && exclusions.withExclusion > 0 && (
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[#3F4C50]">
+            {exclusions.withExclusion} of {exclusions.covered} covered topic{exclusions.covered === 1 ? "" : "s"} had Nuance
+            and/or Management marked outside scope, so the average above isn't a like-for-like 5-domain mean across every
+            topic.
+          </p>
+        )}
       </div>
 
       {perItem && (
