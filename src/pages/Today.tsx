@@ -380,8 +380,9 @@ export function Today({
                   </div>
                   <p className="mt-1 text-[10.5px] leading-relaxed text-[#3F4C50]">
                     Takes the logger role from {logger?.full_name ?? "the current logger"}. Use only if they're no
-                    longer available and forgot to unclaim, or are unreachable. Limited to 2 per day;{" "}
-                    {Math.max(0, 2 - day.emergency_claims)} left today.
+                    longer available and forgot to unclaim, or are unreachable. Can be used up to 2 times per day;{" "}
+                    {Math.max(0, 2 - day.emergency_claims)} use{Math.max(0, 2 - day.emergency_claims) === 1 ? "" : "s"}{" "}
+                    left today.
                   </p>
                   <button
                     onClick={emergencyClaimLogger}
