@@ -149,7 +149,20 @@ export function TrackMyInfo({
         r.mgmt_scope_reason ?? "",
       ];
     });
-    downloadCsv(`soc-teq_topic_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+    const excludedCount = covered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
+    const summaryRows: (string | number)[][] = [
+      [],
+      ["SUMMARY"],
+      ["visually_relevant_topics", rows.length],
+      ["soc_covered_topics", covered.length],
+      ["teaching_exposure_pct", rows.length ? Math.round((covered.length / rows.length) * 100) : 0],
+      ["covered_topics_with_domain_excluded", excludedCount],
+    ];
+    downloadCsv(`soc-teq_topic_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
+      header,
+      ...dataRows,
+      ...summaryRows,
+    ]);
   }
 
   function exportRaterCsv() {
@@ -203,7 +216,20 @@ export function TrackMyInfo({
         ]);
       }
     }
-    downloadCsv(`soc-teq_rater_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+    const excludedCount = covered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
+    const summaryRows: (string | number)[][] = [
+      [],
+      ["SUMMARY"],
+      ["visually_relevant_topics", rows.length],
+      ["soc_covered_topics", covered.length],
+      ["teaching_exposure_pct", rows.length ? Math.round((covered.length / rows.length) * 100) : 0],
+      ["covered_topics_with_domain_excluded", excludedCount],
+    ];
+    downloadCsv(`soc-teq_rater_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
+      header,
+      ...dataRows,
+      ...summaryRows,
+    ]);
   }
 
   return (
