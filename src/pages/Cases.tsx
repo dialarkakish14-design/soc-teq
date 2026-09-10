@@ -38,6 +38,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<CaseTopic | null>(null);
   const [openSessions, setOpenSessions] = useState<Set<SessionType>>(new Set());
+  const [showCoverageInfo, setShowCoverageInfo] = useState(false);
   function toggleSession(t: SessionType) {
     setOpenSessions((prev) => {
       const next = new Set(prev);
@@ -172,7 +173,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
             Diversity database
           </div>
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Topics covered in SoC</h1>
-          <p className="mt-1 text-[13px] text-[#232D30]">Which skin types each condition has been shown in.</p>
+          <p className="mt-1 text-[13px] text-[#232D30]">See which Fitzpatrick skin types are represented for each condition.</p>
         </div>
         <div className="mt-0.5 text-right">
           <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
@@ -191,7 +192,18 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
           <>
             <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
               <div className="flex items-center justify-between">
-                <h3 className="font-bold text-[#0E1A1C]">Fitzpatrick coverage</h3>
+                <div className="flex items-center gap-1.5">
+                  <h3 className="font-bold text-[#0E1A1C]">Fitzpatrick coverage</h3>
+                  <button
+                    onClick={() => setShowCoverageInfo((s) => !s)}
+                    aria-label="What does this mean?"
+                    className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold ${
+                      showCoverageInfo ? "bg-[#0E7C72] text-white" : "bg-[#DCEFEB] text-[#064B45]"
+                    }`}
+                  >
+                    i
+                  </button>
+                </div>
                 <span
                   className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
                     thin.length ? "bg-[#FAEBD4] text-[#8F5205]" : "bg-[#DCEFEB] text-[#064B45]"
@@ -200,6 +212,14 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
                   {conditions.length - thin.length}/{conditions.length} complete
                 </span>
               </div>
+              {showCoverageInfo && (
+                <div className="mt-2.5 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#232D30]">
+                  Counts how many covered conditions have been shown across all three Fitzpatrick tones (IV, V, and
+                  VI) at some point, combining every session that covered that condition, not just one. A condition
+                  only counts as complete once every tone has appeared at least once — it doesn't need to happen in
+                  the same session.
+                </div>
+              )}
               <p className="mt-1.5 text-[12.5px] text-[#232D30]">
                 {thin.length
                   ? `${thin.length} condition${thin.length === 1 ? " has" : "s have"} only been shown in some of Fitzpatrick IV–VI.`
