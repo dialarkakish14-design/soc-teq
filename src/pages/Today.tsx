@@ -160,7 +160,7 @@ export function Today({
     if (error) return flash(error.message);
     setDay({ ...day, logger_id: resident.id, emergency_claims: day.emergency_claims + 1 });
     setLogger(resident);
-    flash("Emergency claim used — you're the logger for this day now.");
+    flash("Backup claim used · you're the logger for this day now.");
   }
 
   async function releaseLogger() {
@@ -373,10 +373,10 @@ export function Today({
               {!iAmLogger && open && (
                 <>
                   <div className="mt-3 flex items-center gap-1.5">
-                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#93393E] text-[9px] font-bold text-white">
-                      !
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#2B5F8A] text-[9px] font-bold text-white">
+                      i
                     </span>
-                    <span className="text-[12px] font-bold text-[#93393E]">Emergency claim</span>
+                    <span className="text-[12px] font-bold text-[#2B5F8A]">Backup claim</span>
                   </div>
                   <p className="mt-1 text-[10.5px] leading-relaxed text-[#3F4C50]">
                     Takes the logger role from {logger?.full_name ?? "the current logger"}. Use only if they're no
@@ -387,9 +387,9 @@ export function Today({
                   <button
                     onClick={emergencyClaimLogger}
                     disabled={busy || day.emergency_claims >= 2}
-                    className="mt-2 w-full rounded-2xl bg-[#93393E] py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                    className="mt-2 w-full rounded-2xl bg-[#2B5F8A] py-2.5 text-xs font-bold text-white disabled:opacity-50"
                   >
-                    {day.emergency_claims >= 2 ? "Emergency claim limit reached today" : "Emergency claim logger"}
+                    {day.emergency_claims >= 2 ? "Backup claim limit reached today" : "Backup claim logger"}
                   </button>
                 </>
               )}
