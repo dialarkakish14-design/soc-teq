@@ -215,7 +215,13 @@ export function Summary({
             />
           )}
           {tab === "notes" && (
-            <NotesTab rows={mine} codeById={codeById} onOpenTopic={openTopic} privateNotes={privateNotes} />
+            <NotesTab
+              rows={mine}
+              codeById={codeById}
+              onOpenTopic={openTopic}
+              privateNotes={privateNotes}
+              programTimezone={programTimezone}
+            />
           )}
           {tab === "cycle" && <CycleTab resident={resident} />}
         </div>
@@ -509,11 +515,13 @@ function NotesTab({
   codeById,
   onOpenTopic,
   privateNotes,
+  programTimezone,
 }: {
   rows: TopicFull[];
   codeById: Record<string, string>;
   onOpenTopic: (t: TopicFull) => void;
   privateNotes: PrivateNoteRow[];
+  programTimezone: string;
 }) {
   const [view, setView] = useState<"picker" | "private" | "public">("picker");
 
@@ -530,22 +538,27 @@ function NotesTab({
     return <PublicNotesBrowser rows={rows} codeById={codeById} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
   }
 
+  // Exports only include days that have fully closed (past their program's
+  // 4am cutoff) — a day still open can still be edited by the logger or
+  // rated by residents, so exporting it risks a snapshot that's already
+  // stale by the time someone opens the file.
+  const dayClosed = (date: string) => !isDayOpen(date, programTimezone);
+
   function exportPrivateNotesCsv() {
     const topicById = new Map(rows.map((r) => [r.id, r]));
     const header = ["date", "session", "topic", "note", "updated_at"];
     const dataRows = privateNotes
       .filter((n) => n.note.trim())
-      .map((n) => {
-        const topic = topicById.get(n.topic_id);
-        return [topic?.sessions?.days.date ?? "", topic?.sessions?.type ?? "", topic?.title ?? "", n.note, n.updated_at];
-      });
+      .map((n) => ({ n, topic: topicById.get(n.topic_id) }))
+      .filter(({ topic }) => topic?.sessions?.days.date && dayClosed(topic.sessions.days.date))
+      .map(({ n, topic }) => [topic!.sessions!.days.date, topic!.sessions!.type, topic!.title, n.note, n.updated_at]);
     downloadCsv(`soc-teq_private-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
   }
 
   function exportPublicNotesCsv() {
     const header = ["date", "session", "topic", "resident_code", "note"];
     const dataRows = rows
-      .filter((r) => r.soc_covered)
+      .filter((r) => r.soc_covered && r.sessions?.days.date && dayClosed(r.sessions.days.date))
       .flatMap((r) =>
         r.ratings
           .filter((rt) => rt.note?.trim())

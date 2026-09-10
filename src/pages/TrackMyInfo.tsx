@@ -99,7 +99,17 @@ export function TrackMyInfo({
     ? mine.reduce((a, r) => a + (scoreTopic(r.ratings)?.overall ?? 0), 0) / mine.length
     : null;
 
+  // Exports only include days that have fully closed (past their program's
+  // 4am cutoff) — a day still open can still be edited by the logger or
+  // rated by residents, so exporting it risks a snapshot that's already
+  // stale by the time someone opens the file.
+  function closedOnly(list: TopicFull[]) {
+    return list.filter((r) => !isDayOpen(r.sessions!.days.date, programTimezone));
+  }
+
   function exportTopicCsv() {
+    const exportRows = closedOnly(rows);
+    const exportCovered = exportRows.filter((r) => r.soc_covered);
     const header = [
       "date",
       "session",
@@ -122,7 +132,7 @@ export function TrackMyInfo({
       "mgmt_applicable",
       "mgmt_scope_reason",
     ];
-    const dataRows = rows.map((r) => {
+    const dataRows = exportRows.map((r) => {
       const sc = scoreTopic(r.ratings);
       const decl = r.absences.filter((a) => a.reason === "declared").length;
       const nores = r.absences.filter((a) => a.reason === "no_response").length;
@@ -150,13 +160,14 @@ export function TrackMyInfo({
         r.mgmt_scope_reason ?? "",
       ];
     });
-    const excludedCount = covered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
+    const excludedCount = exportCovered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
     const summaryRows: (string | number)[][] = [
       [],
       ["SUMMARY"],
-      ["visually_relevant_topics", rows.length],
-      ["soc_covered_topics", covered.length],
-      ["teaching_exposure_pct", rows.length ? Math.round((covered.length / rows.length) * 100) : 0],
+      ["note", "Excludes any day still open for editing/rating as of the export time."],
+      ["visually_relevant_topics", exportRows.length],
+      ["soc_covered_topics", exportCovered.length],
+      ["teaching_exposure_pct", exportRows.length ? Math.round((exportCovered.length / exportRows.length) * 100) : 0],
       ["covered_topics_with_domain_excluded", excludedCount],
     ];
     downloadCsv(`soc-teq_topic_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
@@ -167,6 +178,7 @@ export function TrackMyInfo({
   }
 
   function exportRaterCsv() {
+    const exportCovered = closedOnly(covered);
     const header = [
       "date",
       "session",
@@ -186,7 +198,7 @@ export function TrackMyInfo({
       "note",
     ];
     const dataRows: (string | number)[][] = [];
-    for (const r of covered) {
+    for (const r of exportCovered) {
       const sc = scoreTopic(r.ratings);
       const domainsAveraged = 5 - (r.nuance_applicable ? 0 : 1) - (r.mgmt_applicable ? 0 : 1);
       for (const c of cohort) {
@@ -217,13 +229,15 @@ export function TrackMyInfo({
         ]);
       }
     }
-    const excludedCount = covered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
+    const exportRows = closedOnly(rows);
+    const excludedCount = exportCovered.filter((r) => !r.nuance_applicable || !r.mgmt_applicable).length;
     const summaryRows: (string | number)[][] = [
       [],
       ["SUMMARY"],
-      ["visually_relevant_topics", rows.length],
-      ["soc_covered_topics", covered.length],
-      ["teaching_exposure_pct", rows.length ? Math.round((covered.length / rows.length) * 100) : 0],
+      ["note", "Excludes any day still open for editing/rating as of the export time."],
+      ["visually_relevant_topics", exportRows.length],
+      ["soc_covered_topics", exportCovered.length],
+      ["teaching_exposure_pct", exportRows.length ? Math.round((exportCovered.length / exportRows.length) * 100) : 0],
       ["covered_topics_with_domain_excluded", excludedCount],
     ];
     downloadCsv(`soc-teq_rater_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
