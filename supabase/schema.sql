@@ -41,6 +41,11 @@ create table days (
   pgy text not null check (pgy in ('PGY-2', 'PGY-3', 'PGY-4')),
   date date not null,
   logger_id uuid references residents (id),
+  -- How many times emergency_claim_logger() has taken the logger role over
+  -- on this day, regardless of who did it or how many times it's since been
+  -- released normally — caps the emergency path at 2 uses per day so it
+  -- stays a rare override, not a routine way to switch loggers.
+  emergency_claims int not null default 0,
   unique (program_id, pgy, date)
 );
 
@@ -125,6 +130,44 @@ language sql stable security definer set search_path = public as $$
     select timezone from programs where id = p_program_id
   );
 $$;
+
+-- Lets a cohort member forcibly become the logger even though days_update's
+-- RLS only allows the current logger (or nobody) to change logger_id -
+-- covers the case where the actual logger forgot to release and is
+-- unreachable. security definer to bypass that policy deliberately, with
+-- its own program/pgy check standing in for it, plus a hard cap of 2 uses
+-- per day (tracked in days.emergency_claims) so this stays a rare override.
+create or replace function emergency_claim_logger(p_day_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_program_id uuid;
+  v_pgy text;
+  v_emergency_claims int;
+begin
+  select program_id, pgy, emergency_claims
+  into v_program_id, v_pgy, v_emergency_claims
+  from days
+  where id = p_day_id
+  for update;
+
+  if v_program_id is null then
+    raise exception 'Day not found';
+  end if;
+  if v_program_id <> my_program_id() or v_pgy <> my_pgy() then
+    raise exception 'Not authorized for this day';
+  end if;
+  if v_emergency_claims >= 2 then
+    raise exception 'Emergency claim limit reached for today';
+  end if;
+
+  update days
+  set logger_id = auth.uid(), emergency_claims = emergency_claims + 1
+  where id = p_day_id;
+end;
+$$;
+
+grant execute on function emergency_claim_logger(uuid) to authenticated;
 
 -- ---------- row level security ----------
 

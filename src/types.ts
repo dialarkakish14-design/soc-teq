@@ -36,6 +36,7 @@ export interface Day {
   pgy: Pgy;
   date: string;
   logger_id: string | null;
+  emergency_claims: number;
 }
 
 export const SESSION_TYPES = [

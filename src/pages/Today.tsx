@@ -148,6 +148,21 @@ export function Today({
     flash("You're the logger for this day.");
   }
 
+  // Only reachable when someone else already holds the claim — the normal
+  // days_update RLS policy only lets the current logger (or nobody) change
+  // logger_id, so this goes through a security-definer function instead,
+  // capped server-side at 2 uses per day (see emergency_claim_logger).
+  async function emergencyClaimLogger() {
+    if (!day) return;
+    setBusy(true);
+    const { error } = await supabase.rpc("emergency_claim_logger", { p_day_id: day.id });
+    setBusy(false);
+    if (error) return flash(error.message);
+    setDay({ ...day, logger_id: resident.id, emergency_claims: day.emergency_claims + 1 });
+    setLogger(resident);
+    flash("Emergency claim used — you're the logger for this day now.");
+  }
+
   async function releaseLogger() {
     if (!day) return;
     const { error } = await supabase.from("days").update({ logger_id: null }).eq("id", day.id);
@@ -352,6 +367,22 @@ export function Today({
                     className="mt-3 w-full rounded-2xl bg-[#EAEFEE] py-2.5 text-xs font-bold text-[#232D30]"
                   >
                     Release logger · wrong tap, or had to leave
+                  </button>
+                </>
+              )}
+              {!iAmLogger && open && (
+                <>
+                  <div className="mt-3 rounded-2xl bg-[#F8E4E4] px-3.5 py-3 text-[12.5px] leading-relaxed text-[#93393E]">
+                    <span className="font-semibold">Emergency claim</span> takes the logger role from{" "}
+                    {logger?.full_name ?? "the current logger"} — use this only if they forgot to release it and
+                    aren't reachable. Limited to 2 per day; {Math.max(0, 2 - day.emergency_claims)} left today.
+                  </div>
+                  <button
+                    onClick={emergencyClaimLogger}
+                    disabled={busy || day.emergency_claims >= 2}
+                    className="mt-2 w-full rounded-2xl bg-[#93393E] py-2.5 text-xs font-bold text-white disabled:opacity-50"
+                  >
+                    {day.emergency_claims >= 2 ? "Emergency claim limit reached today" : "Emergency claim logger"}
                   </button>
                 </>
               )}
