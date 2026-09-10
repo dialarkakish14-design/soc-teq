@@ -12,11 +12,13 @@ import {
   itemAverages,
   monthlyBrief,
   responseRecord,
+  scoreTrend,
   shiftDate,
   shiftMonth,
   summaryStats,
   todayLocalDate,
   type EngagementPoint,
+  type ScorePoint,
   type TopicEntry,
 } from "../lib/domain";
 import { SESSION_TYPE_COLOR, RM_DEFINITION } from "../lib/content";
@@ -142,6 +144,7 @@ export function Summary({
 
   const mine = rows.filter((r) => r.sessions?.days);
   const engagementPoints = engagementTrend(mine.map(toEntry), cohortSize);
+  const scorePoints = scoreTrend(mine.map(toEntry));
 
   return (
     <div className="mx-auto min-h-dvh max-w-md pb-24">
@@ -198,6 +201,7 @@ export function Summary({
               monthAnchor={monthAnchor}
               onMonthAnchorChange={setMonthAnchor}
               engagementPoints={engagementPoints}
+              scorePoints={scorePoints}
             />
           )}
           {tab === "month" && (
@@ -212,6 +216,7 @@ export function Summary({
               monthAnchor={monthAnchor}
               onMonthAnchorChange={setMonthAnchor}
               engagementPoints={engagementPoints}
+              scorePoints={scorePoints}
             />
           )}
           {tab === "notes" && (
@@ -854,6 +859,7 @@ function PeriodTab({
   monthAnchor,
   onMonthAnchorChange,
   engagementPoints,
+  scorePoints,
 }: {
   rows: TopicFull[];
   toEntry: (r: TopicFull) => TopicEntry;
@@ -865,6 +871,7 @@ function PeriodTab({
   monthAnchor: string;
   onMonthAnchorChange: (m: string) => void;
   engagementPoints?: EngagementPoint[];
+  scorePoints?: ScorePoint[];
 }) {
   const today = todayLocalDate();
   const rangeStart = period === "week" ? shiftDate(weekAnchor, -6) : monthAnchor + "-01";
@@ -919,6 +926,7 @@ function PeriodTab({
         </button>
       </div>
 
+      {scorePoints && <ScoreTrendCard points={scorePoints} />}
       {engagementPoints && <EngagementTrendCard points={engagementPoints} />}
 
       {!entries.length ? (
@@ -928,6 +936,62 @@ function PeriodTab({
       ) : (
         <PeriodContent entries={entries} byId={byId} period={period} label={label} cohortSize={cohortSize} onOpenTopic={onOpenTopic} />
       )}
+    </div>
+  );
+}
+
+// The score-side counterpart to EngagementTrendCard below — same visual
+// language (weekly bars, current week dimmed) but tracking mean RM instead
+// of response rate, so a resident can see teaching quality trending over
+// time rather than just one period's snapshot number.
+function ScoreTrendCard({ points }: { points: ScorePoint[] }) {
+  const scored = points.filter((p) => p.mean != null);
+  const latest = scored[scored.length - 1];
+  const previous = scored[scored.length - 2];
+  const delta = latest && previous ? latest.mean! - previous.mean! : 0;
+  const trendWord = !previous || Math.abs(delta) < 0.005 ? "holding steady" : delta > 0 ? "rising" : "falling";
+  const trendColor = delta > 0.005 ? "#0E7C72" : delta < -0.005 ? "#8F5205" : "#3F4C50";
+  const weekLabel = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <div className="flex items-start justify-between">
+        <div>
+          <h3 className="font-bold text-[#0E1A1C]">Score trend</h3>
+          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean RM, last 8 weeks</p>
+        </div>
+        <div className="text-right">
+          <div className="font-mono text-2xl font-extrabold text-[#0E1A1C]">{latest ? latest.mean!.toFixed(2) : "—"}</div>
+          {latest && previous && (
+            <div className="text-[11px] font-semibold" style={{ color: trendColor }}>
+              {delta > 0.005 ? "▲" : delta < -0.005 ? "▼" : "–"} {Math.abs(delta).toFixed(2)} · {trendWord}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="mt-4 flex items-end gap-1.5" style={{ height: 64 }}>
+        {points.map((p) => (
+          <div
+            key={p.weekStart}
+            className={`flex-1 rounded-t-md ${
+              p.mean == null ? "bg-[#EAEFEE]" : p.mean < THRESHOLD ? "bg-[#8F5205]" : p.current ? "bg-[#0E7C72]/45" : "bg-[#0E7C72]"
+            }`}
+            style={{ height: `${p.mean == null ? 4 : Math.max(4, (p.mean / 5) * 64)}px` }}
+          />
+        ))}
+      </div>
+      <div className="mt-1 flex gap-1.5">
+        {points.map((p, i) => (
+          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#3F4C50]">
+            {i % 2 === 0 ? weekLabel(p.weekStart) : ""}
+          </div>
+        ))}
+      </div>
+
+      <p className="mt-3.5 text-[11.5px] leading-relaxed text-[#3F4C50]">
+        Amber bars are weeks that averaged below {THRESHOLD}. Gray means nothing was rated that week.
+      </p>
     </div>
   );
 }

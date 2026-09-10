@@ -240,6 +240,30 @@ export function engagementTrend(entries: TopicEntry[], cohortSize: number, weeks
   return points;
 }
 
+export interface ScorePoint {
+  weekStart: string;
+  weekEnd: string;
+  mean: number | null;
+  n: number;
+  current: boolean;
+}
+
+// Mean overall RM per trailing week, oldest first — the score-side
+// counterpart to engagementTrend above, so a resident can see the group's
+// teaching quality trending over time, not just a single period's snapshot.
+export function scoreTrend(entries: TopicEntry[], weeks = 8): ScorePoint[] {
+  const today = todayLocalDate();
+  const points: ScorePoint[] = [];
+  for (let i = weeks - 1; i >= 0; i--) {
+    const weekEnd = shiftDate(today, -7 * i);
+    const weekStart = shiftDate(weekEnd, -6);
+    const inWeek = entries.filter((e) => e.date >= weekStart && e.date <= weekEnd);
+    const stats = summaryStats(inWeek);
+    points.push({ weekStart, weekEnd, mean: stats.avgScore, n: stats.coveredCount, current: i === 0 });
+  }
+  return points;
+}
+
 // Mean of each item's mean across every scored, covered topic in the list.
 export function itemAverages(entries: TopicEntry[]): Record<string, number> | null {
   const scored = entries
