@@ -34,7 +34,7 @@ export function Today({
   const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
-  const [modal, setModal] = useState<{ kind: "coverage" | "rate" | "detail"; topic: TopicWithRatings } | null>(null);
+  const [modal, setModal] = useState<{ kind: "coverage" | "rate" | "detail" | "delete"; topic: TopicWithRatings } | null>(null);
 
   const [newSessionType, setNewSessionType] = useState<string>(SESSION_TYPES[0]);
   const [quickTitle, setQuickTitle] = useState("");
@@ -44,11 +44,25 @@ export function Today({
   // Case-insensitive substring match against the reference topic list, so
   // "the same letter at the start" (or anywhere in the name) surfaces a
   // suggestion regardless of how the resident capitalizes it — this never
-  // blocks a custom entry, it's suggestions only.
-  const topicSuggestions =
-    quickTitle.trim().length > 0
-      ? DERM_TOPICS.filter((t) => t.toLowerCase().includes(quickTitle.trim().toLowerCase())).slice(0, 8)
-      : [];
+  // blocks a custom entry, it's suggestions only. Ranked so the plain term
+  // ("Melanoma") outranks longer variants that merely contain it
+  // ("Subungual melanoma") — an exact match first, then anything starting
+  // with what was typed, then everything else in the list's own order.
+  const topicSuggestions = (() => {
+    const q = quickTitle.trim().toLowerCase();
+    if (!q) return [];
+    const rank = (t: string) => {
+      const tl = t.toLowerCase();
+      if (tl === q) return 0;
+      if (tl.startsWith(q)) return 1;
+      return 2;
+    };
+    return DERM_TOPICS.filter((t) => t.toLowerCase().includes(q))
+      .map((t, i) => ({ t, i }))
+      .sort((a, b) => rank(a.t) - rank(b.t) || a.i - b.i)
+      .slice(0, 8)
+      .map(({ t }) => t);
+  })();
   const [search, setSearch] = useState("");
 
   function flash(msg: string) {
@@ -244,6 +258,25 @@ export function Today({
     setModal({ kind: "coverage", topic: t });
   }
 
+  // Only offered while no one has rated it yet — once a rating exists,
+  // deleting the topic would silently discard someone's real input, so at
+  // that point the logger has to fix coverage instead of removing it outright.
+  // Asks first via the "delete" modal below rather than a native confirm(),
+  // which doesn't render reliably in every browser/webview context.
+  function confirmDeleteTopic(t: TopicWithRatings) {
+    setModal({ kind: "delete", topic: t });
+  }
+
+  async function deleteTopic(t: TopicWithRatings) {
+    setBusy(true);
+    const { error } = await supabase.from("topics").delete().eq("id", t.id);
+    setBusy(false);
+    if (error) return flash(error.message);
+    setSessions((prev) => prev.map((s) => ({ ...s, topics: s.topics.filter((topic) => topic.id !== t.id) })));
+    setModal(null);
+    flash("Topic deleted.");
+  }
+
   const allTopics = sessions.flatMap((s) => s.topics);
   const needsRating = allTopics.filter(
     (t) =>
@@ -434,7 +467,6 @@ export function Today({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") capture();
                 }}
-                placeholder="e.g. Vitiligo"
                 autoComplete="off"
                 className="input"
               />
@@ -509,6 +541,7 @@ export function Today({
                     residentId={resident.id}
                     onOpen={() => openTopic(t)}
                     onEdit={iAmLogger && open ? () => editTopic(t) : undefined}
+                    onDelete={iAmLogger && open && t.ratings.length === 0 ? () => confirmDeleteTopic(t) : undefined}
                   />
                 ))}
               </div>
@@ -555,6 +588,31 @@ export function Today({
       )}
       {modal?.kind === "detail" && (
         <TopicDetail topic={modal.topic} codeById={codeById} residentId={resident.id} onClose={() => setModal(null)} />
+      )}
+      {modal?.kind === "delete" && (
+        <div className="fixed inset-0 z-40 flex items-end justify-center bg-black/40 sm:items-center">
+          <div className="w-full max-w-md rounded-t-3xl bg-[#F2F6F5] p-5 sm:rounded-3xl">
+            <h2 className="text-xl font-extrabold tracking-tight text-[#0E1A1C]">Delete this topic?</h2>
+            <p className="mt-2 text-sm text-[#232D30]">
+              "{modal.topic.title}" will be permanently removed. This can't be undone.
+            </p>
+            <div className="mt-5 flex gap-2">
+              <button
+                onClick={() => setModal(null)}
+                className="flex-1 rounded-2xl bg-[#EAEFEE] py-3 text-sm font-bold text-[#232D30]"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => deleteTopic(modal.topic)}
+                disabled={busy}
+                className="flex-1 rounded-2xl bg-[#93393E] py-3 text-sm font-bold text-white disabled:opacity-60"
+              >
+                {busy ? "Deleting…" : "Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

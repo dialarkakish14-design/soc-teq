@@ -27,7 +27,7 @@ const RAW_TOPICS = [
   "Nail dermoscopy", "Wood lamp examination", "Diascopy",
 
   // Eczema / dermatitis
-  "Atopic dermatitis", "Allergic contact dermatitis", "Irritant contact dermatitis",
+  "Eczema", "Dermatitis", "Atopic dermatitis", "Allergic contact dermatitis", "Irritant contact dermatitis",
   "Photoallergic contact dermatitis", "Phototoxic dermatitis", "Seborrheic dermatitis",
   "Nummular dermatitis", "Dyshidrotic eczema/pompholyx", "Asteatotic eczema",
   "Stasis dermatitis", "Lichen simplex chronicus", "Autosensitization/id reaction",
@@ -40,7 +40,7 @@ const RAW_TOPICS = [
   "Contact urticaria", "Latex allergy", "Photo-patch testing", "Occupational allergology",
 
   // Psoriasis and related disease
-  "Chronic plaque psoriasis", "Guttate psoriasis", "Inverse psoriasis", "Scalp psoriasis",
+  "Psoriasis", "Chronic plaque psoriasis", "Guttate psoriasis", "Inverse psoriasis", "Scalp psoriasis",
   "Palmoplantar psoriasis", "Nail psoriasis", "Pustular psoriasis",
   "Generalized pustular psoriasis", "Palmoplantar pustulosis", "Erythrodermic psoriasis",
   "Psoriatic arthritis", "Sebopsoriasis",
@@ -57,7 +57,7 @@ const RAW_TOPICS = [
   "Lichenoid drug eruption", "Graft-versus-host disease", "Lichen sclerosus", "Lichen aureus",
 
   // Acne and follicular disorders
-  "Acne vulgaris", "Comedonal acne", "Nodulocystic acne", "Acne conglobata",
+  "Acne", "Acne vulgaris", "Comedonal acne", "Nodulocystic acne", "Acne conglobata",
   "Acne fulminans", "Drug-induced acne", "Steroid acne", "Acne mechanica",
   "Neonatal acne", "Infantile acne", "Acne excoriée", "Hidradenitis suppurativa",
   "Dissecting cellulitis of the scalp", "Acne keloidalis nuchae", "Folliculitis",
@@ -78,7 +78,7 @@ const RAW_TOPICS = [
   "Diffuse cutaneous mastocytosis", "Mastocytoma", "Systemic mastocytosis",
 
   // Autoimmune connective-tissue / rheumatologic dermatology
-  "Acute cutaneous lupus erythematosus", "Subacute cutaneous lupus", "Discoid lupus",
+  "Lupus", "Acute cutaneous lupus erythematosus", "Subacute cutaneous lupus", "Discoid lupus",
   "Chilblain lupus", "Tumid lupus", "Lupus panniculitis", "Dermatomyositis",
   "Clinically amyopathic dermatomyositis", "Juvenile dermatomyositis", "Systemic sclerosis",
   "Morphea", "Generalized morphea", "Linear morphea", "Eosinophilic fasciitis",
@@ -214,7 +214,7 @@ const RAW_TOPICS = [
   "Acquired dermal melanocytosis",
 
   // Hair and scalp disorders
-  "Androgenetic alopecia", "Female-pattern hair loss", "Alopecia areata",
+  "Alopecia", "Androgenetic alopecia", "Female-pattern hair loss", "Alopecia areata",
   "Alopecia totalis", "Alopecia universalis", "Telogen effluvium", "Anagen effluvium",
   "Traction alopecia", "Trichotillomania", "Central centrifugal cicatricial alopecia",
   "Discoid lupus alopecia", "Folliculitis decalvans", "Syphilitic alopecia",
@@ -388,7 +388,7 @@ const RAW_TOPICS = [
   "High-risk SCC", "Transplant-associated SCC",
 
   // Melanoma
-  "Superficial spreading melanoma", "Nodular melanoma", "Lentigo maligna melanoma",
+  "Melanoma", "Superficial spreading melanoma", "Nodular melanoma", "Lentigo maligna melanoma",
   "Acral lentiginous melanoma", "Subungual/nail-unit melanoma", "Mucosal melanoma",
   "Desmoplastic melanoma", "Amelanotic melanoma", "Pediatric melanoma",
   "Melanoma staging", "Sentinel-node concepts", "Dermoscopy of melanoma",
