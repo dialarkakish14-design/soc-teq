@@ -372,11 +372,17 @@ export function Today({
               )}
               {!iAmLogger && open && (
                 <>
-                  <div className="mt-3 rounded-2xl bg-[#F8E4E4] px-3.5 py-3 text-[12.5px] leading-relaxed text-[#93393E]">
-                    <span className="font-semibold">Emergency claim</span> takes the logger role from{" "}
-                    {logger?.full_name ?? "the current logger"} — use this only if they forgot to release it and
-                    aren't reachable. Limited to 2 per day; {Math.max(0, 2 - day.emergency_claims)} left today.
+                  <div className="mt-3 flex items-center gap-1.5">
+                    <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-[#93393E] text-[9px] font-bold text-white">
+                      !
+                    </span>
+                    <span className="text-[12px] font-bold text-[#93393E]">Emergency claim</span>
                   </div>
+                  <p className="mt-1 text-[10.5px] leading-relaxed text-[#3F4C50]">
+                    Takes the logger role from {logger?.full_name ?? "the current logger"}. Use only if they're no
+                    longer available and forgot to unclaim, or are unreachable. Limited to 2 per day;{" "}
+                    {Math.max(0, 2 - day.emergency_claims)} left today.
+                  </p>
                   <button
                     onClick={emergencyClaimLogger}
                     disabled={busy || day.emergency_claims >= 2}
