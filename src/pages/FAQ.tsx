@@ -124,7 +124,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
           <h2 className="mt-2.5 text-[16px] font-bold leading-tight tracking-tight text-[#0E1A1C]">
             {EQUITY_NOTE.title}
           </h2>
-          <p className="mt-2 whitespace-pre-line text-[12.5px] leading-relaxed text-[#3E4A4D]">
+          <p className="mt-2 whitespace-pre-line text-[12.5px] leading-relaxed text-[#232D30]">
             {EQUITY_NOTE.body}
           </p>
         </div>

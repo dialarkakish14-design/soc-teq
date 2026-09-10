@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { downloadCsv } from "../lib/csv";
 import {
   engagementTrend,
   exclusionSummary,
@@ -560,6 +561,7 @@ function NotesTab({
 // render function without losing type safety.
 function NotesBrowserShell({
   onBack,
+  onExport,
   search,
   onSearchChange,
   topics,
@@ -568,6 +570,7 @@ function NotesBrowserShell({
   children,
 }: {
   onBack: () => void;
+  onExport: () => void;
   search: string;
   onSearchChange: (v: string) => void;
   topics: { title: string; count: number }[];
@@ -578,9 +581,14 @@ function NotesBrowserShell({
   const [showTopicList, setShowTopicList] = useState(false);
   return (
     <div className="flex flex-col gap-3">
-      <button onClick={onBack} className="text-left text-sm font-bold text-[#0E7C72]">
-        ‹ Back
-      </button>
+      <div className="flex items-center justify-between">
+        <button onClick={onBack} className="text-left text-sm font-bold text-[#0E7C72]">
+          ‹ Back
+        </button>
+        <button onClick={onExport} className="text-sm font-bold text-[#064B45]">
+          Export CSV
+        </button>
+      </div>
 
       <input
         value={search}
@@ -677,9 +685,24 @@ function PrivateNotesBrowser({
     }))
     .filter((g) => g.entries.length > 0);
 
+  function exportCsv() {
+    const header = ["date", "session", "topic", "note", "updated_at"];
+    const dataRows = groups.flatMap((g) =>
+      g.entries.map((e) => [
+        e.topic.sessions!.days.date,
+        e.topic.sessions!.type,
+        g.title,
+        e.note.note,
+        e.note.updated_at,
+      ]),
+    );
+    downloadCsv(`soc-teq_private-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+  }
+
   return (
     <NotesBrowserShell
       onBack={onBack}
+      onExport={exportCsv}
       search={search}
       onSearchChange={setSearch}
       topics={groups.map((g) => ({ title: g.title, count: g.entries.length }))}
@@ -752,8 +775,21 @@ function PublicNotesBrowser({
     }))
     .filter((g) => g.instances.length > 0);
 
+  function exportCsv() {
+    const header = ["date", "session", "topic", "resident_code", "note"];
+    const dataRows = groups.flatMap((g) =>
+      g.instances.flatMap((t) =>
+        t.ratings
+          .filter((rt) => rt.note?.trim())
+          .map((rt) => [t.sessions!.days.date, t.sessions!.type, g.title, codeById[rt.resident_id] ?? "Resident", rt.note ?? ""]),
+      ),
+    );
+    downloadCsv(`soc-teq_public-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+  }
+
   return (
     <NotesBrowserShell
+      onExport={exportCsv}
       onBack={onBack}
       search={search}
       onSearchChange={setSearch}
