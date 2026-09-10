@@ -4,6 +4,7 @@ import { todayLocalDate, isDayOpen, closesAtLabel } from "../lib/domain";
 import { SESSION_TYPE_COLOR } from "../lib/content";
 import { SESSION_TYPES, type Absence, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
 import { CoverageModal } from "../components/CoverageModal";
+import { DERM_TOPICS } from "../lib/topics";
 import { RateModal } from "../components/RateModal";
 import { TopicDetail } from "../components/TopicDetail";
 import { TopicRow } from "../components/TopicRow";
@@ -37,7 +38,17 @@ export function Today({
 
   const [newSessionType, setNewSessionType] = useState<string>(SESSION_TYPES[0]);
   const [quickTitle, setQuickTitle] = useState("");
+  const [showTopicSuggestions, setShowTopicSuggestions] = useState(false);
   const [busy, setBusy] = useState(false);
+
+  // Case-insensitive substring match against the reference topic list, so
+  // "the same letter at the start" (or anywhere in the name) surfaces a
+  // suggestion regardless of how the resident capitalizes it — this never
+  // blocks a custom entry, it's suggestions only.
+  const topicSuggestions =
+    quickTitle.trim().length > 0
+      ? DERM_TOPICS.filter((t) => t.toLowerCase().includes(quickTitle.trim().toLowerCase())).slice(0, 8)
+      : [];
   const [search, setSearch] = useState("");
 
   function flash(msg: string) {
@@ -375,11 +386,13 @@ export function Today({
                 ))}
               </select>
             </label>
-            <label className="mt-3 block">
+            <label className="relative mt-3 block">
               <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Topic name</div>
               <input
                 value={quickTitle}
                 onChange={(e) => setQuickTitle(e.target.value)}
+                onFocus={() => setShowTopicSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowTopicSuggestions(false), 120)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter") capture();
                 }}
@@ -387,6 +400,24 @@ export function Today({
                 autoComplete="off"
                 className="input"
               />
+              {showTopicSuggestions && topicSuggestions.length > 0 && (
+                <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl bg-white shadow-lg">
+                  {topicSuggestions.map((t) => (
+                    <button
+                      key={t}
+                      type="button"
+                      onMouseDown={(e) => {
+                        e.preventDefault();
+                        setQuickTitle(t);
+                        setShowTopicSuggestions(false);
+                      }}
+                      className="block w-full border-t border-[#E2EAE9] px-3.5 py-2.5 text-left text-[13px] font-semibold text-[#232D30] first:border-t-0 active:bg-[#F7FAFA]"
+                    >
+                      {t}
+                    </button>
+                  ))}
+                </div>
+              )}
             </label>
             <button
               onClick={capture}
