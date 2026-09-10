@@ -214,10 +214,8 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
               </div>
               {showCoverageInfo && (
                 <div className="mt-2.5 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#232D30]">
-                  Counts how many covered conditions have been shown across all three Fitzpatrick tones (IV, V, and
-                  VI) at some point, combining every session that covered that condition, not just one. A condition
-                  only counts as complete once every tone has appeared at least once — it doesn't need to happen in
-                  the same session.
+                  A condition counts as complete once Fitzpatrick IV, V, and VI have each been shown for it at least
+                  once, even across separate sessions on separate days.
                 </div>
               )}
               <p className="mt-1.5 text-[12.5px] text-[#232D30]">
