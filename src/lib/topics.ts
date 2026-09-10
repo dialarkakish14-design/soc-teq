@@ -27,8 +27,8 @@ const RAW_TOPICS = [
   "Nail dermoscopy", "Wood lamp examination", "Diascopy",
 
   // Eczema / dermatitis
-  "Eczema", "Dermatitis", "Atopic dermatitis", "Allergic contact dermatitis", "Irritant contact dermatitis",
-  "Photoallergic contact dermatitis", "Phototoxic dermatitis", "Seborrheic dermatitis",
+  "Eczema", "Dermatitis", "Atopic dermatitis (AD)", "Allergic contact dermatitis (ACD)", "Irritant contact dermatitis (ICD)",
+  "Photoallergic contact dermatitis", "Phototoxic dermatitis", "Seborrheic dermatitis (SD)",
   "Nummular dermatitis", "Dyshidrotic eczema/pompholyx", "Asteatotic eczema",
   "Stasis dermatitis", "Lichen simplex chronicus", "Autosensitization/id reaction",
   "Hand dermatitis", "Foot dermatitis", "Eyelid dermatitis", "Lip dermatitis/cheilitis",
@@ -43,23 +43,23 @@ const RAW_TOPICS = [
   "Psoriasis", "Chronic plaque psoriasis", "Guttate psoriasis", "Inverse psoriasis", "Scalp psoriasis",
   "Palmoplantar psoriasis", "Nail psoriasis", "Pustular psoriasis",
   "Generalized pustular psoriasis", "Palmoplantar pustulosis", "Erythrodermic psoriasis",
-  "Psoriatic arthritis", "Sebopsoriasis",
+  "Psoriatic arthritis (PsA)", "Sebopsoriasis",
 
   // Papulosquamous diseases
-  "Pityriasis rosea", "Pityriasis rubra pilaris", "Pityriasis lichenoides chronica",
+  "Pityriasis rosea", "Pityriasis rubra pilaris (PRP)", "Pityriasis lichenoides chronica",
   "PLEVA", "Parapsoriasis", "Digitate dermatosis", "Small-plaque parapsoriasis",
   "Large-plaque parapsoriasis", "Secondary syphilis", "Gianotti-Crosti syndrome",
 
   // Lichenoid disorders
   "Lichen planus", "Hypertrophic lichen planus", "Actinic lichen planus",
-  "Pigmentary lichen planus", "Lichen planopilaris", "Frontal fibrosing alopecia",
+  "Pigmentary lichen planus", "Lichen planopilaris", "Frontal fibrosing alopecia (FFA)",
   "Oral lichen planus", "Genital lichen planus", "Lichen nitidus", "Lichen striatus",
-  "Lichenoid drug eruption", "Graft-versus-host disease", "Lichen sclerosus", "Lichen aureus",
+  "Lichenoid drug eruption", "Graft-versus-host disease (GVHD)", "Lichen sclerosus", "Lichen aureus",
 
   // Acne and follicular disorders
   "Acne", "Acne vulgaris", "Comedonal acne", "Nodulocystic acne", "Acne conglobata",
   "Acne fulminans", "Drug-induced acne", "Steroid acne", "Acne mechanica",
-  "Neonatal acne", "Infantile acne", "Acne excoriée", "Hidradenitis suppurativa",
+  "Neonatal acne", "Infantile acne", "Acne excoriée", "Hidradenitis suppurativa (HS)",
   "Dissecting cellulitis of the scalp", "Acne keloidalis nuchae", "Folliculitis",
   "Gram-negative folliculitis", "Malassezia folliculitis", "Pseudofolliculitis barbae",
   "Perifolliculitis capitis abscedens", "Keratosis pilaris", "Follicular occlusion disorders",
@@ -71,45 +71,45 @@ const RAW_TOPICS = [
   "Steroid-induced rosacea", "Acneiform eruptions",
 
   // Urticaria, angioedema and mast-cell disorders
-  "Acute urticaria", "Chronic spontaneous urticaria", "Dermatographism", "Cold urticaria",
+  "Acute urticaria", "Chronic spontaneous urticaria (CSU)", "Dermatographism", "Cold urticaria",
   "Heat urticaria", "Cholinergic urticaria", "Solar urticaria", "Pressure urticaria",
-  "Aquagenic urticaria", "Vibratory urticaria", "Angioedema", "Hereditary angioedema",
+  "Aquagenic urticaria", "Vibratory urticaria", "Angioedema", "Hereditary angioedema (HAE)",
   "Urticarial vasculitis", "Cutaneous mastocytosis", "Urticaria pigmentosa",
   "Diffuse cutaneous mastocytosis", "Mastocytoma", "Systemic mastocytosis",
 
   // Autoimmune connective-tissue / rheumatologic dermatology
-  "Lupus", "Acute cutaneous lupus erythematosus", "Subacute cutaneous lupus", "Discoid lupus",
-  "Chilblain lupus", "Tumid lupus", "Lupus panniculitis", "Dermatomyositis",
-  "Clinically amyopathic dermatomyositis", "Juvenile dermatomyositis", "Systemic sclerosis",
+  "Lupus", "Acute cutaneous lupus erythematosus (ACLE)", "Subacute cutaneous lupus (SCLE)", "Discoid lupus (DLE)",
+  "Chilblain lupus", "Tumid lupus", "Lupus panniculitis", "Dermatomyositis (DM)",
+  "Clinically amyopathic dermatomyositis", "Juvenile dermatomyositis", "Systemic sclerosis (SSc)",
   "Morphea", "Generalized morphea", "Linear morphea", "Eosinophilic fasciitis",
-  "Mixed connective-tissue disease", "Sjögren syndrome", "Rheumatoid-associated skin disease",
+  "Mixed connective-tissue disease (MCTD)", "Sjögren syndrome", "Rheumatoid-associated skin disease",
   "Antiphospholipid syndrome", "Calcinosis cutis", "Raynaud phenomenon",
 
   // Autoimmune blistering diseases
-  "Pemphigus vulgaris", "Pemphigus foliaceus", "Paraneoplastic pemphigus", "IgA pemphigus",
-  "Drug-induced pemphigus", "Bullous pemphigoid", "Mucous membrane pemphigoid",
-  "Pemphigoid gestationis", "Linear IgA bullous dermatosis",
-  "Epidermolysis bullosa acquisita", "Bullous systemic lupus erythematosus",
-  "Dermatitis herpetiformis", "Anti-p200 pemphigoid", "Lichen planus pemphigoides",
+  "Pemphigus vulgaris (PV)", "Pemphigus foliaceus (PF)", "Paraneoplastic pemphigus", "IgA pemphigus",
+  "Drug-induced pemphigus", "Bullous pemphigoid (BP)", "Mucous membrane pemphigoid (MMP)",
+  "Pemphigoid gestationis", "Linear IgA bullous dermatosis (LABD)",
+  "Epidermolysis bullosa acquisita (EBA)", "Bullous systemic lupus erythematosus",
+  "Dermatitis herpetiformis (DH)", "Anti-p200 pemphigoid", "Lichen planus pemphigoides",
   "Porphyria-associated blistering mimics",
 
   // Inherited blistering diseases
-  "Epidermolysis bullosa simplex", "Junctional epidermolysis bullosa",
-  "Dystrophic epidermolysis bullosa", "Kindler epidermolysis bullosa",
+  "Epidermolysis bullosa simplex (EBS)", "Junctional epidermolysis bullosa (JEB)",
+  "Dystrophic epidermolysis bullosa (DEB)", "Kindler epidermolysis bullosa",
   "Hailey-Hailey disease", "Darier disease", "Grover disease",
 
   // Vasculitis, vasculopathy and purpura
-  "Cutaneous small-vessel vasculitis", "Leukocytoclastic vasculitis", "IgA vasculitis",
-  "ANCA-associated vasculitis", "Granulomatosis with polyangiitis",
-  "Microscopic polyangiitis", "Eosinophilic granulomatosis with polyangiitis",
-  "Polyarteritis nodosa", "Cutaneous polyarteritis nodosa", "Behçet disease",
+  "Cutaneous small-vessel vasculitis (CSVV)", "Leukocytoclastic vasculitis", "IgA vasculitis",
+  "ANCA-associated vasculitis", "Granulomatosis with polyangiitis (GPA)",
+  "Microscopic polyangiitis (MPA)", "Eosinophilic granulomatosis with polyangiitis (EGPA)",
+  "Polyarteritis nodosa (PAN)", "Cutaneous polyarteritis nodosa", "Behçet disease",
   "Cryoglobulinemia", "Livedoid vasculopathy", "Livedo reticularis", "Livedo racemosa",
   "Retiform purpura", "Calciphylaxis", "Cholesterol emboli",
   "Pigmented purpuric dermatoses", "Schamberg disease", "Majocchi purpura",
   "Purpura annularis telangiectodes", "Disseminated intravascular coagulation skin findings",
 
   // Neutrophilic dermatoses
-  "Sweet syndrome", "Pyoderma gangrenosum", "Neutrophilic eccrine hidradenitis",
+  "Sweet syndrome", "Pyoderma gangrenosum (PG)", "Neutrophilic eccrine hidradenitis",
   "Bowel-associated dermatosis-arthritis syndrome", "Rheumatoid neutrophilic dermatosis",
   "Subcorneal pustular dermatosis", "Amicrobial pustulosis",
 
@@ -118,25 +118,25 @@ const RAW_TOPICS = [
   "Papular eruption of HIV", "Arthropod-reaction patterns",
 
   // Autoinflammatory disorders
-  "Familial Mediterranean fever", "CAPS", "Muckle-Wells syndrome",
+  "Familial Mediterranean fever (FMF)", "CAPS", "Muckle-Wells syndrome",
   "Familial cold autoinflammatory syndrome", "NOMID/CINCA", "PAPA syndrome",
   "PASH/PAPASH", "DIRA", "Deficiency of IL-36 receptor antagonist", "Schnitzler syndrome",
   "Adult-onset Still disease",
 
   // Granulomatous and macrophage disorders
-  "Sarcoidosis", "Granuloma annulare", "Necrobiosis lipoidica", "Rheumatoid nodules",
+  "Sarcoidosis", "Granuloma annulare (GA)", "Necrobiosis lipoidica (NL)", "Rheumatoid nodules",
   "Interstitial granulomatous dermatitis", "Palisaded neutrophilic granulomatous dermatitis",
   "Foreign-body granuloma", "Silicone granuloma", "Tattoo granuloma",
   "Annular elastolytic giant-cell granuloma",
 
   // Histiocytoses
-  "Langerhans cell histiocytosis", "Juvenile xanthogranuloma", "Erdheim-Chester disease",
+  "Langerhans cell histiocytosis (LCH)", "Juvenile xanthogranuloma", "Erdheim-Chester disease",
   "Rosai-Dorfman disease", "Generalized eruptive histiocytoma",
   "Benign cephalic histiocytosis", "Xanthoma disseminatum",
 
   // Bacterial infections
   "Impetigo", "Ecthyma", "Furuncle", "Carbuncle", "Cellulitis", "Erysipelas", "Abscess",
-  "Necrotizing fasciitis", "Staphylococcal scalded skin syndrome", "Toxic shock syndrome",
+  "Necrotizing fasciitis", "Staphylococcal scalded skin syndrome (SSSS)", "Toxic shock syndrome (TSS)",
   "Scarlet fever", "Erythrasma", "Trichomycosis axillaris", "Pitted keratolysis",
   "Corynebacterial infections", "Anthrax", "Tularemia", "Cat-scratch disease",
   "Erysipeloid", "Cutaneous diphtheria", "Pseudomonas folliculitis",
@@ -151,7 +151,7 @@ const RAW_TOPICS = [
   "Rapid-growing mycobacteria",
 
   // Viral infections
-  "Herpes simplex", "Genital herpes", "Eczema herpeticum", "Herpetic whitlow",
+  "Herpes simplex (HSV)", "Genital herpes", "Eczema herpeticum", "Herpetic whitlow",
   "Varicella", "Herpes zoster", "Disseminated zoster", "Verruca vulgaris",
   "Plantar warts", "Flat warts", "Genital HPV", "Molluscum contagiosum", "Orf",
   "Milker's nodules", "Mpox", "Hand-foot-mouth disease", "Herpangina", "Measles",
@@ -172,7 +172,7 @@ const RAW_TOPICS = [
 
   // Parasitic disease / infestations / arthropods
   "Scabies", "Crusted scabies", "Pediculosis capitis", "Pediculosis corporis",
-  "Pediculosis pubis", "Cutaneous larva migrans", "Larva currens",
+  "Pediculosis pubis", "Cutaneous larva migrans (CLM)", "Larva currens",
   "Cutaneous leishmaniasis", "Post-kala-azar dermal leishmaniasis", "Onchocerciasis",
   "Loiasis", "Cercarial dermatitis", "Tungiasis", "Myiasis", "Bedbug bites",
   "Flea bites", "Mosquito reactions", "Tick bites", "Spider bites",
@@ -180,7 +180,7 @@ const RAW_TOPICS = [
 
   // Sexually transmitted infections / venereology
   "Primary syphilis", "Tertiary syphilis", "Congenital syphilis", "Gonorrhea",
-  "Chlamydia", "Lymphogranuloma venereum", "Chancroid", "Granuloma inguinale",
+  "Chlamydia", "Lymphogranuloma venereum (LGV)", "Chancroid", "Granuloma inguinale",
   "HIV-associated dermatoses", "Hepatitis-associated cutaneous manifestations",
   "Trichomoniasis", "Scabies/pubic lice in sexual-health settings", "Partner notification",
   "STI prevention", "Sexual-health counseling", "STI laboratory diagnosis",
@@ -188,8 +188,8 @@ const RAW_TOPICS = [
 
   // Drug eruptions / adverse cutaneous drug reactions
   "Morbilliform drug eruption", "Urticarial drug eruption", "Fixed drug eruption",
-  "Generalized bullous fixed drug eruption", "DRESS/DIHS", "Stevens-Johnson syndrome",
-  "Toxic epidermal necrolysis", "AGEP", "SDRIFE", "Drug-induced lupus",
+  "Generalized bullous fixed drug eruption", "DRESS/DIHS", "Stevens-Johnson syndrome (SJS)",
+  "Toxic epidermal necrolysis (TEN)", "AGEP", "SDRIFE", "Drug-induced lupus",
   "Drug-induced pemphigus/pemphigoid", "Drug-induced photosensitivity",
   "Drug-induced pigmentation", "Acneiform drug eruption", "Pseudolymphoma",
   "Serum sickness-like reaction", "Anticoagulant-associated necrosis",
@@ -198,7 +198,7 @@ const RAW_TOPICS = [
   "CAR-T/transplant-related cutaneous toxicities",
 
   // Erythemas and reactive eruptions
-  "Erythema multiforme", "Erythema nodosum", "Erythema annulare centrifugum",
+  "Erythema multiforme (EM)", "Erythema nodosum (EN)", "Erythema annulare centrifugum",
   "Erythema gyratum repens", "Necrolytic migratory erythema",
   "Reactive infectious mucocutaneous eruption", "Kawasaki disease skin findings",
 
@@ -214,9 +214,9 @@ const RAW_TOPICS = [
   "Acquired dermal melanocytosis",
 
   // Hair and scalp disorders
-  "Alopecia", "Androgenetic alopecia", "Female-pattern hair loss", "Alopecia areata",
+  "Alopecia", "Androgenetic alopecia (AGA)", "Female-pattern hair loss", "Alopecia areata (AA)",
   "Alopecia totalis", "Alopecia universalis", "Telogen effluvium", "Anagen effluvium",
-  "Traction alopecia", "Trichotillomania", "Central centrifugal cicatricial alopecia",
+  "Traction alopecia", "Trichotillomania", "Central centrifugal cicatricial alopecia (CCCA)",
   "Discoid lupus alopecia", "Folliculitis decalvans", "Syphilitic alopecia",
   "Loose anagen syndrome", "Short anagen syndrome", "Trichorrhexis nodosa",
   "Trichorrhexis invaginata", "Pili torti", "Monilethrix", "Trichothiodystrophy",
@@ -244,8 +244,8 @@ const RAW_TOPICS = [
 
   // Genital/anogenital dermatology
   "Genital psoriasis", "Genital eczema", "Zoon balanitis", "Vulvovaginal dermatoses",
-  "Vulvodynia", "Balanitis", "Vulvar intraepithelial neoplasia",
-  "Penile intraepithelial neoplasia", "Extramammary Paget disease",
+  "Vulvodynia", "Balanitis", "Vulvar intraepithelial neoplasia (VIN)",
+  "Penile intraepithelial neoplasia (PeIN)", "Extramammary Paget disease (EMPD)",
   "Genital Crohn disease", "Genital infections/STIs", "Anogenital malignancy",
 
   // Pediatric dermatology
@@ -335,7 +335,7 @@ const RAW_TOPICS = [
   "Chemical burns", "Mechanical dermatoses", "Aquatic dermatoses",
 
   // Photodermatology
-  "Polymorphous light eruption", "Chronic actinic dermatitis", "Actinic prurigo",
+  "Polymorphous light eruption (PMLE)", "Chronic actinic dermatitis (CAD)", "Actinic prurigo",
   "Hydroa vacciniforme", "Phototoxicity", "Photoallergy", "Photoaggravated lupus",
   "Photoaggravated dermatomyositis", "Phototesting", "Photopatch testing",
   "UVA/UVB biology",
@@ -378,13 +378,13 @@ const RAW_TOPICS = [
   "Acrochordon", "Neurofibroma", "Leiomyoma", "Granular-cell tumor",
 
   // Premalignant disease
-  "Actinic keratosis", "Bowen disease/SCC in situ", "Erythroplasia of Queyrat",
+  "Actinic keratosis (AK)", "Bowen disease/SCC in situ", "Erythroplasia of Queyrat",
   "Vulvar/penile intraepithelial neoplasia", "Keratoacanthoma", "Lentigo maligna",
   "Dysplastic nevi in melanoma-risk context",
 
   // Keratinocyte carcinoma
-  "Basal cell carcinoma", "Nodular BCC", "Superficial BCC", "Morpheaform/infiltrative BCC",
-  "Pigmented BCC", "Squamous cell carcinoma", "SCC in situ", "Keratoacanthoma-type SCC",
+  "Basal cell carcinoma (BCC)", "Nodular BCC", "Superficial BCC", "Morpheaform/infiltrative BCC",
+  "Pigmented BCC", "Squamous cell carcinoma (SCC)", "SCC in situ", "Keratoacanthoma-type SCC",
   "High-risk SCC", "Transplant-associated SCC",
 
   // Melanoma
@@ -395,12 +395,12 @@ const RAW_TOPICS = [
   "Melanoma in diverse skin tones",
 
   // Other cutaneous malignancies
-  "Merkel cell carcinoma", "Dermatofibrosarcoma protuberans", "Atypical fibroxanthoma",
+  "Merkel cell carcinoma (MCC)", "Dermatofibrosarcoma protuberans", "Atypical fibroxanthoma",
   "Pleomorphic dermal sarcoma", "Angiosarcoma", "Microcystic adnexal carcinoma",
   "Sebaceous carcinoma", "Adnexal carcinoma",
 
   // Cutaneous lymphoma / hematologic disease
-  "Mycosis fungoides", "Sézary syndrome", "CD30+ lymphoproliferative disorders",
+  "Mycosis fungoides (MF)", "Sézary syndrome", "CD30+ lymphoproliferative disorders",
   "Lymphomatoid papulosis", "Primary cutaneous anaplastic large-cell lymphoma",
   "Primary cutaneous B-cell lymphoma", "Extranodal NK/T-cell lymphoma",
   "Adult T-cell leukemia/lymphoma", "Leukemia cutis", "Plasmacytoma",

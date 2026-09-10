@@ -467,6 +467,7 @@ export function Today({
                 onKeyDown={(e) => {
                   if (e.key === "Enter") capture();
                 }}
+                placeholder="Start typing to search…"
                 autoComplete="off"
                 className="input"
               />
@@ -540,7 +541,7 @@ export function Today({
                     topic={t}
                     residentId={resident.id}
                     onOpen={() => openTopic(t)}
-                    onEdit={iAmLogger && open ? () => editTopic(t) : undefined}
+                    onEdit={iAmLogger && open && t.ratings.length === 0 ? () => editTopic(t) : undefined}
                     onDelete={iAmLogger && open && t.ratings.length === 0 ? () => confirmDeleteTopic(t) : undefined}
                   />
                 ))}
@@ -565,7 +566,6 @@ export function Today({
       {modal?.kind === "coverage" && (
         <CoverageModal
           topic={modal.topic}
-          ratings={modal.topic.ratings}
           onClose={() => setModal(null)}
           onSaved={() => {
             setModal(null);

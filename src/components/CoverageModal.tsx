@@ -1,19 +1,17 @@
 import { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { COVERAGE_DEFINITIONS } from "../lib/content";
-import { RATING_DOMAINS, SKIN_TYPES, type Rating, type SkinType, type Topic } from "../types";
+import { RATING_DOMAINS, SKIN_TYPES, type SkinType, type Topic } from "../types";
 
 const NUANCE_HINT = RATING_DOMAINS.find((d) => d.key === "nuance")?.hint;
 const MGMT_HINT = RATING_DOMAINS.find((d) => d.key === "mgmt")?.hint;
 
 export function CoverageModal({
   topic,
-  ratings,
   onClose,
   onSaved,
 }: {
   topic: Topic;
-  ratings?: Rating[];
   onClose: () => void;
   onSaved: () => void;
 }) {
@@ -133,13 +131,6 @@ export function CoverageModal({
             </div>
           )}
         </div>
-
-        {isEdit && ratings && ratings.length > 0 && (
-          <div className="mt-3 rounded-2xl bg-[#F8E4E4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#93393E]">
-            {ratings.length} resident{ratings.length === 1 ? " has" : "s have"} already rated this topic. Changing
-            coverage here won't remove those ratings, but may affect whether this topic still counts as covered.
-          </div>
-        )}
 
         <div className="mt-5 text-xs font-bold text-[#0E1A1C]">Is this a visually relevant topic?</div>
         <SegButtons value={visual} onChange={setVisual} />

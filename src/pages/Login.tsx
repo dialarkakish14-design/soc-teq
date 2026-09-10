@@ -181,7 +181,7 @@ function ForgotPassword({ onBack }: { onBack: () => void }) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@med.wayne.edu"
+            placeholder="you@youremail.edu"
             autoCapitalize="none"
             className="input"
           />

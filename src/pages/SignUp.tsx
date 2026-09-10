@@ -133,7 +133,7 @@ export function SignUp({
           <input
             value={fullName}
             onChange={(e) => setFullName(e.target.value)}
-            placeholder="e.g. Diala Kakish"
+            placeholder="Your full name"
             className="input"
           />
         </Field>
@@ -173,7 +173,7 @@ export function SignUp({
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="you@med.wayne.edu"
+            placeholder="you@youremail.edu"
             className="input"
           />
         </Field>

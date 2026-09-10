@@ -69,7 +69,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Full name</div>
-          <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="e.g. Diala Kakish" className="input" />
+          <input value={fullName} onChange={(e) => setFullName(e.target.value)} placeholder="Your full name" className="input" />
         </label>
 
         <label className="block">
