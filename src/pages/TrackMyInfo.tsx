@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
+import { engagementTrend, formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
 import { RATING_DOMAINS, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicDetail } from "../components/TopicDetail";
 import { InfoTag } from "../components/InfoTag";
@@ -33,13 +33,13 @@ export function TrackMyInfo({
 }) {
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohort, setCohort] = useState<CohortResident[]>([]);
-  const [loggerDays, setLoggerDays] = useState(0);
+  const [loggerDayDates, setLoggerDayDates] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TopicFull | null>(null);
   const [showRated, setShowRated] = useState(false);
 
   const load = useCallback(async () => {
-    const [{ data: topicRows }, { data: cohortRows }, { count: loggerCount }] = await Promise.all([
+    const [{ data: topicRows }, { data: cohortRows }, { data: loggerDayRows }] = await Promise.all([
       supabase
         .from("topics")
         .select("*, ratings(*), absences(*), sessions(type, days(date))")
@@ -50,15 +50,12 @@ export function TrackMyInfo({
         .select("id, resident_code")
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
-      supabase
-        .from("days")
-        .select("id", { count: "exact", head: true })
-        .eq("logger_id", resident.id),
+      supabase.from("days").select("date").eq("logger_id", resident.id),
     ]);
 
     setRows(((topicRows as TopicFull[] | null) ?? []).filter((r) => r.sessions?.days));
     setCohort((cohortRows as CohortResident[] | null) ?? []);
-    setLoggerDays(loggerCount ?? 0);
+    setLoggerDayDates(((loggerDayRows as { date: string }[] | null) ?? []).map((d) => d.date));
     setLoading(false);
   }, [resident.id, resident.program_id, resident.pgy]);
 
@@ -105,6 +102,63 @@ export function TrackMyInfo({
   // stale by the time someone opens the file.
   function closedOnly(list: TopicFull[]) {
     return list.filter((r) => !isDayOpen(r.sessions!.days.date, programTimezone));
+  }
+
+  // Everything valuable that isn't already covered by the topic/rater
+  // exports: participation counts, personal vs. team mean RM, days spent as
+  // logger, and the weekly engagement (response-rate) trend already shown
+  // on the Summary page — all in one file, all closed-days-only.
+  function exportMyStatsCsv() {
+    const closedCovered = closedOnly(covered);
+    const closedMine = closedCovered.filter((r) => r.ratings.some((rt) => rt.resident_id === resident.id));
+    const closedDeclared = closedCovered.filter((r) =>
+      r.absences.some((a) => a.resident_id === resident.id && a.reason === "declared"),
+    );
+    const closedNoResponse = closedCovered.filter((r) =>
+      r.absences.some((a) => a.resident_id === resident.id && a.reason === "no_response"),
+    );
+    const closedMyAvg = closedMine.length ? closedMine.reduce((a, r) => a + myMean(r), 0) / closedMine.length : null;
+    const closedTeamAvg = closedMine.length
+      ? closedMine.reduce((a, r) => a + (scoreTopic(r.ratings)?.overall ?? 0), 0) / closedMine.length
+      : null;
+    const closedLoggerDays = loggerDayDates.filter((d) => !isDayOpen(d, programTimezone)).length;
+
+    const summaryRows: (string | number)[][] = [
+      ["metric", "value"],
+      ["resident_code", resident.resident_code],
+      ["topics_rated", closedMine.length],
+      ["topics_absent_declared", closedDeclared.length],
+      ["topics_forgot_to_rate", closedNoResponse.length],
+      ["topics_covered_logged", closedCovered.length],
+      ["days_as_logger", closedLoggerDays],
+      ["my_mean_rm", closedMyAvg != null ? closedMyAvg.toFixed(2) : ""],
+      ["team_mean_rm_on_same_topics", closedTeamAvg != null ? closedTeamAvg.toFixed(2) : ""],
+    ];
+
+    const entries = closedCovered.map((r) => ({
+      id: r.id,
+      title: r.title,
+      socCovered: r.soc_covered,
+      date: r.sessions!.days.date,
+      sessionType: r.sessions!.type,
+      ratings: r.ratings,
+      absences: r.absences,
+      nuanceApplicable: r.nuance_applicable,
+      mgmtApplicable: r.mgmt_applicable,
+    }));
+    const trend = engagementTrend(entries, cohort.length, 8);
+    const trendRows: (string | number)[][] = [
+      [],
+      ["WEEKLY ENGAGEMENT (last 8 weeks, group response rate)"],
+      ["week_start", "week_end", "response_rate_pct", "total_responses_expected"],
+      ...trend.map((p) => [p.weekStart, p.weekEnd, p.pct, p.total]),
+    ];
+
+    downloadCsv(`soc-teq_my-stats_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
+      ...summaryRows,
+      ["note", "Excludes any day still open for editing/rating as of the export time."],
+      ...trendRows,
+    ]);
   }
 
   function exportTopicCsv() {
@@ -297,7 +351,7 @@ export function TrackMyInfo({
             <Stat n={mine.length} label="Rated" />
             <Stat n={declared.length} label="Absent" />
             <Stat n={noResponse.length} label="Forgot to rate" />
-            <Stat n={loggerDays} label="Logged" />
+            <Stat n={loggerDayDates.length} label="Logged" />
           </div>
           <p className="mt-3 text-[12.5px] text-[#232D30]">
             Both are excluded from averages. "Forgot to rate" just means a day closed without a rating from you.
@@ -359,6 +413,12 @@ export function TrackMyInfo({
         )}
 
         <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#3F4C50]">Export</div>
+        <button onClick={exportMyStatsCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
+          Export my stats (CSV)
+        </button>
+        <div className="mt-1.5 text-[11px] text-[#3F4C50]">
+          Your rated/absent/logger counts, mean RM vs. team, and weekly engagement trend.
+        </div>
         <button onClick={exportTopicCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export topic data (CSV)
         </button>

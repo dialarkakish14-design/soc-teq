@@ -47,7 +47,7 @@ export function SignUp({
     if (!email.trim()) return setError("Add your email.");
     if (!programId) return setError("Choose your dermatology program.");
     if (!accessCode.trim()) return setError("Add your program access code.");
-    if (!precourse) return setError("Confirm you've completed the pre-course before joining.");
+    if (!precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
 
     setBusy(true);
     try {
@@ -68,6 +68,11 @@ export function SignUp({
           // so completing the join works regardless of which device/browser
           // the resident opens the email on.
           emailRedirectTo: buildEmailRedirectUrl(pending),
+          // Also mirrors name/username into user_metadata immediately, so the
+          // Confirm Signup email itself (sent right now, before the account
+          // exists) can personalize with {{ .Data.full_name }} — the redirect
+          // URL above is what the app reads, this is what the email can read.
+          data: { full_name: fullName.trim(), username: username.trim().toLowerCase() },
         },
       });
       if (signUpError) {
@@ -231,7 +236,7 @@ export function SignUp({
           >
             {precourse ? "✓" : ""}
           </span>
-          I've completed the SoC-TEQ pre-course and understand the coverage criteria.
+          I've gone through what SoC-TEQ is and how it works before joining.
         </button>
 
         {error && (

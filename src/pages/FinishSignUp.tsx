@@ -36,7 +36,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
     }
     if (!programId) return setError("Choose your dermatology program.");
     if (!accessCode.trim()) return setError("Add your program access code.");
-    if (!precourse) return setError("Confirm you've completed the pre-course before joining.");
+    if (!precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
 
     setBusy(true);
     const { error: rpcError } = await supabase.rpc("complete_signup", {
@@ -127,7 +127,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
           >
             {precourse ? "✓" : ""}
           </span>
-          I've completed the SoC-TEQ pre-course and understand the coverage criteria.
+          I've gone through what SoC-TEQ is and how it works before joining.
         </button>
 
         {error && (
