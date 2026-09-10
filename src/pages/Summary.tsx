@@ -530,26 +530,60 @@ function NotesTab({
     return <PublicNotesBrowser rows={rows} codeById={codeById} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
   }
 
+  function exportPrivateNotesCsv() {
+    const topicById = new Map(rows.map((r) => [r.id, r]));
+    const header = ["date", "session", "topic", "note", "updated_at"];
+    const dataRows = privateNotes
+      .filter((n) => n.note.trim())
+      .map((n) => {
+        const topic = topicById.get(n.topic_id);
+        return [topic?.sessions?.days.date ?? "", topic?.sessions?.type ?? "", topic?.title ?? "", n.note, n.updated_at];
+      });
+    downloadCsv(`soc-teq_private-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+  }
+
+  function exportPublicNotesCsv() {
+    const header = ["date", "session", "topic", "resident_code", "note"];
+    const dataRows = rows
+      .filter((r) => r.soc_covered)
+      .flatMap((r) =>
+        r.ratings
+          .filter((rt) => rt.note?.trim())
+          .map((rt) => [r.sessions!.days.date, r.sessions!.type, r.title, codeById[rt.resident_id] ?? "Resident", rt.note ?? ""]),
+      );
+    downloadCsv(`soc-teq_public-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+  }
+
   return (
     <div className="flex flex-col gap-3">
-      <button onClick={() => setView("private")} className="rounded-3xl bg-white p-4 text-left shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-[#0E1A1C]">My private notes</h3>
-          <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
-            {privateCount}
-          </span>
-        </div>
-        <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you, never shown to anyone else.</p>
-      </button>
-      <button onClick={() => setView("public")} className="rounded-3xl bg-white p-4 text-left shadow-sm">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-[#0E1A1C]">Public group notes</h3>
-          <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#064B45]">
-            {publicCount}
-          </span>
-        </div>
-        <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole cohort.</p>
-      </button>
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <button onClick={() => setView("private")} className="w-full text-left">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[#0E1A1C]">My private notes</h3>
+            <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
+              {privateCount}
+            </span>
+          </div>
+          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you, never shown to anyone else.</p>
+        </button>
+        <button onClick={exportPrivateNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
+          Export private notes (CSV)
+        </button>
+      </div>
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <button onClick={() => setView("public")} className="w-full text-left">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[#0E1A1C]">Public group notes</h3>
+            <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#064B45]">
+              {publicCount}
+            </span>
+          </div>
+          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole cohort.</p>
+        </button>
+        <button onClick={exportPublicNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
+          Export public notes (CSV)
+        </button>
+      </div>
     </div>
   );
 }
@@ -561,7 +595,6 @@ function NotesTab({
 // render function without losing type safety.
 function NotesBrowserShell({
   onBack,
-  onExport,
   search,
   onSearchChange,
   topics,
@@ -570,7 +603,6 @@ function NotesBrowserShell({
   children,
 }: {
   onBack: () => void;
-  onExport: () => void;
   search: string;
   onSearchChange: (v: string) => void;
   topics: { title: string; count: number }[];
@@ -581,14 +613,9 @@ function NotesBrowserShell({
   const [showTopicList, setShowTopicList] = useState(false);
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-left text-sm font-bold text-[#0E7C72]">
-          ‹ Back
-        </button>
-        <button onClick={onExport} className="text-sm font-bold text-[#064B45]">
-          Export CSV
-        </button>
-      </div>
+      <button onClick={onBack} className="text-left text-sm font-bold text-[#0E7C72]">
+        ‹ Back
+      </button>
 
       <input
         value={search}
@@ -685,24 +712,9 @@ function PrivateNotesBrowser({
     }))
     .filter((g) => g.entries.length > 0);
 
-  function exportCsv() {
-    const header = ["date", "session", "topic", "note", "updated_at"];
-    const dataRows = groups.flatMap((g) =>
-      g.entries.map((e) => [
-        e.topic.sessions!.days.date,
-        e.topic.sessions!.type,
-        g.title,
-        e.note.note,
-        e.note.updated_at,
-      ]),
-    );
-    downloadCsv(`soc-teq_private-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
-  }
-
   return (
     <NotesBrowserShell
       onBack={onBack}
-      onExport={exportCsv}
       search={search}
       onSearchChange={setSearch}
       topics={groups.map((g) => ({ title: g.title, count: g.entries.length }))}
@@ -775,21 +787,8 @@ function PublicNotesBrowser({
     }))
     .filter((g) => g.instances.length > 0);
 
-  function exportCsv() {
-    const header = ["date", "session", "topic", "resident_code", "note"];
-    const dataRows = groups.flatMap((g) =>
-      g.instances.flatMap((t) =>
-        t.ratings
-          .filter((rt) => rt.note?.trim())
-          .map((rt) => [t.sessions!.days.date, t.sessions!.type, g.title, codeById[rt.resident_id] ?? "Resident", rt.note ?? ""]),
-      ),
-    );
-    downloadCsv(`soc-teq_public-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
-  }
-
   return (
     <NotesBrowserShell
-      onExport={exportCsv}
       onBack={onBack}
       search={search}
       onSearchChange={setSearch}
