@@ -31,6 +31,12 @@ type TopicFull = Topic & {
   sessions: { id: string; type: SessionType; days: { id: string; date: string; pgy: string } } | null;
 };
 
+interface PrivateNoteRow {
+  topic_id: string;
+  note: string;
+  updated_at: string;
+}
+
 type Tab = "day" | "week" | "month" | "notes" | "cycle";
 
 function toEntry(r: TopicFull): TopicEntry {
@@ -62,6 +68,7 @@ export function Summary({
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohortSize, setCohortSize] = useState(0);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
+  const [privateNotes, setPrivateNotes] = useState<PrivateNoteRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<{ kind: "rate" | "detail"; topic: TopicFull } | null>(null);
@@ -78,7 +85,7 @@ export function Summary({
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }] = await Promise.all([
+    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }, { data: noteRows }] = await Promise.all([
       supabase
         .from("topics")
         .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
@@ -89,6 +96,7 @@ export function Summary({
         .select("id, resident_code", { count: "exact" })
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
+      supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
     ]);
     if (topicsError) flash(topicsError.message);
 
@@ -97,8 +105,9 @@ export function Summary({
     setCodeById(
       Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
     );
+    setPrivateNotes((noteRows as PrivateNoteRow[] | null) ?? []);
     setLoading(false);
-  }, [resident.program_id, resident.pgy]);
+  }, [resident.program_id, resident.pgy, resident.id]);
 
   useEffect(() => {
     load(true);
@@ -204,7 +213,9 @@ export function Summary({
               engagementPoints={engagementPoints}
             />
           )}
-          {tab === "notes" && <NotesTab rows={mine} codeById={codeById} onOpenTopic={openTopic} />}
+          {tab === "notes" && (
+            <NotesTab rows={mine} codeById={codeById} onOpenTopic={openTopic} privateNotes={privateNotes} />
+          )}
           {tab === "cycle" && <CycleTab resident={resident} />}
         </div>
       </div>
@@ -496,68 +507,291 @@ function NotesTab({
   rows,
   codeById,
   onOpenTopic,
+  privateNotes,
 }: {
   rows: TopicFull[];
   codeById: Record<string, string>;
   onOpenTopic: (t: TopicFull) => void;
+  privateNotes: PrivateNoteRow[];
 }) {
-  const titleKey = (t: string) => t.trim().toLowerCase();
-  const groups = new Map<string, TopicFull[]>();
-  for (const r of rows) {
-    if (!r.soc_covered || !r.ratings.some((rt) => rt.note?.trim())) continue;
-    const key = titleKey(r.title);
-    if (!groups.has(key)) groups.set(key, []);
-    groups.get(key)!.push(r);
+  const [view, setView] = useState<"picker" | "private" | "public">("picker");
+
+  const privateCount = privateNotes.filter((n) => n.note.trim()).length;
+  const publicCount = rows.reduce(
+    (n, r) => n + (r.soc_covered ? r.ratings.filter((rt) => rt.note?.trim()).length : 0),
+    0,
+  );
+
+  if (view === "private") {
+    return <PrivateNotesBrowser rows={rows} privateNotes={privateNotes} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
   }
-
-  const conditions = [...groups.values()]
-    .map((instances) => ({
-      title: instances[0].title,
-      instances: [...instances].sort((a, b) => (a.sessions!.days.date < b.sessions!.days.date ? 1 : -1)),
-      noteCount: instances.reduce((n, t) => n + t.ratings.filter((rt) => rt.note?.trim()).length, 0),
-    }))
-    .sort((a, b) => b.noteCount - a.noteCount);
-
-  if (conditions.length === 0) {
-    return (
-      <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
-        No notes yet. Notes left while rating a topic will collect here by condition.
-      </div>
-    );
+  if (view === "public") {
+    return <PublicNotesBrowser rows={rows} codeById={codeById} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
   }
 
   return (
     <div className="flex flex-col gap-3">
-      {conditions.map((c) => (
-        <div key={c.title} className="rounded-3xl bg-white p-4 shadow-sm">
-          <div className="flex items-center justify-between">
-            <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-            <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
-              {c.noteCount} note{c.noteCount === 1 ? "" : "s"}
-            </span>
-          </div>
-          {c.instances.map((t) => {
-            const notes = t.ratings.filter((rt) => rt.note?.trim());
-            if (notes.length === 0) return null;
-            return (
-              <div key={t.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
-                <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#3F4C50]">
-                  {t.sessions!.type} · {formatDateShort(t.sessions!.days.date)}
-                </button>
-                {notes.map((rt) => (
-                  <div key={rt.id} className="mt-1.5">
-                    <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
-                      {codeById[rt.resident_id] ?? "Resident"}
-                    </div>
-                    <p className="mt-0.5 text-[13px] leading-relaxed text-[#232D30]">{rt.note}</p>
-                  </div>
-                ))}
-              </div>
-            );
-          })}
+      <button onClick={() => setView("private")} className="rounded-3xl bg-white p-4 text-left shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-[#0E1A1C]">My private notes</h3>
+          <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
+            {privateCount}
+          </span>
         </div>
-      ))}
+        <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you, never shown to anyone else.</p>
+      </button>
+      <button onClick={() => setView("public")} className="rounded-3xl bg-white p-4 text-left shadow-sm">
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-[#0E1A1C]">Public group notes</h3>
+          <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#064B45]">
+            {publicCount}
+          </span>
+        </div>
+        <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole cohort.</p>
+      </button>
     </div>
+  );
+}
+
+// Shared browsing shell for both note views: back button, search, and a
+// collapsible "topics mentioned" list that filters the notes below it to
+// one topic. The actual note list is supplied by the caller as children,
+// since private/public notes have different shapes and can't share a
+// render function without losing type safety.
+function NotesBrowserShell({
+  onBack,
+  search,
+  onSearchChange,
+  topics,
+  selectedTitle,
+  onSelectTitle,
+  children,
+}: {
+  onBack: () => void;
+  search: string;
+  onSearchChange: (v: string) => void;
+  topics: { title: string; count: number }[];
+  selectedTitle: string | null;
+  onSelectTitle: (t: string | null) => void;
+  children: React.ReactNode;
+}) {
+  const [showTopicList, setShowTopicList] = useState(false);
+  return (
+    <div className="flex flex-col gap-3">
+      <button onClick={onBack} className="text-left text-sm font-bold text-[#0E7C72]">
+        ‹ Back
+      </button>
+
+      <input
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+        placeholder="Search notes or topics…"
+        className="input"
+      />
+
+      <div className="rounded-2xl bg-white shadow-sm">
+        <button onClick={() => setShowTopicList((s) => !s)} className="flex w-full items-center justify-between gap-2 px-4 py-3">
+          <span className="text-[13px] font-bold text-[#0E1A1C]">
+            Topics mentioned{selectedTitle ? ` · ${selectedTitle}` : ""}
+          </span>
+          <span className={`text-lg font-extrabold text-[#3F4C50] transition-transform ${showTopicList ? "rotate-180" : ""}`}>
+            ▾
+          </span>
+        </button>
+        {showTopicList && (
+          <div className="flex flex-col gap-1 px-4 pb-3">
+            <button
+              onClick={() => {
+                onSelectTitle(null);
+                setShowTopicList(false);
+              }}
+              className={`rounded-xl px-3 py-2 text-left text-[13px] font-semibold ${
+                !selectedTitle ? "bg-[#DCEFEB] text-[#064B45]" : "text-[#232D30]"
+              }`}
+            >
+              All topics
+            </button>
+            {topics.map((t) => (
+              <button
+                key={t.title}
+                onClick={() => {
+                  onSelectTitle(t.title);
+                  setShowTopicList(false);
+                }}
+                className={`flex items-center justify-between rounded-xl px-3 py-2 text-left text-[13px] font-semibold ${
+                  selectedTitle === t.title ? "bg-[#DCEFEB] text-[#064B45]" : "text-[#232D30]"
+                }`}
+              >
+                <span>{t.title}</span>
+                <span className="font-mono text-[10px] text-[#3F4C50]">{t.count}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {children}
+    </div>
+  );
+}
+
+function PrivateNotesBrowser({
+  rows,
+  privateNotes,
+  onOpenTopic,
+  onBack,
+}: {
+  rows: TopicFull[];
+  privateNotes: PrivateNoteRow[];
+  onOpenTopic: (t: TopicFull) => void;
+  onBack: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const titleKey = (t: string) => t.trim().toLowerCase();
+  const topicById = new Map(rows.map((r) => [r.id, r]));
+
+  const groups = (() => {
+    const m = new Map<string, { topic: TopicFull; note: PrivateNoteRow }[]>();
+    for (const n of privateNotes) {
+      const topic = topicById.get(n.topic_id);
+      if (!topic || !n.note.trim()) continue;
+      const key = titleKey(topic.title);
+      if (!m.has(key)) m.set(key, []);
+      m.get(key)!.push({ topic, note: n });
+    }
+    return [...m.values()]
+      .map((entries) => ({
+        title: entries[0].topic.title,
+        entries: [...entries].sort((a, b) => (a.note.updated_at < b.note.updated_at ? 1 : -1)),
+      }))
+      .sort((a, b) => b.entries.length - a.entries.length);
+  })();
+
+  const q = search.trim().toLowerCase();
+  const filtered = groups
+    .filter((g) => !selectedTitle || g.title === selectedTitle)
+    .map((g) => ({
+      ...g,
+      entries: g.entries.filter((e) => !q || g.title.toLowerCase().includes(q) || e.note.note.toLowerCase().includes(q)),
+    }))
+    .filter((g) => g.entries.length > 0);
+
+  return (
+    <NotesBrowserShell
+      onBack={onBack}
+      search={search}
+      onSearchChange={setSearch}
+      topics={groups.map((g) => ({ title: g.title, count: g.entries.length }))}
+      selectedTitle={selectedTitle}
+      onSelectTitle={setSelectedTitle}
+    >
+      {filtered.length === 0 ? (
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+          {privateNotes.length === 0 ? "No private notes yet." : "No notes match."}
+        </div>
+      ) : (
+        filtered.map((g) => (
+          <div key={g.title} className="rounded-3xl bg-white p-4 shadow-sm">
+            <h3 className="font-bold text-[#0E1A1C]">{g.title}</h3>
+            {g.entries.map((e) => (
+              <div key={e.note.topic_id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+                <button onClick={() => onOpenTopic(e.topic)} className="text-[11px] font-semibold text-[#3F4C50]">
+                  {e.topic.sessions!.type} · {formatDateShort(e.topic.sessions!.days.date)}
+                </button>
+                <p className="mt-1 text-[13px] leading-relaxed text-[#232D30]">{e.note.note}</p>
+              </div>
+            ))}
+          </div>
+        ))
+      )}
+    </NotesBrowserShell>
+  );
+}
+
+function PublicNotesBrowser({
+  rows,
+  codeById,
+  onOpenTopic,
+  onBack,
+}: {
+  rows: TopicFull[];
+  codeById: Record<string, string>;
+  onOpenTopic: (t: TopicFull) => void;
+  onBack: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const titleKey = (t: string) => t.trim().toLowerCase();
+  const noteCountOf = (t: TopicFull) => t.ratings.filter((rt) => rt.note?.trim()).length;
+
+  const groups = (() => {
+    const m = new Map<string, TopicFull[]>();
+    for (const r of rows) {
+      if (!r.soc_covered || !r.ratings.some((rt) => rt.note?.trim())) continue;
+      const key = titleKey(r.title);
+      if (!m.has(key)) m.set(key, []);
+      m.get(key)!.push(r);
+    }
+    return [...m.values()]
+      .map((instances) => ({
+        title: instances[0].title,
+        instances: [...instances].sort((a, b) => (a.sessions!.days.date < b.sessions!.days.date ? 1 : -1)),
+      }))
+      .sort((a, b) => b.instances.reduce((n, t) => n + noteCountOf(t), 0) - a.instances.reduce((n, t) => n + noteCountOf(t), 0));
+  })();
+
+  const q = search.trim().toLowerCase();
+  const filtered = groups
+    .filter((g) => !selectedTitle || g.title === selectedTitle)
+    .map((g) => ({
+      ...g,
+      instances: g.instances.filter(
+        (t) => !q || g.title.toLowerCase().includes(q) || t.ratings.some((rt) => rt.note?.toLowerCase().includes(q)),
+      ),
+    }))
+    .filter((g) => g.instances.length > 0);
+
+  return (
+    <NotesBrowserShell
+      onBack={onBack}
+      search={search}
+      onSearchChange={setSearch}
+      topics={groups.map((g) => ({ title: g.title, count: g.instances.reduce((n, t) => n + noteCountOf(t), 0) }))}
+      selectedTitle={selectedTitle}
+      onSelectTitle={setSelectedTitle}
+    >
+      {filtered.length === 0 ? (
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+          {groups.length === 0 ? "No notes yet. Notes left while rating a topic will collect here." : "No notes match."}
+        </div>
+      ) : (
+        filtered.map((g) => (
+          <div key={g.title} className="rounded-3xl bg-white p-4 shadow-sm">
+            <h3 className="font-bold text-[#0E1A1C]">{g.title}</h3>
+            {g.instances.map((t) => {
+              const notes = t.ratings.filter((rt) => rt.note?.trim());
+              if (notes.length === 0) return null;
+              return (
+                <div key={t.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+                  <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#3F4C50]">
+                    {t.sessions!.type} · {formatDateShort(t.sessions!.days.date)}
+                  </button>
+                  {notes.map((rt) => (
+                    <div key={rt.id} className="mt-1.5">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
+                        {codeById[rt.resident_id] ?? "Resident"}
+                      </div>
+                      <p className="mt-0.5 text-[13px] leading-relaxed text-[#232D30]">{rt.note}</p>
+                    </div>
+                  ))}
+                </div>
+              );
+            })}
+          </div>
+        ))
+      )}
+    </NotesBrowserShell>
   );
 }
 

@@ -348,7 +348,7 @@ export function TrackMyInfo({
           Export topic data (CSV)
         </button>
         <div className="mt-1.5 text-[11px] text-[#3F4C50]">
-          One row per topic. No rater identities — this is the analysis file.
+          One row per topic. No rater identities · this is the analysis file.
         </div>
         <button onClick={exportRaterCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export rating-level data (CSV)
