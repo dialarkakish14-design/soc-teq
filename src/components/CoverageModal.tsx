@@ -96,8 +96,8 @@ export function CoverageModal({
         <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">{topic.title}</h1>
 
         <div className="mt-3 rounded-2xl bg-[#FAEBD4] px-3.5 py-3 text-[12.5px] font-semibold leading-relaxed text-[#8F5205]">
-          Before marking coverage, check with the residents in the room that you agree on what was
-          shown and discussed.
+          Before marking coverage, check with the residents that you agree on what was shown and
+          discussed.
         </div>
 
         <div className="mt-3 rounded-2xl bg-white shadow-sm">
