@@ -32,6 +32,10 @@ create table residents (
   resident_code text not null,
   role text not null default 'resident' check (role in ('resident', 'program_lead')),
   precourse_confirmed boolean not null default false,
+  -- Optional email reminder before a day's 4am close — see
+  -- supabase/patch_reminders.sql for the full commentary.
+  reminder_enabled boolean not null default false,
+  reminder_hours_before smallint check (reminder_hours_before is null or reminder_hours_before in (1, 3)),
   created_at timestamptz not null default now()
 );
 
@@ -484,6 +488,97 @@ $$;
 
 -- Schedule separately after enabling pg_cron (Database -> Extensions):
 --   select cron.schedule('close-finished-days', '*/15 * * * *', 'select close_finished_days()');
+
+-- ---------- reminders ----------
+-- See supabase/patch_reminders.sql for the full commentary. Sending itself
+-- happens in the send-reminders Edge Function, invoked by pg_cron.
+
+create table reminder_log (
+  day_id uuid not null references days (id) on delete cascade,
+  resident_id uuid not null references residents (id) on delete cascade,
+  sent_at timestamptz not null default now(),
+  primary key (day_id, resident_id)
+);
+
+alter table reminder_log enable row level security;
+
+create or replace function update_reminder_preference(p_enabled boolean, p_hours_before smallint)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  if p_enabled and p_hours_before not in (1, 3) then
+    raise exception 'Invalid reminder offset';
+  end if;
+  update residents
+  set reminder_enabled = p_enabled,
+      reminder_hours_before = case when p_enabled then p_hours_before else null end
+  where id = auth.uid();
+end;
+$$;
+
+grant execute on function update_reminder_preference(boolean, smallint) to authenticated;
+
+create or replace function reminder_candidates()
+returns table (
+  day_id uuid,
+  resident_id uuid,
+  email text,
+  full_name text,
+  minutes_until_close numeric
+)
+language sql stable security definer set search_path = public as $$
+  select
+    d.id,
+    r.id,
+    r.email,
+    r.full_name,
+    extract(epoch from (((d.date + 1)::timestamp + time '04:00') at time zone p.timezone - now())) / 60.0
+  from days d
+  join programs p on p.id = d.program_id
+  join residents r on r.program_id = d.program_id and r.pgy = d.pgy
+  where r.reminder_enabled
+    and is_day_open(d.date, d.program_id)
+    and not exists (select 1 from reminder_log rl where rl.day_id = d.id and rl.resident_id = r.id)
+    and abs(
+      extract(epoch from (((d.date + 1)::timestamp + time '04:00') at time zone p.timezone - now())) / 60.0
+      - r.reminder_hours_before * 60
+    ) <= 7.5
+    and exists (
+      select 1
+      from sessions s
+      join topics t on t.session_id = s.id
+      where s.day_id = d.id
+        and t.soc_covered
+        and not exists (select 1 from ratings rt where rt.topic_id = t.id and rt.resident_id = r.id)
+        and not exists (select 1 from absences ab where ab.topic_id = t.id and ab.resident_id = r.id)
+    );
+$$;
+
+revoke all on function reminder_candidates() from public, anon, authenticated;
+grant execute on function reminder_candidates() to service_role;
+
+create or replace function record_reminder_sent(p_day_id uuid, p_resident_id uuid)
+returns void
+language sql security definer set search_path = public as $$
+  insert into reminder_log (day_id, resident_id) values (p_day_id, p_resident_id)
+  on conflict (day_id, resident_id) do nothing;
+$$;
+
+revoke all on function record_reminder_sent(uuid, uuid) from public, anon, authenticated;
+grant execute on function record_reminder_sent(uuid, uuid) to service_role;
+
+-- Schedule separately after enabling pg_cron and pg_net (Database -> Extensions):
+--   select cron.schedule(
+--     'send-reminders',
+--     '*/15 * * * *',
+--     $$
+--     select net.http_post(
+--       url := 'https://hnkckozojgdtizufanmz.supabase.co/functions/v1/send-reminders',
+--       headers := jsonb_build_object('content-type', 'application/json', 'x-cron-secret', '<CRON_SECRET>'),
+--       body := '{}'::jsonb
+--     );
+--     $$
+--   );
 
 -- ---------- remediation cycle ----------
 -- See supabase/patch_remediation_cycle.sql for the full commentary.

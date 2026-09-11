@@ -103,6 +103,7 @@ function App() {
             programTimezone={programTimezone}
             onAbout={() => setInfoOverlay("mission")}
             onLogout={() => supabase.auth.signOut()}
+            onReminderChange={refreshResident}
           />
         </div>
         <div style={{ display: navScreen === "team" ? "contents" : "none" }}>

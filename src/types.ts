@@ -10,6 +10,8 @@ export interface Resident {
   resident_code: string;
   role: "resident" | "program_lead";
   precourse_confirmed: boolean;
+  reminder_enabled: boolean;
+  reminder_hours_before: 1 | 3 | null;
 }
 
 export interface ProgramPublic {

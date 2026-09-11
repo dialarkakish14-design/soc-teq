@@ -24,12 +24,14 @@ export function TrackMyInfo({
   programTimezone,
   onAbout,
   onLogout,
+  onReminderChange,
 }: {
   resident: Resident;
   active: boolean;
   programTimezone: string;
   onAbout: () => void;
   onLogout: () => void;
+  onReminderChange: () => void;
 }) {
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohort, setCohort] = useState<CohortResident[]>([]);
@@ -37,6 +39,17 @@ export function TrackMyInfo({
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TopicFull | null>(null);
   const [showRated, setShowRated] = useState(false);
+  const [reminderBusy, setReminderBusy] = useState(false);
+
+  async function setReminderPreference(enabled: boolean, hoursBefore: 1 | 3) {
+    setReminderBusy(true);
+    const { error } = await supabase.rpc("update_reminder_preference", {
+      p_enabled: enabled,
+      p_hours_before: hoursBefore,
+    });
+    setReminderBusy(false);
+    if (!error) onReminderChange();
+  }
 
   const load = useCallback(async () => {
     const [{ data: topicRows }, { data: cohortRows }, { data: loggerDayRows }] = await Promise.all([
@@ -337,6 +350,39 @@ export function TrackMyInfo({
             <AccountRow label="Program year" value={resident.pgy} />
             <AccountRow label="Resident code" value={resident.resident_code} />
           </div>
+        </div>
+
+        <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
+          <h3 className="font-bold text-[#0E1A1C]">Rating reminders</h3>
+          <p className="mt-1 text-[11.5px] leading-relaxed text-[#3F4C50]">
+            Optional email if you still have a topic to rate before today closes. Off by default.
+          </p>
+          <div className="mt-3 flex gap-2">
+            {([1, 3] as const).map((h) => {
+              const active = resident.reminder_enabled && resident.reminder_hours_before === h;
+              return (
+                <button
+                  key={h}
+                  disabled={reminderBusy}
+                  onClick={() => setReminderPreference(true, h)}
+                  className={`flex-1 rounded-2xl py-2.5 text-[12.5px] font-bold disabled:opacity-60 ${
+                    active ? "bg-[#0E7C72] text-white" : "bg-[#F2F6F5] text-[#232D30]"
+                  }`}
+                >
+                  {h} hour{h === 1 ? "" : "s"} before
+                </button>
+              );
+            })}
+          </div>
+          {resident.reminder_enabled && (
+            <button
+              disabled={reminderBusy}
+              onClick={() => setReminderPreference(false, 1)}
+              className="mt-2.5 w-full text-center text-[12px] font-semibold text-[#3F4C50] disabled:opacity-60"
+            >
+              Turn off reminders
+            </button>
+          )}
         </div>
 
         {waitingOnMe.length > 0 && (
