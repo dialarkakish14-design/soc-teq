@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { cycleMonth, cyclePhase, daysSinceStart, formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
 import { downloadCsv } from "../lib/csv";
+import { LikertBreakdown } from "../components/LikertBreakdown";
 import {
   CLAIM_FORMATS,
   RATING_DOMAINS,
@@ -100,6 +101,12 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const month = cycleMonth(cycle.start_date);
   const phase2Started = !!cycle.phase2_started_at;
   const phase3Started = !!cycle.phase3_started_at;
+  // What's actually shown below is driven by the explicit phase2Started/
+  // phase3Started flags, not the raw calendar phase — a resident can (and
+  // often will) start Phase 3 before day 98, so the badge and roadmap need
+  // to reflect that instead of still reading "Phase 2" while Phase 3's
+  // claiming/delivery content is what's actually on screen.
+  const displayPhase: 1 | 2 | 3 | 4 = !phase2Started ? 1 : !phase3Started ? 2 : phase === 4 ? 4 : 3;
   const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
@@ -138,11 +145,25 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Recorded as delivered.");
   }
 
+  async function undoDelivered(id: string) {
+    const { error } = await supabase.from("claims").update({ status: "planned" }).eq("id", id);
+    if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, status: "planned" } : c)));
+    flash("Back to planned.");
+  }
+
   async function markScholarly(id: string) {
     const { error } = await supabase.from("claims").update({ scholarly: true }).eq("id", id);
     if (error) return flash(error.message);
     setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, scholarly: true } : c)));
     flash("Recorded as scholarly output.");
+  }
+
+  async function undoScholarly(id: string) {
+    const { error } = await supabase.from("claims").update({ scholarly: false }).eq("id", id);
+    if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, scholarly: false } : c)));
+    flash("Undone.");
   }
 
   async function recordAssessment(assessPhase: "baseline" | "followup", score: number) {
@@ -209,7 +230,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
             </div>
           </div>
           <span className="whitespace-nowrap rounded-lg bg-[#DCEFEB] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#064B45]">
-            Phase {phase}
+            Phase {displayPhase}
           </span>
         </div>
         <div className="mt-3.5 h-2 overflow-hidden rounded-full bg-[#EAEFEE]">
@@ -252,7 +273,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onClaim={claimTopic}
           onRelease={releaseClaim}
           onDeliver={markDelivered}
+          onUndoDeliver={undoDelivered}
           onScholarly={markScholarly}
+          onUndoScholarly={undoScholarly}
           onShare={shareResource}
           onExportNotes={exportTopicNotesCsv}
         />
@@ -261,7 +284,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <Phase4 assessments={assessments} resident={resident} claims={claims} cohortCount={cohortCount} onAssess={recordAssessment} />
       )}
 
-      <PhaseCards phase={phase} />
+      <PhaseCards phase={displayPhase} />
 
       {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-[#0E1A1C] px-4 py-3.5 text-sm font-semibold text-white shadow-lg">
@@ -289,40 +312,6 @@ function Phase1({ count }: { count: number }) {
         {count} skin of color topic{count === 1 ? "" : "s"} logged so far this cycle. At the end of month 3
         everything scoring below {THRESHOLD} becomes your group's priority list.
       </p>
-    </div>
-  );
-}
-
-// Shown under a priority topic in both Phase 2 (read-only) and Phase 3
-// (claimable) — the per-domain (5-Likert) breakdown behind the overall
-// score, so residents can see exactly where a topic is weak before
-// deciding how to address it.
-function LikertBreakdown({ perItem }: { perItem: Record<string, number> }) {
-  const [open, setOpen] = useState(false);
-  const available = RATING_DOMAINS.filter((d) => perItem[d.key] != null);
-  if (!available.length) return null;
-  return (
-    <div className="mt-2">
-      <button
-        type="button"
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 text-[11px] font-semibold text-[#3F4C50]"
-      >
-        {open ? "Hide" : "Show"} Likert breakdown
-        <span className={`text-sm font-extrabold transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
-      </button>
-      {open && (
-        <div className="mt-1.5 flex flex-col gap-1 rounded-xl bg-[#F5F8F7] px-3 py-2">
-          {available.map((d) => (
-            <div key={d.key} className="flex items-center justify-between text-[11.5px] text-[#232D30]">
-              <span>{d.name}</span>
-              <b className={`font-mono ${isBelowThreshold(perItem[d.key]) ? "text-[#8F5205]" : "text-[#064B45]"}`}>
-                {perItem[d.key].toFixed(2)}
-              </b>
-            </div>
-          ))}
-        </div>
-      )}
     </div>
   );
 }
@@ -463,7 +452,9 @@ function Phase3({
   onClaim,
   onRelease,
   onDeliver,
+  onUndoDeliver,
   onScholarly,
+  onUndoScholarly,
   onShare,
   onExportNotes,
 }: {
@@ -476,7 +467,9 @@ function Phase3({
   onClaim: (title: string, format: string) => void;
   onRelease: (id: string) => void;
   onDeliver: (id: string) => void;
+  onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
+  onUndoScholarly: (id: string) => void;
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
   onExportNotes: (title: string) => void;
 }) {
@@ -578,53 +571,17 @@ function Phase3({
           <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
         ) : (
           mine.map((c) => (
-            <div key={c.id} className="border-t border-[#E2EAE9] py-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                  <div className="text-xs text-[#3F4C50]">{c.format}</div>
-                </div>
-                <span
-                  className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                    c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
-                  }`}
-                >
-                  {c.status === "delivered" ? "Delivered" : "Planned"}
-                </span>
-              </div>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {c.status !== "delivered" && (
-                  <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
-                    Mark delivered
-                  </button>
-                )}
-                {c.status === "delivered" && !c.scholarly && (
-                  <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
-                    Became scholarly work
-                  </button>
-                )}
-                {c.scholarly && <div className="text-xs text-[#3D6B49]">Carried into formal scholarly work.</div>}
-                {resources.some((r) => r.topic_title === c.topic_title) && (
-                  <button
-                    onClick={() => onExportNotes(c.topic_title)}
-                    className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]"
-                  >
-                    Export notes (CSV)
-                  </button>
-                )}
-              </div>
-              {c.status === "delivered" && !c.scholarly && (
-                <p className="mt-1.5 text-[11px] leading-relaxed text-[#3F4C50]">
-                  Mark this if it led to something beyond the teaching itself, like a poster, a conference
-                  presentation, or a publication.
-                </p>
-              )}
-              <ResourceShare
-                title={c.topic_title}
-                resources={resources.filter((r) => r.topic_title === c.topic_title)}
-                onShare={onShare}
-              />
-            </div>
+            <CommittedTopicRow
+              key={c.id}
+              claim={c}
+              resources={resources.filter((r) => r.topic_title === c.topic_title)}
+              onDeliver={onDeliver}
+              onUndoDeliver={onUndoDeliver}
+              onScholarly={onScholarly}
+              onUndoScholarly={onUndoScholarly}
+              onShare={onShare}
+              onExportNotes={onExportNotes}
+            />
           ))
         )}
       </div>
@@ -680,6 +637,93 @@ function ResourceShare({
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+function CommittedTopicRow({
+  claim,
+  resources,
+  onDeliver,
+  onUndoDeliver,
+  onScholarly,
+  onUndoScholarly,
+  onShare,
+  onExportNotes,
+}: {
+  claim: Claim;
+  resources: Resource[];
+  onDeliver: (id: string) => void;
+  onUndoDeliver: (id: string) => void;
+  onScholarly: (id: string) => void;
+  onUndoScholarly: (id: string) => void;
+  onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onExportNotes: (title: string) => void;
+}) {
+  const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
+  const c = claim;
+  const statusColor = c.scholarly
+    ? "bg-[#EEE7F3] text-[#5E3F73]"
+    : c.status === "delivered"
+      ? "bg-[#DCEFEB] text-[#064B45]"
+      : "bg-[#FAEBD4] text-[#8F5205]";
+
+  return (
+    <div className="border-t border-[#E2EAE9] py-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+          <div className="text-xs text-[#3F4C50]">{c.format}</div>
+        </div>
+        <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+          {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+        </span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {c.status !== "delivered" ? (
+          <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
+            Mark delivered
+          </button>
+        ) : (
+          <button onClick={() => onUndoDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
+            Undo delivered
+          </button>
+        )}
+        {c.status === "delivered" && !c.scholarly && (
+          <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
+            Became scholarly work
+          </button>
+        )}
+        {c.scholarly && (
+          <button onClick={() => onUndoScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
+            Undo scholarly work
+          </button>
+        )}
+        {c.status === "delivered" && (
+          <button
+            type="button"
+            onClick={() => setShowScholarlyInfo((o) => !o)}
+            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EEE7F3] text-[10px] font-bold text-[#5E3F73]"
+          >
+            ?
+          </button>
+        )}
+        {resources.length > 0 && (
+          <button
+            onClick={() => onExportNotes(c.topic_title)}
+            className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]"
+          >
+            Export notes (CSV)
+          </button>
+        )}
+      </div>
+      {showScholarlyInfo && (
+        <p className="mt-1.5 rounded-xl bg-[#EEE7F3] px-3 py-2 text-[11.5px] leading-relaxed text-[#5E3F73]">
+          "Scholarly work" means it led to something beyond the teaching itself, like a poster, a conference
+          presentation, or a publication, not just delivering the session.
+        </p>
+      )}
+      <ResourceShare title={c.topic_title} resources={resources} onShare={onShare} />
     </div>
   );
 }

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { engagementTrend, formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
-import { RATING_DOMAINS, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
+import { RATING_DOMAINS, type Absence, type Claim, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicDetail } from "../components/TopicDetail";
 import { InfoTag } from "../components/InfoTag";
+import { LikertBreakdown } from "../components/LikertBreakdown";
 import { RM_DEFINITION } from "../lib/content";
 import { downloadCsv } from "../lib/csv";
 
@@ -36,6 +37,8 @@ export function TrackMyInfo({
   const [rows, setRows] = useState<TopicFull[]>([]);
   const [cohort, setCohort] = useState<CohortResident[]>([]);
   const [loggerDayDates, setLoggerDayDates] = useState<string[]>([]);
+  const [myClaims, setMyClaims] = useState<Claim[]>([]);
+  const [showClaimed, setShowClaimed] = useState(false);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<TopicFull | null>(null);
   const [showRated, setShowRated] = useState(false);
@@ -52,7 +55,7 @@ export function TrackMyInfo({
   }
 
   const load = useCallback(async () => {
-    const [{ data: topicRows }, { data: cohortRows }, { data: loggerDayRows }] = await Promise.all([
+    const [{ data: topicRows }, { data: cohortRows }, { data: loggerDayRows }, { data: claimRows }] = await Promise.all([
       supabase
         .from("topics")
         .select("*, ratings(*), absences(*), sessions(type, days(date))")
@@ -64,11 +67,13 @@ export function TrackMyInfo({
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
       supabase.from("days").select("date").eq("logger_id", resident.id),
+      supabase.from("claims").select("*").eq("resident_id", resident.id),
     ]);
 
     setRows(((topicRows as TopicFull[] | null) ?? []).filter((r) => r.sessions?.days));
     setCohort((cohortRows as CohortResident[] | null) ?? []);
     setLoggerDayDates(((loggerDayRows as { date: string }[] | null) ?? []).map((d) => d.date));
+    setMyClaims((claimRows as Claim[] | null) ?? []);
     setLoading(false);
   }, [resident.id, resident.program_id, resident.pgy]);
 
@@ -98,6 +103,22 @@ export function TrackMyInfo({
       !r.ratings.some((rt) => rt.resident_id === resident.id) &&
       !r.absences.some((a) => a.resident_id === resident.id),
   );
+
+  // Same "combine every instance of a subject into one breakdown" grouping
+  // used for the priority list on the Cycle tab, but only for the titles
+  // this resident actually claimed.
+  const claimedTitles = new Set(myClaims.map((c) => c.topic_title));
+  const breakdownByTitle = new Map<string, ReturnType<typeof scoreTopic>>();
+  if (claimedTitles.size) {
+    const ratingsByTitle = new Map<string, Rating[]>();
+    for (const r of covered) {
+      if (!claimedTitles.has(r.title)) continue;
+      ratingsByTitle.set(r.title, (ratingsByTitle.get(r.title) ?? []).concat(r.ratings));
+    }
+    for (const [title, ratings] of ratingsByTitle) {
+      breakdownByTitle.set(title, scoreTopic(ratings));
+    }
+  }
 
   const myMean = (r: TopicFull) => {
     const mineRating = r.ratings.find((rt) => rt.resident_id === resident.id)!;
@@ -455,6 +476,43 @@ export function TrackMyInfo({
         ) : (
           <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
             You haven't rated anything yet.
+          </div>
+        )}
+
+        {myClaims.length > 0 && (
+          <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
+            <button onClick={() => setShowClaimed((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
+              <h3 className="font-bold text-[#0E1A1C]">Topics you claimed</h3>
+              <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${showClaimed ? "rotate-180" : ""}`}>
+                ▾
+              </span>
+            </button>
+            {showClaimed &&
+              myClaims.map((c) => {
+                const sc = breakdownByTitle.get(c.topic_title);
+                return (
+                  <div key={c.id} className="border-t border-[#E2EAE9] py-3 first:border-t-0">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+                        <div className="text-[11.5px] text-[#3F4C50]">{c.format}</div>
+                      </div>
+                      <span
+                        className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
+                          c.scholarly
+                            ? "bg-[#EEE7F3] text-[#5E3F73]"
+                            : c.status === "delivered"
+                              ? "bg-[#DCEFEB] text-[#064B45]"
+                              : "bg-[#FAEBD4] text-[#8F5205]"
+                        }`}
+                      >
+                        {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+                      </span>
+                    </div>
+                    {sc && <LikertBreakdown perItem={sc.perItem} />}
+                  </div>
+                );
+              })}
           </div>
         )}
 
