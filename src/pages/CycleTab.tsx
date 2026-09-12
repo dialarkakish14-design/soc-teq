@@ -5,6 +5,7 @@ import { downloadCsv } from "../lib/csv";
 import { LikertBreakdown } from "../components/LikertBreakdown";
 import {
   CLAIM_FORMATS,
+  FITZPATRICK_TONES,
   RATING_DOMAINS,
   THRESHOLD,
   type Assessment,
@@ -13,12 +14,25 @@ import {
   type Rating,
   type Resident,
   type Resource,
+  type SkinType,
 } from "../types";
 
 interface PriorityTopic {
   title: string;
   overall: number;
   perItem: Record<string, number>;
+  tones: Set<SkinType>;
+}
+
+// Same "Mixed across IV-VI counts toward all three" expansion Cases.tsx
+// already uses for its own Fitzpatrick coverage view.
+function expandTones(skinTypes: (SkinType | null)[]): Set<SkinType> {
+  const seen = new Set<SkinType>();
+  for (const s of skinTypes) {
+    if (s === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((t) => seen.add(t));
+    else if (s) seen.add(s);
+  }
+  return seen;
 }
 
 const OTHER_FORMAT = "__other__";
@@ -73,7 +87,11 @@ export function CycleTab({ resident }: { resident: Resident }) {
       claims: Claim[];
       assessments: Assessment[];
       resources: Resource[];
-      priority_topics: { title: string; ratings: Pick<Rating, "depth" | "clarity" | "nuance" | "mgmt" | "conf">[] }[];
+      priority_topics: {
+        title: string;
+        ratings: Pick<Rating, "depth" | "clarity" | "nuance" | "mgmt" | "conf">[];
+        skin_types: (SkinType | null)[];
+      }[];
     };
 
     setCycle(result.cycle);
@@ -85,7 +103,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
     const gaps: PriorityTopic[] = [];
     for (const t of result.priority_topics ?? []) {
       const sc = scoreTopic(t.ratings as Rating[]);
-      if (sc && isBelowThreshold(sc.overall)) gaps.push({ title: t.title, overall: sc.overall, perItem: sc.perItem });
+      if (sc && isBelowThreshold(sc.overall)) {
+        gaps.push({ title: t.title, overall: sc.overall, perItem: sc.perItem, tones: expandTones(t.skin_types ?? []) });
+      }
     }
     setPriority(gaps);
 
@@ -288,11 +308,17 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   function exportPriorityCsv() {
-    const header = ["topic", "overall_rm", ...RATING_DOMAINS.map((d) => d.key)];
+    const header = [
+      "topic",
+      "overall_rm",
+      ...RATING_DOMAINS.map((d) => d.key),
+      ...FITZPATRICK_TONES.map((t) => t.replace("Fitzpatrick ", "fitzpatrick_")),
+    ];
     const rows = priority.map((p) => [
       p.title,
       p.overall.toFixed(2),
       ...RATING_DOMAINS.map((d) => (p.perItem[d.key] != null ? p.perItem[d.key].toFixed(2) : "")),
+      ...FITZPATRICK_TONES.map((t) => (p.tones.has(t) ? 1 : 0)),
     ]);
     downloadCsv(`soc-teq_priority-topics_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
       header,
@@ -507,6 +533,35 @@ function TopicSearchInput({
   );
 }
 
+// Same visual as the Fitzpatrick coverage strip on the Cases tab, reused
+// here so a priority topic also shows which skin tones it's actually
+// been shown in, not just its RM score.
+function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
+  if (tones.size === 0) return null;
+  const missing = FITZPATRICK_TONES.filter((t) => !tones.has(t));
+  return (
+    <div className="mt-2">
+      <div className="flex gap-1.5">
+        {FITZPATRICK_TONES.map((t) => (
+          <span
+            key={t}
+            className={`flex-1 rounded-lg py-1 text-center font-mono text-[10px] font-semibold ${
+              tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#3F4C50]"
+            }`}
+          >
+            {t.replace("Fitzpatrick ", "")}
+          </span>
+        ))}
+      </div>
+      {missing.length > 0 && (
+        <div className="mt-1 text-[10.5px] text-[#3F4C50]">
+          Not yet shown in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Phase 2: identification and baseline — the priority list, claiming a
 // topic and choosing a teaching format, and the baseline assessment all
 // live here. Phase 3 is delivery/tracking only for what was already
@@ -544,27 +599,27 @@ function Phase2({
 
   return (
     <>
-      <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <div className="rounded-3xl bg-gradient-to-br from-[#FDF0DA] to-[#FFFBF3] p-4 shadow-sm">
         <div className="flex items-start justify-between gap-2">
           <div>
-            <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
-            <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
+            <h3 className="font-extrabold text-[#8F5205]">Priority educational needs</h3>
+            <p className="mt-1 text-[12.5px] text-[#6B4A17]">Claim the ones you'll build something on over months 4–6.</p>
           </div>
           {priority.length > 0 && (
-            <button onClick={onExport} className="whitespace-nowrap rounded-xl bg-[#F5F8F7] px-3 py-2 text-xs font-bold text-[#064B45]">
+            <button onClick={onExport} className="whitespace-nowrap rounded-xl bg-white px-3 py-2 text-xs font-bold text-[#8F5205] shadow-sm">
               Export (CSV)
             </button>
           )}
         </div>
-        <p className="mt-2 text-[11px] text-[#3F4C50]">
+        <p className="mt-2 text-[11px] text-[#6B4A17]">
           The export includes every flagged topic's 5-Likert breakdown, so your program director can see exactly
           what to prep questions on.
         </p>
         {priority.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#6B4A17]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
           <>
-            <div className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] font-semibold text-[#232D30]">
+            <div className="mt-2.5 rounded-xl bg-[#8F5205] px-3 py-2.5 text-[12px] font-semibold text-white">
               {priority.length} topic{priority.length === 1 ? "" : "s"} flagged · {claimedCount} claimed so far
               {fairShare != null && cohortCount > 0 && (
                 <> · about {fairShare} each for {cohortCount} resident{cohortCount === 1 ? "" : "s"} to split it fairly</>
@@ -579,7 +634,7 @@ function Phase2({
               const mineClaim = claimsForTopic.find((c) => c.resident_id === resident.id);
               const chosen = formats[p.title] ?? "";
               return (
-                <div key={p.title} className="border-t border-[#E2EAE9] py-3">
+                <div key={p.title} className="mt-2.5 rounded-2xl border-l-[5px] border-l-[#E8A93C] bg-white p-3 shadow-sm">
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
@@ -592,6 +647,7 @@ function Phase2({
                     </span>
                   </div>
                   <LikertBreakdown perItem={p.perItem} />
+                  <FitzpatrickStrip tones={p.tones} />
                   {claimsForTopic.length > 0 && (
                     <div className="mt-2 flex flex-col gap-1.5">
                       {claimsForTopic.map((c) => {

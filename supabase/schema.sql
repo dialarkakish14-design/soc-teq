@@ -778,13 +778,16 @@ begin
     select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc), '[]'::jsonb) into v_resources
     from resources r where r.program_id = v_program_id and r.pgy = p_pgy;
 
-    select coalesce(jsonb_agg(jsonb_build_object('title', grp.title, 'ratings', grp.ratings)), '[]'::jsonb) into v_priority
+    select coalesce(
+      jsonb_agg(jsonb_build_object('title', grp.title, 'ratings', grp.ratings, 'skin_types', grp.skin_types)), '[]'::jsonb
+    ) into v_priority
     from (
       select
         ti.title,
         jsonb_agg(
           jsonb_build_object('depth', rt.depth, 'clarity', rt.clarity, 'nuance', rt.nuance, 'mgmt', rt.mgmt, 'conf', rt.conf)
-        ) as ratings
+        ) as ratings,
+        coalesce(jsonb_agg(distinct ti.skin_type) filter (where ti.skin_type is not null), '[]'::jsonb) as skin_types
       from topics ti
       join sessions se on se.id = ti.session_id
       join days d on d.id = se.day_id
