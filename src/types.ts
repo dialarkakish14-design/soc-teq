@@ -156,6 +156,7 @@ export interface Cycle {
   program_id: string;
   pgy: Pgy;
   start_date: string;
+  remediation_started_at: string | null;
 }
 
 export const CLAIM_FORMATS = ["Peer-teaching module", "SoC journal club", "Digital repository case set"] as const;

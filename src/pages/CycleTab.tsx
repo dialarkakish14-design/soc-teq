@@ -94,6 +94,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
   const phase = cyclePhase(cycle.start_date);
   const month = cycleMonth(cycle.start_date);
+  const remediationStarted = !!cycle.remediation_started_at;
   const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const responsiveness = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
@@ -183,7 +184,8 @@ export function CycleTab({ resident }: { resident: Resident }) {
       </div>
 
       {phase === 1 && <Phase1 count={priority.length} />}
-      {phase === 2 && (
+      {phase !== 1 && !remediationStarted && <StartRemediationPhase resident={resident} onStarted={load} />}
+      {phase === 2 && remediationStarted && (
         <Phase2
           priority={priority}
           claims={claims}
@@ -194,10 +196,10 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onAssess={recordAssessment}
         />
       )}
-      {phase === 3 && (
+      {phase === 3 && remediationStarted && (
         <Phase3 mine={mine} resources={resources} onDeliver={markDelivered} onScholarly={markScholarly} onShare={shareResource} />
       )}
-      {phase === 4 && (
+      {phase === 4 && remediationStarted && (
         <Phase4 assessments={assessments} resident={resident} claims={claims} onAssess={recordAssessment} />
       )}
 
@@ -600,30 +602,19 @@ function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: ()
   async function start() {
     setBusy(true);
     setError("");
-    const { error: rpcError } = await supabase.rpc("start_remediation_cycle", { p_pgy: resident.pgy });
+    const { error: rpcError } = await supabase.rpc("start_cycle", { p_pgy: resident.pgy });
     setBusy(false);
     if (rpcError) return setError(rpcError.message);
     onStarted();
   }
 
-  if (resident.role !== "program_lead") {
-    return (
-      <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
-        <h3 className="font-bold text-[#0E1A1C]">Remediation cycle not started yet</h3>
-        <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
-          Your program lead hasn't started the 6-month remediation cycle for {resident.pgy} yet. Check back once
-          they have.
-        </p>
-      </div>
-    );
-  }
-
   return (
     <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
-      <h3 className="font-bold text-[#0E1A1C]">Begin the remediation cycle</h3>
+      <h3 className="font-bold text-[#0E1A1C]">Begin Cycle 1</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
-        This starts the 6-month remediation cycle for {resident.pgy} — months 1–3 gather data, months 4–6 are for
-        claiming and delivering on the gaps found. Once started, this can't be undone from here.
+        This starts the 6-month tracking cycle for {resident.pgy} — months 1–3 gather data, months 4–6 are for
+        claiming and delivering on the gaps found. Any resident can start it, but make sure you've discussed this
+        with the rest of {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-3 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
@@ -633,7 +624,41 @@ function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: ()
         disabled={busy}
         className="mt-4 w-full rounded-2xl bg-[#0E7C72] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0E7C72]/25 disabled:opacity-60"
       >
-        {busy ? "Starting…" : "Begin Phase 1"}
+        {busy ? "Starting…" : "Begin Cycle 1"}
+      </button>
+    </div>
+  );
+}
+
+function StartRemediationPhase({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function start() {
+    setBusy(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("start_remediation_phase", { p_pgy: resident.pgy });
+    setBusy(false);
+    if (rpcError) return setError(rpcError.message);
+    onStarted();
+  }
+
+  return (
+    <div className="rounded-2xl bg-[#FAEBD4] p-4 shadow-sm">
+      <h3 className="font-bold text-[#8F5205]">3 months are up — ready for the remediation phase?</h3>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8F5205]">
+        Months 4–6 are for claiming and delivering on the gaps found so far. Any resident can start this, but talk
+        it over with {resident.pgy} and your program director first.
+      </p>
+      {error && (
+        <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
+      )}
+      <button
+        onClick={start}
+        disabled={busy}
+        className="mt-3 w-full rounded-2xl bg-[#8F5205] py-3 text-sm font-bold text-white disabled:opacity-60"
+      >
+        {busy ? "Starting…" : "Start remediation cycle"}
       </button>
     </div>
   );
