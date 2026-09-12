@@ -1,6 +1,15 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { cycleMonth, cyclePhase, daysSinceStart, formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
+import {
+  claimDeliveryState,
+  claimScheduleLocked,
+  cycleMonth,
+  cyclePhase,
+  daysSinceStart,
+  formatDateShort,
+  isBelowThreshold,
+  scoreTopic,
+} from "../lib/domain";
 import { downloadCsv } from "../lib/csv";
 import {
   CLAIM_FORMATS,
@@ -883,11 +892,14 @@ function Phase3({
 }) {
   const [open, setOpen] = useState(true);
 
-  // Not-yet-delivered topics stay up top (soonest scheduled first, unscheduled
-  // ones after), delivered ones get pushed to the bottom — so whatever's
-  // still coming up is always what's easiest to find, for the whole cohort.
+  // Planned (still upcoming) first, soonest scheduled first — then pending
+  // (grace window), then missed (needs rescheduling), then delivered last.
+  // So the whole cohort always sees what's still coming up before what's
+  // already done, with anything overdue clearly separated from both.
+  const rankOf = (c: Claim) => ({ planned: 0, pending: 1, missed: 2, delivered: 3 })[claimDeliveryState(c.status, c.deliver_date)];
   const sorted = [...claims].sort((a, b) => {
-    if ((a.status === "delivered") !== (b.status === "delivered")) return a.status === "delivered" ? 1 : -1;
+    const rankDiff = rankOf(a) - rankOf(b);
+    if (rankDiff !== 0) return rankDiff;
     const whenOf = (c: Claim) => (c.deliver_date ? `${c.deliver_date}T${c.deliver_time ?? "00:00"}` : null);
     const aw = whenOf(a);
     const bw = whenOf(b);
@@ -914,7 +926,7 @@ function Phase3({
         <div className="mt-3 text-center text-sm text-[#2B5F8A]">Nobody's claimed a topic this cycle yet.</div>
       ) : (
         sorted.map((c) => {
-          const featured = c.status !== "delivered" && upcomingSeen < 3;
+          const featured = claimDeliveryState(c.status, c.deliver_date) === "planned" && upcomingSeen < 3;
           if (featured) upcomingSeen++;
           return (
             <CommittedTopicRow
@@ -1140,12 +1152,19 @@ function DeliveryDetailsEditor({
   }
 
   const when = formatWhenWhere(claim.deliver_date, claim.deliver_time, claim.deliver_location);
+  const locked = claimScheduleLocked(claim.deliver_date);
   return (
     <div className="mt-1.5">
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
-      <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
-        {when ? "Edit day/time/location" : "Add day/time/location"}
-      </button>
+      {locked ? (
+        <div className="mt-0.5 text-[10.5px] text-[#343E42]">
+          Can't be changed within 6 days of the scheduled date, to avoid disrupting colleagues.
+        </div>
+      ) : (
+        <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
+          {when ? "Edit day/time/location" : "Add day/time/location"}
+        </button>
+      )}
     </div>
   );
 }
@@ -1192,11 +1211,25 @@ function CommittedTopicRow({
   const [customNewFormat, setCustomNewFormat] = useState("");
   const c = claim;
   const isOther = !(CLAIM_FORMATS as readonly string[]).includes(c.format);
+  const deliveryState = claimDeliveryState(c.status, c.deliver_date);
   const statusColor = c.scholarly
     ? "bg-[#EEE7F3] text-[#5E3F73]"
-    : c.status === "delivered"
+    : deliveryState === "delivered"
       ? "bg-[#DCEFEB] text-[#064B45]"
-      : "bg-[#FAEBD4] text-[#8F5205]";
+      : deliveryState === "missed"
+        ? "bg-[#F8E4E4] text-[#93393E]"
+        : deliveryState === "pending"
+          ? "bg-[#FAEBD4] text-[#8F5205]"
+          : "bg-[#DCEAF5] text-[#2B5F8A]";
+  const statusLabel = c.scholarly
+    ? "Scholarly"
+    : deliveryState === "delivered"
+      ? "Delivered"
+      : deliveryState === "missed"
+        ? "Missed"
+        : deliveryState === "pending"
+          ? "Pending"
+          : "Planned";
   const open = forceOpen || expanded;
 
   return (
@@ -1210,7 +1243,7 @@ function CommittedTopicRow({
             </div>
           </div>
           <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-            {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+            {statusLabel}
           </span>
         </div>
       ) : (
@@ -1223,7 +1256,7 @@ function CommittedTopicRow({
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-              {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+              {statusLabel}
             </span>
             <span className={`text-xl font-extrabold text-[#5B9BD5] transition-transform ${expanded ? "rotate-180" : ""}`}>▾</span>
           </div>
@@ -1231,6 +1264,17 @@ function CommittedTopicRow({
       )}
       {open && (
         <div className={forceOpen ? "" : "mt-2.5 border-t border-[#E2EAE9] pt-2.5"}>
+          {isMine && deliveryState === "missed" && (
+            <div className="mb-1.5 rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11.5px] font-semibold leading-relaxed text-[#93393E]">
+              This session's window closed without being marked delivered. Reschedule a new day/time below to try
+              again.
+            </div>
+          )}
+          {isMine && deliveryState === "pending" && (
+            <div className="mb-1.5 rounded-xl bg-[#FAEBD4] px-3 py-2 text-[11px] leading-relaxed text-[#8F5205]">
+              Mark this delivered within 3 days of the session, or it'll need to be rescheduled.
+            </div>
+          )}
           {isMine ? (
             <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
           ) : (
@@ -1291,7 +1335,7 @@ function CommittedTopicRow({
               </button>
             ))}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {isMine && c.status !== "delivered" && (
+            {isMine && c.status !== "delivered" && deliveryState !== "missed" && (
               <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
                 Mark delivered
               </button>

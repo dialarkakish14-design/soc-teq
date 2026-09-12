@@ -851,6 +851,32 @@ create policy claims_delete on claims for delete
     )
   );
 
+-- Day/time/location can't change from 6 days before a scheduled date
+-- through 3 days after it — a trigger, not RLS, since it only needs to
+-- block those 3 columns specifically, not every update to the row. See
+-- patch_claim_schedule_lock.sql.
+create or replace function check_claim_schedule_lock()
+returns trigger
+language plpgsql as $$
+begin
+  if OLD.deliver_date is not null
+    and OLD.deliver_date between (current_date - 3) and (current_date + 6)
+    and (
+      NEW.deliver_date is distinct from OLD.deliver_date
+      or NEW.deliver_time is distinct from OLD.deliver_time
+      or NEW.deliver_location is distinct from OLD.deliver_location
+    )
+  then
+    raise exception 'Day, time, and location can''t be changed within 6 days before or 3 days after the scheduled date';
+  end if;
+  return NEW;
+end;
+$$;
+
+create trigger claims_schedule_lock
+before update on claims
+for each row execute function check_claim_schedule_lock();
+
 create policy assessments_select on assessments for select
   using (
     exists (select 1 from cycles c where c.id = assessments.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())

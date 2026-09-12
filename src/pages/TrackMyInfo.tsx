@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { engagementTrend, formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
+import { claimDeliveryState, engagementTrend, formatDateShort, isBelowThreshold, isDayOpen, scoreTopic } from "../lib/domain";
 import { RATING_DOMAINS, type Absence, type Claim, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicDetail } from "../components/TopicDetail";
 import { InfoTag } from "../components/InfoTag";
@@ -490,6 +490,25 @@ export function TrackMyInfo({
             {showClaimed &&
               myClaims.map((c) => {
                 const sc = breakdownByTitle.get(c.topic_title);
+                const deliveryState = claimDeliveryState(c.status, c.deliver_date);
+                const statusColor = c.scholarly
+                  ? "bg-[#EEE7F3] text-[#5E3F73]"
+                  : deliveryState === "delivered"
+                    ? "bg-[#DCEFEB] text-[#064B45]"
+                    : deliveryState === "missed"
+                      ? "bg-[#F8E4E4] text-[#93393E]"
+                      : deliveryState === "pending"
+                        ? "bg-[#FAEBD4] text-[#8F5205]"
+                        : "bg-[#DCEAF5] text-[#2B5F8A]";
+                const statusLabel = c.scholarly
+                  ? "Scholarly"
+                  : deliveryState === "delivered"
+                    ? "Delivered"
+                    : deliveryState === "missed"
+                      ? "Missed"
+                      : deliveryState === "pending"
+                        ? "Pending"
+                        : "Planned";
                 return (
                   <div key={c.id} className="border-t border-[#E2EAE9] py-3 first:border-t-0">
                     <div className="flex items-center justify-between">
@@ -497,18 +516,17 @@ export function TrackMyInfo({
                         <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
                         <div className="text-[11.5px] text-[#343E42]">{c.format}</div>
                       </div>
-                      <span
-                        className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                          c.scholarly
-                            ? "bg-[#EEE7F3] text-[#5E3F73]"
-                            : c.status === "delivered"
-                              ? "bg-[#DCEFEB] text-[#064B45]"
-                              : "bg-[#FAEBD4] text-[#8F5205]"
-                        }`}
-                      >
-                        {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+                      <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+                        {statusLabel}
                       </span>
                     </div>
+                    {(deliveryState === "pending" || deliveryState === "missed") && (
+                      <p className="mt-1 text-[11px] leading-relaxed text-[#343E42]">
+                        {deliveryState === "pending"
+                          ? "You still need to mark this delivered, within 3 days of the session."
+                          : "This one's window closed unmarked. Head to Cycle to reschedule and redo it."}
+                      </p>
+                    )}
                     {sc && <LikertBreakdown perItem={sc.perItem} />}
                   </div>
                 );

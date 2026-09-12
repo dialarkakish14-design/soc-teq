@@ -84,6 +84,36 @@ export function daysSinceStart(startDate: string): number {
   return Math.floor((today.getTime() - start.getTime()) / 86400000);
 }
 
+// A claimed topic's delivery state, derived purely from its scheduled date
+// and status — never stored directly, so it's always current:
+//   planned   — not delivered yet, scheduled date (if any) hasn't arrived.
+//   pending   — scheduled date has passed, but still within the 3-day
+//               grace window to mark it delivered.
+//   missed    — grace window lapsed without being marked delivered; the
+//               resident needs to reschedule and redo it.
+//   delivered — marked delivered (whether or not it later became
+//               scholarly work — that's a separate flag layered on top).
+export type ClaimDeliveryState = "planned" | "pending" | "missed" | "delivered";
+
+export function claimDeliveryState(status: "planned" | "delivered", deliverDate: string | null): ClaimDeliveryState {
+  if (status === "delivered") return "delivered";
+  if (!deliverDate) return "planned";
+  const daysPast = daysSinceStart(deliverDate);
+  if (daysPast <= 0) return "planned";
+  if (daysPast <= 3) return "pending";
+  return "missed";
+}
+
+// Day/time/location can't be changed from 6 days before the scheduled
+// date through 3 days after it (the same grace window above) — close
+// enough that changing it would disrupt colleagues counting on it. Once a
+// session is actually missed, this reopens so the resident can reschedule.
+export function claimScheduleLocked(deliverDate: string | null): boolean {
+  if (!deliverDate) return false;
+  const daysPast = daysSinceStart(deliverDate);
+  return daysPast >= -6 && daysPast <= 3;
+}
+
 export function cyclePhase(startDate: string): 1 | 2 | 3 | 4 {
   const n = daysSinceStart(startDate);
   if (n < 90) return 1;
