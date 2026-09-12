@@ -170,6 +170,12 @@ export const CLAIM_FORMATS = [
 ] as const;
 export type ClaimFormat = (typeof CLAIM_FORMATS)[number];
 
+// Not mutually exclusive — scholarly work can be, say, both "Submitted"
+// and "Pending work" at once (submitted, awaiting a decision), so these
+// are toggled independently rather than picked as a single status.
+export const SCHOLARLY_STATUSES = ["Completed", "Published", "Submitted", "Pending work"] as const;
+export type ScholarlyStatus = (typeof SCHOLARLY_STATUSES)[number];
+
 export interface Claim {
   id: string;
   cycle_id: string;
@@ -180,6 +186,9 @@ export interface Claim {
   format: string;
   status: "planned" | "delivered";
   scholarly: boolean;
+  // Any combination of SCHOLARLY_STATUSES — only meaningful once
+  // scholarly is true, but not reset if it's ever un-marked.
+  scholarly_status: string[];
   // Optional — visible to the whole cohort, not just whoever claimed it.
   deliver_date: string | null;
   deliver_time: string | null;

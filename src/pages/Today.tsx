@@ -362,34 +362,45 @@ export function Today({
         {/* logger card */}
         <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
           {!day?.logger_id ? (
-            <>
+            captureLocked ? (
               <div className="flex items-center justify-between gap-3">
                 <div>
-                  <h3 className="font-bold text-[#0E1A1C]">Logger not claimed</h3>
+                  <h3 className="font-bold text-[#0E1A1C]">Logging closed for this cycle</h3>
                   <p className="mt-1 text-[12.5px] text-[#232D30]">
-                    One {resident.pgy} resident registers the day's topics and marks SoC coverage. The
-                    rest rate.
+                    This cycle has moved past Phase 1 (data gathering). No new logger claims or topic captures
+                    until a new cycle's Phase 1 begins.
                   </p>
                 </div>
                 <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
-                  Open
+                  Closed
                 </span>
               </div>
-              {captureLocked ? (
-                <div className="mt-2 text-[11px] text-[#343E42]">
-                  Topic capture is closed · this cycle has moved past Phase 1 (data gathering).
+            ) : (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 className="font-bold text-[#0E1A1C]">Logger not claimed</h3>
+                    <p className="mt-1 text-[12.5px] text-[#232D30]">
+                      One {resident.pgy} resident registers the day's topics and marks SoC coverage. The
+                      rest rate.
+                    </p>
+                  </div>
+                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
+                    Open
+                  </span>
                 </div>
-              ) : open ? (
-                <button
-                  onClick={claimLogger}
-                  className="mt-3 w-full rounded-2xl bg-[#0E7C72] py-3 text-sm font-bold text-white"
-                >
-                  Claim logger
-                </button>
-              ) : (
-                <div className="mt-2 text-[11px] text-[#343E42]">This day closed without a logger.</div>
-              )}
-            </>
+                {open ? (
+                  <button
+                    onClick={claimLogger}
+                    className="mt-3 w-full rounded-2xl bg-[#0E7C72] py-3 text-sm font-bold text-white"
+                  >
+                    Claim logger
+                  </button>
+                ) : (
+                  <div className="mt-2 text-[11px] text-[#343E42]">This day closed without a logger.</div>
+                )}
+              </>
+            )
           ) : (
             <>
               <div className="flex items-center justify-between gap-3">

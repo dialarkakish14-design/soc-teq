@@ -15,6 +15,7 @@ import {
   CLAIM_FORMATS,
   FITZPATRICK_TONES,
   RATING_DOMAINS,
+  SCHOLARLY_STATUSES,
   THRESHOLD,
   type Assessment,
   type Claim,
@@ -250,6 +251,12 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Undone.");
   }
 
+  async function updateScholarlyStatus(id: string, statuses: string[]) {
+    const { error } = await supabase.from("claims").update({ scholarly_status: statuses }).eq("id", id);
+    if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, scholarly_status: statuses } : c)));
+  }
+
   // Only reachable once (format_edited stays false until this runs, then
   // the option disappears — enforced by hiding the control client-side;
   // the update itself just flips the flag along with the new format).
@@ -442,6 +449,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onUndoDeliver={undoDelivered}
           onScholarly={markScholarly}
           onUndoScholarly={undoScholarly}
+          onUpdateScholarlyStatus={updateScholarlyStatus}
           onShare={shareResource}
           onDeleteResource={deleteResource}
           onUpdateResource={updateResource}
@@ -898,6 +906,7 @@ function Phase3({
   onUndoDeliver,
   onScholarly,
   onUndoScholarly,
+  onUpdateScholarlyStatus,
   onShare,
   onDeleteResource,
   onUpdateResource,
@@ -914,6 +923,7 @@ function Phase3({
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
   onUndoScholarly: (id: string) => void;
+  onUpdateScholarlyStatus: (id: string, statuses: string[]) => void;
   onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
@@ -974,6 +984,7 @@ function Phase3({
               onUndoDeliver={onUndoDeliver}
               onScholarly={onScholarly}
               onUndoScholarly={onUndoScholarly}
+              onUpdateScholarlyStatus={onUpdateScholarlyStatus}
               onShare={onShare}
               onDeleteResource={onDeleteResource}
               onUpdateResource={onUpdateResource}
@@ -1216,7 +1227,7 @@ function DeliveryDetailsEditor({
           {when ? "Edit day/time/location" : "Add day/time/location"}
         </button>
       )}
-      {!locked && showReminder && claim.deliver_date && (
+      {!locked && showReminder && claim.deliver_date && claimDeliveryState(claim.status, claim.deliver_date) !== "missed" && (
         <div className="mt-1 text-[10px] text-[#343E42]">
           Heads up: this locks in once you're within 6 days of the date.
         </div>
@@ -1237,6 +1248,7 @@ function CommittedTopicRow({
   onUndoDeliver,
   onScholarly,
   onUndoScholarly,
+  onUpdateScholarlyStatus,
   onShare,
   onDeleteResource,
   onUpdateResource,
@@ -1256,6 +1268,7 @@ function CommittedTopicRow({
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
   onUndoScholarly: (id: string) => void;
+  onUpdateScholarlyStatus: (id: string, statuses: string[]) => void;
   onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
@@ -1440,6 +1453,45 @@ function CommittedTopicRow({
               presentation, or a publication, not just delivering the session.
             </p>
           )}
+          {c.scholarly &&
+            (isMine ? (
+              <div className="mt-1.5 rounded-xl bg-[#EEE7F3] p-2.5">
+                <div className="text-[10.5px] font-semibold text-[#5E3F73]">
+                  Where does it stand? Any that apply.
+                </div>
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {SCHOLARLY_STATUSES.map((s) => {
+                    const active = c.scholarly_status.includes(s);
+                    return (
+                      <button
+                        key={s}
+                        onClick={() =>
+                          onUpdateScholarlyStatus(
+                            c.id,
+                            active ? c.scholarly_status.filter((x) => x !== s) : [...c.scholarly_status, s],
+                          )
+                        }
+                        className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                          active ? "bg-[#5E3F73] text-white" : "bg-white text-[#5E3F73]"
+                        }`}
+                      >
+                        {s}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              c.scholarly_status.length > 0 && (
+                <div className="mt-1.5 flex flex-wrap gap-1.5">
+                  {c.scholarly_status.map((s) => (
+                    <span key={s} className="rounded-lg bg-[#EEE7F3] px-2.5 py-1.5 text-[11px] font-bold text-[#5E3F73]">
+                      {s}
+                    </span>
+                  ))}
+                </div>
+              )
+            ))}
           <ResourceShare
             title={c.topic_title}
             resources={resources}
