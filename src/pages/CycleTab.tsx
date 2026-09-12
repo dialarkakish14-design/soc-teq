@@ -367,6 +367,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
             cohortCount={cohortCount}
             onClaim={claimTopic}
             onRelease={releaseClaim}
+            onUpdateDetails={updateClaimDetails}
             onAssess={recordAssessment}
             onExport={exportPriorityCsv}
           />
@@ -574,6 +575,7 @@ function Phase2({
   cohortCount,
   onClaim,
   onRelease,
+  onUpdateDetails,
   onAssess,
   onExport,
 }: {
@@ -584,6 +586,7 @@ function Phase2({
   cohortCount: number;
   onClaim: (title: string, format: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
   onRelease: (id: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
   onExport: () => void;
 }) {
@@ -662,9 +665,12 @@ function Phase2({
                     </div>
                   )}
                   {mineClaim ? (
-                    <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-                      Release this topic
-                    </button>
+                    <>
+                      <DeliveryDetailsEditor claim={mineClaim} onSave={onUpdateDetails} />
+                      <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
+                        Release this topic
+                      </button>
+                    </>
                   ) : (
                     <>
                       <select
@@ -710,7 +716,7 @@ function Phase2({
                       />
                       <div className="mt-1 text-[10.5px] text-[#3F4C50]">
                         Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
-                        set.
+                        set. You can edit them here, or later in Phase 3, any time.
                       </div>
                       <button
                         onClick={() =>
@@ -970,6 +976,58 @@ function ResourceShare({
   );
 }
 
+// Shared between Phase 2 (right after claiming) and Phase 3's "What you
+// committed to" — the day/time/location for a claim can be added or
+// changed from either place, at any point.
+function DeliveryDetailsEditor({
+  claim,
+  onSave,
+}: {
+  claim: Claim;
+  onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [date, setDate] = useState(claim.deliver_date ?? "");
+  const [time, setTime] = useState(claim.deliver_time ?? "");
+  const [location, setLocation] = useState(claim.deliver_location ?? "");
+
+  if (editing) {
+    return (
+      <div className="mt-2 flex flex-col gap-2">
+        <div className="flex gap-2">
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input flex-1" />
+          <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input flex-1" />
+        </div>
+        <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Where (optional)" className="input" />
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onSave(claim.id, date, time, location);
+              setEditing(false);
+            }}
+            className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
+          >
+            Save
+          </button>
+          <button onClick={() => setEditing(false)} className="flex-1 rounded-xl bg-[#EAEFEE] py-2 text-xs font-bold text-[#232D30]">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const when = formatWhenWhere(claim.deliver_date, claim.deliver_time, claim.deliver_location);
+  return (
+    <div className="mt-1.5">
+      {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
+      <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#3F4C50]">
+        {when ? "Edit day/time/location" : "Add day/time/location"}
+      </button>
+    </div>
+  );
+}
+
 function CommittedTopicRow({
   claim,
   resources,
@@ -998,10 +1056,6 @@ function CommittedTopicRow({
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
-  const [editingDetails, setEditingDetails] = useState(false);
-  const [editDate, setEditDate] = useState(claim.deliver_date ?? "");
-  const [editTime, setEditTime] = useState(claim.deliver_time ?? "");
-  const [editLocation, setEditLocation] = useState(claim.deliver_location ?? "");
   const c = claim;
   const statusColor = c.scholarly
     ? "bg-[#EEE7F3] text-[#5E3F73]"
@@ -1015,49 +1069,12 @@ function CommittedTopicRow({
         <div>
           <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
           <div className="text-xs text-[#3F4C50]">{c.format}</div>
-          {!editingDetails &&
-            formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
-              <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">
-                {formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location)}
-              </div>
-            )}
         </div>
         <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
           {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
         </span>
       </div>
-      {editingDetails ? (
-        <div className="mt-2 flex flex-col gap-2">
-          <div className="flex gap-2">
-            <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="input flex-1" />
-            <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="input flex-1" />
-          </div>
-          <input
-            value={editLocation}
-            onChange={(e) => setEditLocation(e.target.value)}
-            placeholder="Where (optional)"
-            className="input"
-          />
-          <div className="flex gap-2">
-            <button
-              onClick={() => {
-                onUpdateDetails(c.id, editDate, editTime, editLocation);
-                setEditingDetails(false);
-              }}
-              className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
-            >
-              Save
-            </button>
-            <button onClick={() => setEditingDetails(false)} className="flex-1 rounded-xl bg-[#EAEFEE] py-2 text-xs font-bold text-[#232D30]">
-              Cancel
-            </button>
-          </div>
-        </div>
-      ) : (
-        <button onClick={() => setEditingDetails(true)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-          {c.deliver_date || c.deliver_time || c.deliver_location ? "Edit day/time/location" : "Add day/time/location"}
-        </button>
-      )}
+      <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {c.status !== "delivered" ? (
           <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
