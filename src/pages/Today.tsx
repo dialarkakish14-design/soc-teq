@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { todayLocalDate, isDayOpen, closesAtLabel } from "../lib/domain";
 import { SESSION_TYPE_COLOR } from "../lib/content";
-import { SESSION_TYPES, type Absence, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
+import { SESSION_TYPES, type Absence, type Cycle, type Day, type Rating, type Resident, type Session, type Topic } from "../types";
 import { CoverageModal } from "../components/CoverageModal";
 import { DERM_TOPICS } from "../lib/topics";
 import { RateModal } from "../components/RateModal";
@@ -29,6 +29,7 @@ export function Today({
   const open = isDayOpen(date, programTimezone);
 
   const [day, setDay] = useState<Day | null>(null);
+  const [cycle, setCycle] = useState<Cycle | null>(null);
   const [sessions, setSessions] = useState<SessionWithTopics[]>([]);
   const [logger, setLogger] = useState<Resident | null>(null);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
@@ -73,14 +74,18 @@ export function Today({
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const { data: cohortRows } = await supabase
-      .from("residents")
-      .select("id, resident_code")
-      .eq("program_id", resident.program_id)
-      .eq("pgy", resident.pgy);
+    const [{ data: cohortRows }, { data: cycleRow }] = await Promise.all([
+      supabase
+        .from("residents")
+        .select("id, resident_code")
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy),
+      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+    ]);
     setCodeById(
       Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
     );
+    setCycle((cycleRow as Cycle | null) ?? null);
 
     let { data: dayRow } = await supabase
       .from("days")
@@ -277,6 +282,11 @@ export function Today({
     flash("Topic deleted.");
   }
 
+  // Once the cohort has moved past Phase 1 (data gathering) into
+  // Identification and baseline, new topics no longer get captured — see
+  // CycleTab.tsx. Already-registered topics can still be rated/coverage-marked.
+  const captureLocked = !!cycle?.phase2_started_at;
+
   const allTopics = sessions.flatMap((s) => s.topics);
   const needsRating = allTopics.filter(
     (t) =>
@@ -360,7 +370,11 @@ export function Today({
                   Open
                 </span>
               </div>
-              {open ? (
+              {captureLocked ? (
+                <div className="mt-2 text-[11px] text-[#3F4C50]">
+                  Topic capture is closed · this cycle has moved past Phase 1 (data gathering).
+                </div>
+              ) : open ? (
                 <button
                   onClick={claimLogger}
                   className="mt-3 w-full rounded-2xl bg-[#0E7C72] py-3 text-sm font-bold text-white"
@@ -431,7 +445,13 @@ export function Today({
         </div>
 
         {/* quick capture */}
-        {iAmLogger && open && (
+        {iAmLogger && open && captureLocked && (
+          <div className="mt-4 rounded-2xl bg-white px-4 py-3.5 text-[12.5px] text-[#3F4C50] shadow-sm">
+            Topic capture is closed for this cycle · Phase 1 (data gathering) has ended. Existing topics can still
+            be rated and marked for coverage.
+          </div>
+        )}
+        {iAmLogger && open && !captureLocked && (
           <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
             <div className="flex items-center justify-between">
               <div>

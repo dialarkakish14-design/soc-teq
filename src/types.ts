@@ -161,7 +161,13 @@ export interface Cycle {
   phase3_started_at: string | null;
 }
 
-export const CLAIM_FORMATS = ["Peer-teaching module", "SoC journal club", "Digital repository case set"] as const;
+export const CLAIM_FORMATS = [
+  "Peer-teaching module",
+  "SoC journal club",
+  "Digital repository case set",
+  "Grand rounds presentation",
+  "Mini-lecture / didactic session",
+] as const;
 export type ClaimFormat = (typeof CLAIM_FORMATS)[number];
 
 export interface Claim {

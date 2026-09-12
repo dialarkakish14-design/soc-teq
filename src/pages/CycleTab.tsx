@@ -25,6 +25,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
   const [priority, setPriority] = useState<PriorityTopic[]>([]);
+  const [cohortCount, setCohortCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
 
@@ -51,6 +52,13 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
     setCycle(cycleRow as Cycle | null);
 
+    const { count: cohortCountResult } = await supabase
+      .from("residents")
+      .select("id", { count: "exact", head: true })
+      .eq("program_id", resident.program_id)
+      .eq("pgy", resident.pgy);
+    setCohortCount(cohortCountResult ?? 0);
+
     if (cycleRow) {
       const [{ data: claimRows }, { data: assessRows }, { data: resourceRows }, { data: topicRows }] = await Promise.all([
         supabase.from("claims").select("*").eq("cycle_id", cycleRow.id),
@@ -62,11 +70,21 @@ export function CycleTab({ resident }: { resident: Resident }) {
       setAssessments((assessRows as Assessment[] | null) ?? []);
       setResources((resourceRows as Resource[] | null) ?? []);
 
+      // Grouped by title, not by individual topic row — the same subject
+      // (e.g. "Melanoma") can be logged across several sessions, and it's
+      // one combined educational need to claim, not one entry per
+      // occurrence. Grouping also avoids duplicate React keys below, which
+      // previously caused claiming one instance to visually affect another
+      // same-titled entry.
       const rows = (topicRows as { title: string; ratings: Rating[] }[] | null) ?? [];
-      const gaps: PriorityTopic[] = [];
+      const ratingsByTitle = new Map<string, Rating[]>();
       for (const r of rows) {
-        const sc = scoreTopic(r.ratings);
-        if (sc && isBelowThreshold(sc.overall)) gaps.push({ title: r.title, overall: sc.overall, perItem: sc.perItem });
+        ratingsByTitle.set(r.title, (ratingsByTitle.get(r.title) ?? []).concat(r.ratings));
+      }
+      const gaps: PriorityTopic[] = [];
+      for (const [title, ratings] of ratingsByTitle) {
+        const sc = scoreTopic(ratings);
+        if (sc && isBelowThreshold(sc.overall)) gaps.push({ title, overall: sc.overall, perItem: sc.perItem });
       }
       setPriority(gaps);
     }
@@ -107,7 +125,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       .from("claims")
       .insert({ cycle_id: cycle!.id, resident_id: resident.id, topic_title: title, format });
     if (error) return flash(error.message);
-    flash("Claimed — you'll build this over months 4–6.");
+    flash("Claimed · you'll build this over months 4–6.");
     await load();
   }
 
@@ -192,6 +210,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
             priority={priority}
             claims={claims}
             resident={resident}
+            cohortCount={cohortCount}
             onClaim={claimTopic}
             onRelease={releaseClaim}
             assessments={assessments}
@@ -204,7 +223,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <Phase3 mine={mine} resources={resources} onDeliver={markDelivered} onScholarly={markScholarly} onShare={shareResource} />
       )}
       {phase3Started && phase === 4 && (
-        <Phase4 assessments={assessments} resident={resident} claims={claims} onAssess={recordAssessment} />
+        <Phase4 assessments={assessments} resident={resident} claims={claims} cohortCount={cohortCount} onAssess={recordAssessment} />
       )}
 
       <PhaseCards phase={phase} />
@@ -243,6 +262,7 @@ function Phase2({
   priority,
   claims,
   resident,
+  cohortCount,
   onClaim,
   onRelease,
   assessments,
@@ -251,12 +271,15 @@ function Phase2({
   priority: PriorityTopic[];
   claims: Claim[];
   resident: Resident;
+  cohortCount: number;
   onClaim: (title: string, format: ClaimFormat) => void;
   onRelease: (id: string) => void;
   assessments: Assessment[];
   onAssess: (phase: "baseline" | "followup", score: number) => void;
 }) {
-  const [formats, setFormats] = useState<Record<string, ClaimFormat>>({});
+  const [formats, setFormats] = useState<Record<string, ClaimFormat | "">>({});
+  const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
+  const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
   return (
     <>
       <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -265,53 +288,66 @@ function Phase2({
         {priority.length === 0 ? (
           <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
-          priority.map((p) => {
-            const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
-            const mine = claimsForTopic.find((c) => c.resident_id === resident.id);
-            return (
-              <div key={p.title} className="border-t border-[#E2EAE9] py-3">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                    <div className="text-xs text-[#3F4C50]">
-                      {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
+          <>
+            <div className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] font-semibold text-[#232D30]">
+              {priority.length} topic{priority.length === 1 ? "" : "s"} flagged · {claimedCount} claimed so far
+              {fairShare != null && cohortCount > 0 && (
+                <> · about {fairShare} each for {cohortCount} resident{cohortCount === 1 ? "" : "s"} to split it fairly</>
+              )}
+              .
+            </div>
+            {priority.map((p) => {
+              const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
+              const mine = claimsForTopic.find((c) => c.resident_id === resident.id);
+              return (
+                <div key={p.title} className="border-t border-[#E2EAE9] py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
+                      <div className="text-xs text-[#3F4C50]">
+                        {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
+                      </div>
                     </div>
+                    <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
+                      {p.overall.toFixed(2)}
+                    </span>
                   </div>
-                  <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
-                    {p.overall.toFixed(2)}
-                  </span>
+                  {mine ? (
+                    <>
+                      <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
+                        You claimed this: {mine.format}.
+                      </div>
+                      <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
+                        Release this topic
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <select
+                        value={formats[p.title] ?? ""}
+                        onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value as ClaimFormat }))}
+                        className="input mt-2"
+                      >
+                        <option value="" disabled>
+                          Choose how you'll teach it…
+                        </option>
+                        {CLAIM_FORMATS.map((f) => (
+                          <option key={f}>{f}</option>
+                        ))}
+                      </select>
+                      <button
+                        onClick={() => onClaim(p.title, formats[p.title] as ClaimFormat)}
+                        disabled={!formats[p.title]}
+                        className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                      >
+                        Claim this topic
+                      </button>
+                    </>
+                  )}
                 </div>
-                {mine ? (
-                  <>
-                    <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                      You claimed this — {mine.format}.
-                    </div>
-                    <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-                      Release this topic
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <select
-                      value={formats[p.title] ?? CLAIM_FORMATS[0]}
-                      onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value as ClaimFormat }))}
-                      className="input mt-2"
-                    >
-                      {CLAIM_FORMATS.map((f) => (
-                        <option key={f}>{f}</option>
-                      ))}
-                    </select>
-                    <button
-                      onClick={() => onClaim(p.title, formats[p.title] ?? CLAIM_FORMATS[0])}
-                      className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white"
-                    >
-                      Claim this topic
-                    </button>
-                  </>
-                )}
-              </div>
-            );
-          })
+              );
+            })}
+          </>
         )}
       </div>
       <AssessmentCard
@@ -320,6 +356,7 @@ function Phase2({
         desc="Taken now, before remediation begins."
         assessments={assessments}
         resident={resident}
+        cohortCount={cohortCount}
         onAssess={onAssess}
       />
     </>
@@ -436,22 +473,33 @@ function Phase4({
   assessments,
   resident,
   claims,
+  cohortCount,
   onAssess,
 }: {
   assessments: Assessment[];
   resident: Resident;
   claims: Claim[];
+  cohortCount: number;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
 }) {
   const baseline = assessments.filter((a) => a.phase === "baseline");
   const followup = assessments.filter((a) => a.phase === "followup");
   const mean = (list: Assessment[]) => (list.length ? list.reduce((a, x) => a + x.score, 0) / list.length : null);
-  const b = mean(baseline);
-  const f = mean(followup);
+  const bothComplete = cohortCount > 0 && baseline.length >= cohortCount && followup.length >= cohortCount;
+  const b = bothComplete ? mean(baseline) : null;
+  const f = bothComplete ? mean(followup) : null;
 
   return (
     <>
-      <AssessmentCard phase="followup" label="Follow-up assessment" desc="Same format as the baseline, six months on." assessments={assessments} resident={resident} onAssess={onAssess} />
+      <AssessmentCard
+        phase="followup"
+        label="Follow-up assessment"
+        desc="Same format as the baseline, six months on."
+        assessments={assessments}
+        resident={resident}
+        cohortCount={cohortCount}
+        onAssess={onAssess}
+      />
       {b != null && f != null && (
         <div className={`rounded-2xl px-4 py-3.5 ${f >= b ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"}`}>
           <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Change since baseline</div>
@@ -498,6 +546,7 @@ function AssessmentCard({
   desc,
   assessments,
   resident,
+  cohortCount,
   onAssess,
 }: {
   phase: "baseline" | "followup";
@@ -505,12 +554,14 @@ function AssessmentCard({
   desc: string;
   assessments: Assessment[];
   resident: Resident;
+  cohortCount: number;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
 }) {
   const [score, setScore] = useState("");
   const phaseAssessments = assessments.filter((a) => a.phase === phase);
   const mine = phaseAssessments.find((a) => a.resident_id === resident.id);
-  const mean = phaseAssessments.length ? phaseAssessments.reduce((a, x) => a + x.score, 0) / phaseAssessments.length : null;
+  const everyoneIn = cohortCount > 0 && phaseAssessments.length >= cohortCount;
+  const mean = everyoneIn ? phaseAssessments.reduce((a, x) => a + x.score, 0) / phaseAssessments.length : null;
 
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -527,11 +578,21 @@ function AssessmentCard({
           {mine ? `${mine.score}%` : "Not taken"}
         </span>
       </div>
-      {mean != null && (
+      <p className="mt-2 text-[11.5px] leading-relaxed text-[#3F4C50]">
+        Enter your own score below · it's yours alone to see until every {resident.pgy} resident has entered
+        theirs, then the group average appears here instead of individual scores.
+      </p>
+      {mean != null ? (
         <div className="mt-3 flex items-center justify-between border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#232D30]">
-          <span>Group mean · {phaseAssessments.length} taken</span>
+          <span>Group average · all {phaseAssessments.length} in</span>
           <b className="font-mono">{mean.toFixed(1)}%</b>
         </div>
+      ) : (
+        phaseAssessments.length > 0 && (
+          <div className="mt-3 border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#3F4C50]">
+            {phaseAssessments.length} of {cohortCount || "?"} entered so far · average shows once everyone's in.
+          </div>
+        )
       )}
       {!mine && (
         <div className="mt-3 flex gap-2">
@@ -616,9 +677,9 @@ function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: ()
     <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">Begin Cycle 1</h3>
       <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
-        This starts the 6-month tracking cycle for {resident.pgy} — months 1–3 gather data, months 4–6 are for
-        claiming and delivering on the gaps found. Any resident can start it, but make sure you've discussed this
-        with the rest of {resident.pgy} and your program director first.
+        This starts the 6-month tracking cycle for {resident.pgy}: months 1–3 gather data, months 4–6 are for
+        claiming and delivering on the priority educational topics found. Any resident can start it, but make sure
+        you've discussed this with the rest of {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-3 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
@@ -649,7 +710,7 @@ function StartPhase2({ resident, onStarted }: { resident: Resident; onStarted: (
 
   return (
     <div className="rounded-2xl bg-[#FAEBD4] p-4 shadow-sm">
-      <h3 className="font-bold text-[#8F5205]">3 months are up — begin identification and baseline?</h3>
+      <h3 className="font-bold text-[#8F5205]">3 months are up. Begin identification and baseline?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8F5205]">
         This flags every topic scoring below {THRESHOLD} as a priority need and opens the baseline assessment. Any
         resident can start this, but talk it over with {resident.pgy} and your program director first.
@@ -685,9 +746,9 @@ function StartPhase3({ resident, onStarted }: { resident: Resident; onStarted: (
     <div className="rounded-2xl bg-[#DCEFEB] p-4 shadow-sm">
       <h3 className="font-bold text-[#064B45]">Ready to begin resident-led remediation?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#064B45]">
-        Once baseline scores are in and gaps are claimed above, move into months 4–6 — building and delivering on
-        what was claimed. Any resident can start this, but talk it over with {resident.pgy} and your program
-        director first.
+        Once baseline scores are in and priority educational topics are claimed above, move into months 4–6:
+        building and delivering on what was claimed. Any resident can start this, but talk it over with{" "}
+        {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
