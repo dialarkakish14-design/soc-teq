@@ -232,6 +232,14 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Score recorded.");
   }
 
+  async function editAssessment(id: string, score: number) {
+    if (!(score >= 0 && score <= 100)) return flash("Enter a score between 0 and 100.");
+    const { error } = await supabase.from("assessments").update({ score }).eq("id", id);
+    if (error) return flash(error.message);
+    setAssessments((prev) => prev.map((a) => (a.id === id ? { ...a, score } : a)));
+    flash("Score updated.");
+  }
+
   async function shareResource(title: string, source: string, url: string, takeaway: string, file: File | null) {
     if (!source.trim() || !takeaway.trim()) return flash("Add where it's from and what you took from it.");
 
@@ -369,6 +377,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
             onRelease={releaseClaim}
             onUpdateDetails={updateClaimDetails}
             onAssess={recordAssessment}
+            onEditAssess={editAssessment}
             onExport={exportPriorityCsv}
           />
           {allClaimed ? (
@@ -398,7 +407,14 @@ export function CycleTab({ resident }: { resident: Resident }) {
         />
       )}
       {phase3Started && phase === 4 && (
-        <Phase4 assessments={assessments} resident={resident} claims={claims} cohortCount={cohortCount} onAssess={recordAssessment} />
+        <Phase4
+          assessments={assessments}
+          resident={resident}
+          claims={claims}
+          cohortCount={cohortCount}
+          onAssess={recordAssessment}
+          onEditAssess={editAssessment}
+        />
       )}
 
       <PhaseCards phase={displayPhase} />
@@ -577,6 +593,7 @@ function Phase2({
   onRelease,
   onUpdateDetails,
   onAssess,
+  onEditAssess,
   onExport,
 }: {
   priority: PriorityTopic[];
@@ -588,6 +605,7 @@ function Phase2({
   onRelease: (id: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onEditAssess: (id: string, score: number) => void;
   onExport: () => void;
 }) {
   const [formats, setFormats] = useState<Record<string, string>>({});
@@ -654,10 +672,15 @@ function Phase2({
                   {claimsForTopic.length > 0 && (
                     <div className="mt-2 flex flex-col gap-1.5">
                       {claimsForTopic.map((c) => {
-                        const when = formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location);
+                        // Skip the "when" line for my own claim here — the
+                        // DeliveryDetailsEditor below already shows it
+                        // (plus lets me edit it), so repeating it here just
+                        // duplicates the same line right above it.
+                        const mine = c.resident_id === resident.id;
+                        const when = mine ? null : formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location);
                         return (
                           <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                            {c.resident_id === resident.id ? "You claimed this" : "Claimed"}: {c.format}
+                            {mine ? "You claimed this" : "Claimed"}: {c.format}
                             {when && <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
                           </div>
                         );
@@ -749,6 +772,7 @@ function Phase2({
         resident={resident}
         cohortCount={cohortCount}
         onAssess={onAssess}
+        onEditAssess={onEditAssess}
       />
     </>
   );
@@ -1137,12 +1161,14 @@ function Phase4({
   claims,
   cohortCount,
   onAssess,
+  onEditAssess,
 }: {
   assessments: Assessment[];
   resident: Resident;
   claims: Claim[];
   cohortCount: number;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onEditAssess: (id: string, score: number) => void;
 }) {
   const baseline = assessments.filter((a) => a.phase === "baseline");
   const followup = assessments.filter((a) => a.phase === "followup");
@@ -1161,6 +1187,7 @@ function Phase4({
         resident={resident}
         cohortCount={cohortCount}
         onAssess={onAssess}
+        onEditAssess={onEditAssess}
       />
       {b != null && f != null && (
         <div className={`rounded-2xl px-4 py-3.5 ${f >= b ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"}`}>
@@ -1210,6 +1237,7 @@ function AssessmentCard({
   resident,
   cohortCount,
   onAssess,
+  onEditAssess,
 }: {
   phase: "baseline" | "followup";
   label: string;
@@ -1218,8 +1246,10 @@ function AssessmentCard({
   resident: Resident;
   cohortCount: number;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onEditAssess: (id: string, score: number) => void;
 }) {
   const [score, setScore] = useState("");
+  const [editing, setEditing] = useState(false);
   const phaseAssessments = assessments.filter((a) => a.phase === phase);
   const mine = phaseAssessments.find((a) => a.resident_id === resident.id);
   const everyoneIn = cohortCount > 0 && phaseAssessments.length >= cohortCount;
@@ -1256,7 +1286,18 @@ function AssessmentCard({
           </div>
         )
       )}
-      {!mine && (
+      {mine && !editing && (
+        <button
+          onClick={() => {
+            setScore(String(mine.score));
+            setEditing(true);
+          }}
+          className="mt-2 text-xs font-semibold text-[#3F4C50]"
+        >
+          Edit score · typo, or the grade was corrected
+        </button>
+      )}
+      {(!mine || editing) && (
         <div className="mt-3 flex gap-2">
           <input
             type="number"
@@ -1268,11 +1309,26 @@ function AssessmentCard({
             className="input flex-1"
           />
           <button
-            onClick={() => onAssess(phase, +score)}
+            onClick={() => {
+              if (mine) {
+                onEditAssess(mine.id, +score);
+                setEditing(false);
+              } else {
+                onAssess(phase, +score);
+              }
+            }}
             className="whitespace-nowrap rounded-xl bg-[#0E7C72] px-4 py-3 text-sm font-bold text-white"
           >
-            Record score
+            {mine ? "Save" : "Record score"}
           </button>
+          {editing && (
+            <button
+              onClick={() => setEditing(false)}
+              className="whitespace-nowrap rounded-xl bg-[#EAEFEE] px-4 py-3 text-sm font-bold text-[#232D30]"
+            >
+              Cancel
+            </button>
+          )}
         </div>
       )}
     </div>

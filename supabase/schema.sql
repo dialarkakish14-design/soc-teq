@@ -844,6 +844,10 @@ create policy assessments_insert on assessments for insert
     and exists (select 1 from cycles c where c.id = assessments.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy())
   );
 
+create policy assessments_update on assessments for update
+  using (resident_id = auth.uid())
+  with check (resident_id = auth.uid());
+
 create policy resources_select on resources for select
   using (program_id = my_program_id() and pgy = my_pgy());
 
