@@ -632,8 +632,29 @@ alter table resources enable row level security;
 create policy cycles_select on cycles for select
   using (program_id = my_program_id() and pgy = my_pgy());
 
-create policy cycles_insert on cycles for insert
-  with check (program_id = my_program_id() and pgy = my_pgy());
+-- No cycles_insert policy: starting a cycle is a deliberate program-lead
+-- action, not something any resident can trigger by opening the tab — see
+-- start_remediation_cycle() below and patch_manual_cycle_start.sql.
+
+create or replace function start_remediation_cycle(p_pgy text)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_program_id uuid;
+  v_role text;
+begin
+  select program_id, role into v_program_id, v_role from residents where id = auth.uid();
+  if v_role <> 'program_lead' then
+    raise exception 'Only a program lead can start the remediation cycle';
+  end if;
+  if exists (select 1 from cycles where program_id = v_program_id and pgy = p_pgy) then
+    raise exception 'The remediation cycle has already started for this program year';
+  end if;
+  insert into cycles (program_id, pgy, start_date) values (v_program_id, p_pgy, current_date);
+end;
+$$;
+
+grant execute on function start_remediation_cycle(text) to authenticated;
 
 create policy claims_select on claims for select
   using (

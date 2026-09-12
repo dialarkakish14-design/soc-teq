@@ -36,7 +36,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const [loadError, setLoadError] = useState("");
 
   const load = useCallback(async () => {
-    let { data: cycleRow, error: selectError } = await supabase
+    const { data: cycleRow, error: selectError } = await supabase
       .from("cycles")
       .select("*")
       .eq("program_id", resident.program_id)
@@ -49,28 +49,6 @@ export function CycleTab({ resident }: { resident: Resident }) {
       return;
     }
 
-    if (!cycleRow) {
-      const { data: inserted, error: insertError } = await supabase
-        .from("cycles")
-        .insert({ program_id: resident.program_id, pgy: resident.pgy, start_date: new Date().toISOString().slice(0, 10) })
-        .select("*")
-        .single();
-      if (inserted) cycleRow = inserted;
-      else {
-        const { data: retry, error: retryError } = await supabase
-          .from("cycles")
-          .select("*")
-          .eq("program_id", resident.program_id)
-          .eq("pgy", resident.pgy)
-          .maybeSingle();
-        if (!retry && (retryError || insertError)) {
-          setLoadError((retryError ?? insertError)!.message);
-          setLoading(false);
-          return;
-        }
-        cycleRow = retry ?? null;
-      }
-    }
     setCycle(cycleRow as Cycle | null);
 
     if (cycleRow) {
@@ -106,8 +84,12 @@ export function CycleTab({ resident }: { resident: Resident }) {
     );
   }
 
-  if (loading || !cycle) {
+  if (loading) {
     return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">Loading…</div>;
+  }
+
+  if (!cycle) {
+    return <NoCycleYet resident={resident} onStarted={load} />;
   }
 
   const phase = cyclePhase(cycle.start_date);
@@ -607,6 +589,52 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
           <p className="mt-1.5 text-[12.5px] text-[#232D30]">{c.desc}</p>
         </div>
       ))}
+    </div>
+  );
+}
+
+function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function start() {
+    setBusy(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("start_remediation_cycle", { p_pgy: resident.pgy });
+    setBusy(false);
+    if (rpcError) return setError(rpcError.message);
+    onStarted();
+  }
+
+  if (resident.role !== "program_lead") {
+    return (
+      <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
+        <h3 className="font-bold text-[#0E1A1C]">Remediation cycle not started yet</h3>
+        <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
+          Your program lead hasn't started the 6-month remediation cycle for {resident.pgy} yet. Check back once
+          they have.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
+      <h3 className="font-bold text-[#0E1A1C]">Begin the remediation cycle</h3>
+      <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
+        This starts the 6-month remediation cycle for {resident.pgy} — months 1–3 gather data, months 4–6 are for
+        claiming and delivering on the gaps found. Once started, this can't be undone from here.
+      </p>
+      {error && (
+        <div className="mt-3 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
+      )}
+      <button
+        onClick={start}
+        disabled={busy}
+        className="mt-4 w-full rounded-2xl bg-[#0E7C72] py-3.5 text-sm font-bold text-white shadow-lg shadow-[#0E7C72]/25 disabled:opacity-60"
+      >
+        {busy ? "Starting…" : "Begin Phase 1"}
+      </button>
     </div>
   );
 }
