@@ -246,14 +246,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         </div>
       </div>
 
-      <div className="rounded-3xl bg-white p-4 shadow-sm">
-        <h3 className="font-bold text-[#0E1A1C]">Resident engagement</h3>
-        <div className="mt-2.5 flex text-center">
-          <Stat n={`${claimRate}%`} label="Claim rate" />
-          <Stat n={delivered.length} label="Sessions delivered" />
-          <Stat n={scholarly.length} label="Scholarly output" />
-        </div>
-      </div>
+      <EngagementBox claimRate={claimRate} delivered={delivered} scholarly={scholarly} />
 
       {phase === 1 && <Phase1 count={priority.length} />}
       {phase !== 1 && !phase2Started && <StartPhase2 resident={resident} onStarted={load} />}
@@ -313,6 +306,52 @@ function Stat({ n, label }: { n: string | number; label: string }) {
     <div className="flex-1">
       <h2 className="text-xl font-extrabold text-[#0E1A1C]">{n}</h2>
       <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">{label}</div>
+    </div>
+  );
+}
+
+// "Sessions delivered" and "Scholarly output" are tappable — they expand
+// to show which topics they actually are, since a bare count on its own
+// isn't very informative to a resident trying to see what the cohort has
+// actually built.
+function EngagementBox({ claimRate, delivered, scholarly }: { claimRate: number; delivered: Claim[]; scholarly: Claim[] }) {
+  const [expanded, setExpanded] = useState<"delivered" | "scholarly" | null>(null);
+  const list = expanded === "delivered" ? delivered : expanded === "scholarly" ? scholarly : null;
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <h3 className="font-bold text-[#0E1A1C]">Resident engagement</h3>
+      <div className="mt-2.5 flex text-center">
+        <Stat n={`${claimRate}%`} label="Claim rate" />
+        <button
+          onClick={() => setExpanded((e) => (e === "delivered" ? null : "delivered"))}
+          className={`flex-1 rounded-xl py-1 ${expanded === "delivered" ? "bg-[#F5F8F7]" : ""}`}
+        >
+          <h2 className="text-xl font-extrabold text-[#0E1A1C]">{delivered.length}</h2>
+          <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">Sessions delivered</div>
+        </button>
+        <button
+          onClick={() => setExpanded((e) => (e === "scholarly" ? null : "scholarly"))}
+          className={`flex-1 rounded-xl py-1 ${expanded === "scholarly" ? "bg-[#F5F8F7]" : ""}`}
+        >
+          <h2 className="text-xl font-extrabold text-[#0E1A1C]">{scholarly.length}</h2>
+          <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">Scholarly output</div>
+        </button>
+      </div>
+      {list && (
+        <div className="mt-3 border-t border-[#E2EAE9] pt-2">
+          {list.length === 0 ? (
+            <div className="py-2 text-center text-[12.5px] text-[#3F4C50]">Nothing here yet.</div>
+          ) : (
+            list.map((c) => (
+              <div key={c.id} className="flex items-center justify-between border-t border-[#E2EAE9] py-2 first:border-t-0">
+                <div className="text-[13px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+                <div className="text-[11px] text-[#3F4C50]">{c.format}</div>
+              </div>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
