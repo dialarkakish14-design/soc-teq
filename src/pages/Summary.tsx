@@ -1130,7 +1130,7 @@ function PeriodContent({
       {perItem && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Team item averages</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean across every resident's rating this period — not an individual score.</p>
+          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean across every resident's rating this period, not an individual score.</p>
           {Object.entries(perItem).map(([k, v]) => (
             <div key={k} className="mt-2.5">
               <div className="flex justify-between text-[12.5px] font-semibold">

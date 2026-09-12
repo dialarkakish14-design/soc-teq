@@ -722,15 +722,19 @@ function Phase3({
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
+  const [open, setOpen] = useState(true);
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
-      <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
-      {mine.length > 0 && (
+      <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
+        <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
+        <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+      </button>
+      {open && mine.length > 0 && (
         <p className="mt-1 text-[11px] leading-relaxed text-[#3F4C50]">
-          When you deliver, try to cover all 5 Likert items, not just whichever one flagged this topic.
+          When you deliver, consider all 5 Likert items and try to cover them all.
         </p>
       )}
-      {mine.length === 0 ? (
+      {!open ? null : mine.length === 0 ? (
         <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
       ) : (
         mine.map((c) => (
