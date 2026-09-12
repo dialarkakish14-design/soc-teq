@@ -602,12 +602,10 @@ create table claims (
   cycle_id uuid not null references cycles (id) on delete cascade,
   resident_id uuid not null references residents (id),
   topic_title text not null,
-  format text not null check (
-    format in (
-      'Peer-teaching module', 'SoC journal club', 'Digital repository case set',
-      'Grand rounds presentation', 'Mini-lecture / didactic session'
-    )
-  ),
+  -- Not restricted to an enum: the app offers a preset list (see
+  -- CLAIM_FORMATS in types.ts) plus an "Other" option where the resident
+  -- types their own — just requires non-empty text either way.
+  format text not null check (length(trim(format)) > 0),
   status text not null default 'planned' check (status in ('planned', 'delivered')),
   scholarly boolean not null default false,
   created_at timestamptz not null default now()

@@ -448,7 +448,7 @@ export function Today({
         {iAmLogger && open && captureLocked && (
           <div className="mt-4 rounded-2xl bg-white px-4 py-3.5 text-[12.5px] text-[#3F4C50] shadow-sm">
             Topic capture is closed for this cycle · Phase 1 (data gathering) has ended. Existing topics can still
-            be rated and marked for coverage.
+            be rated and marked for coverage. To review, go to Summary and open Cycle.
           </div>
         )}
         {iAmLogger && open && !captureLocked && (

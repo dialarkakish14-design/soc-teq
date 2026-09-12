@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { cycleMonth, cyclePhase, daysSinceStart, formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
+import { downloadCsv } from "../lib/csv";
 import {
   CLAIM_FORMATS,
+  RATING_DOMAINS,
   THRESHOLD,
   type Assessment,
-  type ClaimFormat,
   type Claim,
   type Cycle,
   type Rating,
@@ -18,6 +19,8 @@ interface PriorityTopic {
   overall: number;
   perItem: Record<string, number>;
 }
+
+const OTHER_FORMAT = "__other__";
 
 export function CycleTab({ resident }: { resident: Resident }) {
   const [cycle, setCycle] = useState<Cycle | null>(null);
@@ -37,12 +40,14 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const [loadError, setLoadError] = useState("");
 
   const load = useCallback(async () => {
-    const { data: cycleRow, error: selectError } = await supabase
-      .from("cycles")
-      .select("*")
-      .eq("program_id", resident.program_id)
-      .eq("pgy", resident.pgy)
-      .maybeSingle();
+    const [{ data: cycleRow, error: selectError }, { count: cohortCountResult }] = await Promise.all([
+      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+      supabase
+        .from("residents")
+        .select("id", { count: "exact", head: true })
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy),
+    ]);
 
     if (selectError) {
       setLoadError(selectError.message);
@@ -51,12 +56,6 @@ export function CycleTab({ resident }: { resident: Resident }) {
     }
 
     setCycle(cycleRow as Cycle | null);
-
-    const { count: cohortCountResult } = await supabase
-      .from("residents")
-      .select("id", { count: "exact", head: true })
-      .eq("program_id", resident.program_id)
-      .eq("pgy", resident.pgy);
     setCohortCount(cohortCountResult ?? 0);
 
     if (cycleRow) {
@@ -116,62 +115,100 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const phase3Started = !!cycle.phase3_started_at;
   const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
-  const responsiveness = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
+  const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
   const delivered = claims.filter((c) => c.status === "delivered");
   const scholarly = claims.filter((c) => c.scholarly);
 
-  async function claimTopic(title: string, format: ClaimFormat) {
-    const { error } = await supabase
+  // Every mutation below updates local state directly from the result
+  // instead of calling load() again — a full reload re-fetches every
+  // claim/assessment/resource plus every rated topic across the cycle,
+  // which made every single click (claim, mark delivered, ...) feel slow.
+  // We already know the result of our own write, so there's no reason to
+  // wait on a fresh round trip just to show it.
+
+  async function claimTopic(title: string, format: string) {
+    const { data, error } = await supabase
       .from("claims")
-      .insert({ cycle_id: cycle!.id, resident_id: resident.id, topic_title: title, format });
+      .insert({ cycle_id: cycle!.id, resident_id: resident.id, topic_title: title, format })
+      .select("*")
+      .single();
     if (error) return flash(error.message);
+    setClaims((prev) => [...prev, data as Claim]);
     flash("Claimed · you'll build this over months 4–6.");
-    await load();
   }
 
   async function releaseClaim(id: string) {
     const { error } = await supabase.from("claims").delete().eq("id", id);
     if (error) return flash(error.message);
+    setClaims((prev) => prev.filter((c) => c.id !== id));
     flash("Released.");
-    await load();
   }
 
   async function markDelivered(id: string) {
     const { error } = await supabase.from("claims").update({ status: "delivered" }).eq("id", id);
     if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, status: "delivered" } : c)));
     flash("Recorded as delivered.");
-    await load();
   }
 
   async function markScholarly(id: string) {
     const { error } = await supabase.from("claims").update({ scholarly: true }).eq("id", id);
     if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, scholarly: true } : c)));
     flash("Recorded as scholarly output.");
-    await load();
   }
 
   async function recordAssessment(assessPhase: "baseline" | "followup", score: number) {
     if (!(score >= 0 && score <= 100)) return flash("Enter a score between 0 and 100.");
-    const { error } = await supabase.from("assessments").insert({ cycle_id: cycle!.id, resident_id: resident.id, phase: assessPhase, score });
+    const { data, error } = await supabase
+      .from("assessments")
+      .insert({ cycle_id: cycle!.id, resident_id: resident.id, phase: assessPhase, score })
+      .select("*")
+      .single();
     if (error) return flash(error.message);
+    setAssessments((prev) => [...prev, data as Assessment]);
     flash("Score recorded.");
-    await load();
   }
 
   async function shareResource(title: string, source: string, url: string, takeaway: string) {
     if (!source.trim() || !takeaway.trim()) return flash("Add where it's from and what you took from it.");
-    const { error } = await supabase.from("resources").insert({
-      program_id: resident.program_id,
-      pgy: resident.pgy,
-      topic_title: title,
-      resident_id: resident.id,
-      source: source.trim(),
-      url: url.trim() || null,
-      takeaway: takeaway.trim(),
-    });
+    const { data, error } = await supabase
+      .from("resources")
+      .insert({
+        program_id: resident.program_id,
+        pgy: resident.pgy,
+        topic_title: title,
+        resident_id: resident.id,
+        source: source.trim(),
+        url: url.trim() || null,
+        takeaway: takeaway.trim(),
+      })
+      .select("*")
+      .single();
     if (error) return flash(error.message);
+    setResources((prev) => [data as Resource, ...prev]);
     flash("Shared with your group.");
-    await load();
+  }
+
+  function exportPriorityCsv() {
+    const header = ["topic", "overall_rm", ...RATING_DOMAINS.map((d) => d.key)];
+    const rows = priority.map((p) => [
+      p.title,
+      p.overall.toFixed(2),
+      ...RATING_DOMAINS.map((d) => (p.perItem[d.key] != null ? p.perItem[d.key].toFixed(2) : "")),
+    ]);
+    downloadCsv(`soc-teq_priority-topics_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
+      header,
+      ...rows,
+    ]);
+  }
+
+  function exportTopicNotesCsv(title: string) {
+    const rows = resources.filter((r) => r.topic_title === title).map((r) => [r.source, r.url ?? "", r.takeaway]);
+    downloadCsv(`soc-teq_notes_${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`, [
+      ["source", "url", "takeaway"],
+      ...rows,
+    ]);
   }
 
   return (
@@ -196,7 +233,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <h3 className="font-bold text-[#0E1A1C]">Resident engagement</h3>
         <div className="mt-2.5 flex text-center">
-          <Stat n={`${responsiveness}%`} label="Gap responsiveness" />
+          <Stat n={`${claimRate}%`} label="Claim rate" />
           <Stat n={delivered.length} label="Sessions delivered" />
           <Stat n={scholarly.length} label="Scholarly output" />
         </div>
@@ -208,19 +245,30 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <>
           <Phase2
             priority={priority}
-            claims={claims}
+            assessments={assessments}
             resident={resident}
             cohortCount={cohortCount}
-            onClaim={claimTopic}
-            onRelease={releaseClaim}
-            assessments={assessments}
             onAssess={recordAssessment}
+            onExport={exportPriorityCsv}
           />
           <StartPhase3 resident={resident} onStarted={load} />
         </>
       )}
       {phase3Started && phase !== 4 && (
-        <Phase3 mine={mine} resources={resources} onDeliver={markDelivered} onScholarly={markScholarly} onShare={shareResource} />
+        <Phase3
+          priority={priority}
+          claims={claims}
+          mine={mine}
+          resources={resources}
+          resident={resident}
+          cohortCount={cohortCount}
+          onClaim={claimTopic}
+          onRelease={releaseClaim}
+          onDeliver={markDelivered}
+          onScholarly={markScholarly}
+          onShare={shareResource}
+          onExportNotes={exportTopicNotesCsv}
+        />
       )}
       {phase3Started && phase === 4 && (
         <Phase4 assessments={assessments} resident={resident} claims={claims} cohortCount={cohortCount} onAssess={recordAssessment} />
@@ -258,95 +306,103 @@ function Phase1({ count }: { count: number }) {
   );
 }
 
+// Shown under a priority topic in both Phase 2 (read-only) and Phase 3
+// (claimable) — the per-domain (5-Likert) breakdown behind the overall
+// score, so residents can see exactly where a topic is weak before
+// deciding how to address it.
+function LikertBreakdown({ perItem }: { perItem: Record<string, number> }) {
+  const [open, setOpen] = useState(false);
+  const available = RATING_DOMAINS.filter((d) => perItem[d.key] != null);
+  if (!available.length) return null;
+  return (
+    <div className="mt-2">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        className="flex items-center gap-1 text-[11px] font-semibold text-[#3F4C50]"
+      >
+        {open ? "Hide" : "Show"} Likert breakdown
+        <span className={`text-sm font-extrabold transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+      </button>
+      {open && (
+        <div className="mt-1.5 flex flex-col gap-1 rounded-xl bg-[#F5F8F7] px-3 py-2">
+          {available.map((d) => (
+            <div key={d.key} className="flex items-center justify-between text-[11.5px] text-[#232D30]">
+              <span>{d.name}</span>
+              <b className={`font-mono ${isBelowThreshold(perItem[d.key]) ? "text-[#8F5205]" : "text-[#064B45]"}`}>
+                {perItem[d.key].toFixed(2)}
+              </b>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// Phase 2: identification + baseline only — display, not claiming. See
+// Phase3 for where claiming a topic and choosing a teaching format live.
 function Phase2({
   priority,
-  claims,
+  assessments,
   resident,
   cohortCount,
-  onClaim,
-  onRelease,
-  assessments,
   onAssess,
+  onExport,
 }: {
   priority: PriorityTopic[];
-  claims: Claim[];
+  assessments: Assessment[];
   resident: Resident;
   cohortCount: number;
-  onClaim: (title: string, format: ClaimFormat) => void;
-  onRelease: (id: string) => void;
-  assessments: Assessment[];
   onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onExport: () => void;
 }) {
-  const [formats, setFormats] = useState<Record<string, ClaimFormat | "">>({});
-  const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
-  const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
+  const [search, setSearch] = useState("");
+  const filtered = priority.filter((p) => p.title.toLowerCase().includes(search.trim().toLowerCase()));
+
   return (
     <>
       <div className="rounded-3xl bg-white p-4 shadow-sm">
-        <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
-        <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
+            <p className="mt-1 text-[12.5px] text-[#232D30]">
+              Everything scoring below {THRESHOLD}. Claiming one opens once resident-led remediation begins.
+            </p>
+          </div>
+          {priority.length > 0 && (
+            <button onClick={onExport} className="whitespace-nowrap rounded-xl bg-[#F5F8F7] px-3 py-2 text-xs font-bold text-[#064B45]">
+              Export (CSV)
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-[11px] text-[#3F4C50]">
+          The export includes every flagged topic's 5-Likert breakdown, so your program director can see exactly
+          what to prep questions on.
+        </p>
         {priority.length === 0 ? (
           <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
           <>
-            <div className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] font-semibold text-[#232D30]">
-              {priority.length} topic{priority.length === 1 ? "" : "s"} flagged · {claimedCount} claimed so far
-              {fairShare != null && cohortCount > 0 && (
-                <> · about {fairShare} each for {cohortCount} resident{cohortCount === 1 ? "" : "s"} to split it fairly</>
-              )}
-              .
-            </div>
-            {priority.map((p) => {
-              const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
-              const mine = claimsForTopic.find((c) => c.resident_id === resident.id);
-              return (
-                <div key={p.title} className="border-t border-[#E2EAE9] py-3">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                      <div className="text-xs text-[#3F4C50]">
-                        {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
-                      </div>
-                    </div>
-                    <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
-                      {p.overall.toFixed(2)}
-                    </span>
-                  </div>
-                  {mine ? (
-                    <>
-                      <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                        You claimed this: {mine.format}.
-                      </div>
-                      <button onClick={() => onRelease(mine.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-                        Release this topic
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <select
-                        value={formats[p.title] ?? ""}
-                        onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value as ClaimFormat }))}
-                        className="input mt-2"
-                      >
-                        <option value="" disabled>
-                          Choose how you'll teach it…
-                        </option>
-                        {CLAIM_FORMATS.map((f) => (
-                          <option key={f}>{f}</option>
-                        ))}
-                      </select>
-                      <button
-                        onClick={() => onClaim(p.title, formats[p.title] as ClaimFormat)}
-                        disabled={!formats[p.title]}
-                        className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                      >
-                        Claim this topic
-                      </button>
-                    </>
-                  )}
+            {priority.length > 5 && (
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search topics…"
+                className="input mt-3"
+              />
+            )}
+            {filtered.map((p) => (
+              <div key={p.title} className="border-t border-[#E2EAE9] py-3">
+                <div className="flex items-center justify-between">
+                  <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
+                  <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
+                    {p.overall.toFixed(2)}
+                  </span>
                 </div>
-              );
-            })}
+                <LikertBreakdown perItem={p.perItem} />
+              </div>
+            ))}
           </>
         )}
       </div>
@@ -363,58 +419,191 @@ function Phase2({
   );
 }
 
+// Phase 3: resident-led remediation — claiming a priority topic and
+// choosing a teaching format now live here, not in Phase 2, alongside
+// tracking what was committed to (delivered, scholarly output, shared
+// readings).
 function Phase3({
+  priority,
+  claims,
   mine,
   resources,
+  resident,
+  cohortCount,
+  onClaim,
+  onRelease,
   onDeliver,
   onScholarly,
   onShare,
+  onExportNotes,
 }: {
+  priority: PriorityTopic[];
+  claims: Claim[];
   mine: Claim[];
   resources: Resource[];
+  resident: Resident;
+  cohortCount: number;
+  onClaim: (title: string, format: string) => void;
+  onRelease: (id: string) => void;
   onDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onExportNotes: (title: string) => void;
 }) {
+  const [formats, setFormats] = useState<Record<string, string>>({});
+  const [customFormats, setCustomFormats] = useState<Record<string, string>>({});
+  const [search, setSearch] = useState("");
+  const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
+  const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
+  const filtered = priority.filter((p) => p.title.toLowerCase().includes(search.trim().toLowerCase()));
+
   return (
-    <div className="rounded-3xl bg-white p-4 shadow-sm">
-      <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
-      {mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
-      ) : (
-        mine.map((c) => (
-          <div key={c.id} className="border-t border-[#E2EAE9] py-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#3F4C50]">{c.format}</div>
+    <>
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
+        <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
+        {priority.length === 0 ? (
+          <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
+        ) : (
+          <>
+            <div className="mt-2.5 rounded-xl bg-[#F5F8F7] px-3 py-2.5 text-[12px] font-semibold text-[#232D30]">
+              {priority.length} topic{priority.length === 1 ? "" : "s"} flagged · {claimedCount} claimed so far
+              {fairShare != null && cohortCount > 0 && (
+                <> · about {fairShare} each for {cohortCount} resident{cohortCount === 1 ? "" : "s"} to split it fairly</>
+              )}
+              .
+            </div>
+            {priority.length > 5 && (
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search topics…"
+                className="input mt-2.5"
+              />
+            )}
+            {filtered.map((p) => {
+              const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
+              const mineClaim = claimsForTopic.find((c) => c.resident_id === resident.id);
+              const chosen = formats[p.title] ?? "";
+              return (
+                <div key={p.title} className="border-t border-[#E2EAE9] py-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
+                      <div className="text-xs text-[#3F4C50]">
+                        {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
+                      </div>
+                    </div>
+                    <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
+                      {p.overall.toFixed(2)}
+                    </span>
+                  </div>
+                  <LikertBreakdown perItem={p.perItem} />
+                  {mineClaim ? (
+                    <>
+                      <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
+                        You claimed this: {mineClaim.format}.
+                      </div>
+                      <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
+                        Release this topic
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <select
+                        value={chosen}
+                        onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value }))}
+                        className="input mt-2"
+                      >
+                        <option value="" disabled>
+                          Choose how you'll teach it…
+                        </option>
+                        {CLAIM_FORMATS.map((f) => (
+                          <option key={f}>{f}</option>
+                        ))}
+                        <option value={OTHER_FORMAT}>Other…</option>
+                      </select>
+                      {chosen === OTHER_FORMAT && (
+                        <input
+                          value={customFormats[p.title] ?? ""}
+                          onChange={(e) => setCustomFormats((c) => ({ ...c, [p.title]: e.target.value }))}
+                          placeholder="Describe how you'll teach it"
+                          className="input mt-2"
+                        />
+                      )}
+                      <button
+                        onClick={() => onClaim(p.title, chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen)}
+                        disabled={!chosen || (chosen === OTHER_FORMAT && !(customFormats[p.title] ?? "").trim())}
+                        className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                      >
+                        Claim this topic
+                      </button>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </>
+        )}
+      </div>
+
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
+        {mine.length === 0 ? (
+          <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
+        ) : (
+          mine.map((c) => (
+            <div key={c.id} className="border-t border-[#E2EAE9] py-3">
+              <div className="flex items-center justify-between">
+                <div>
+                  <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+                  <div className="text-xs text-[#3F4C50]">{c.format}</div>
+                </div>
+                <span
+                  className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
+                    c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
+                  }`}
+                >
+                  {c.status === "delivered" ? "Delivered" : "Planned"}
+                </span>
               </div>
-              <span
-                className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
-                }`}
-              >
-                {c.status === "delivered" ? "Delivered" : "Planned"}
-              </span>
-            </div>
-            <div className="mt-2 flex gap-2">
-              {c.status !== "delivered" && (
-                <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
-                  Mark delivered
-                </button>
-              )}
+              <div className="mt-2 flex flex-wrap gap-2">
+                {c.status !== "delivered" && (
+                  <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
+                    Mark delivered
+                  </button>
+                )}
+                {c.status === "delivered" && !c.scholarly && (
+                  <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
+                    Became scholarly work
+                  </button>
+                )}
+                {c.scholarly && <div className="text-xs text-[#3D6B49]">Carried into formal scholarly work.</div>}
+                {resources.some((r) => r.topic_title === c.topic_title) && (
+                  <button
+                    onClick={() => onExportNotes(c.topic_title)}
+                    className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]"
+                  >
+                    Export notes (CSV)
+                  </button>
+                )}
+              </div>
               {c.status === "delivered" && !c.scholarly && (
-                <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
-                  Became scholarly work
-                </button>
+                <p className="mt-1.5 text-[11px] leading-relaxed text-[#3F4C50]">
+                  Mark this if it led to something beyond the teaching itself, like a poster, a conference
+                  presentation, or a publication.
+                </p>
               )}
-              {c.scholarly && <div className="text-xs text-[#3D6B49]">Carried into formal scholarly work.</div>}
+              <ResourceShare
+                title={c.topic_title}
+                resources={resources.filter((r) => r.topic_title === c.topic_title)}
+                onShare={onShare}
+              />
             </div>
-            <ResourceShare title={c.topic_title} resources={resources.filter((r) => r.topic_title === c.topic_title)} onShare={onShare} />
-          </div>
-        ))
-      )}
-    </div>
+          ))
+        )}
+      </div>
+    </>
   );
 }
 
@@ -435,9 +624,11 @@ function ResourceShare({
   return (
     <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
       <div className="flex items-center justify-between">
-        <span className="text-xs font-semibold text-[#232D30]">{resources.length} shared reading on this condition</span>
+        <span className="text-xs font-semibold text-[#232D30]">
+          {resources.length} shared reading{resources.length === 1 ? "" : "s"} on this condition
+        </span>
         <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
-          {open ? "Cancel" : "Share a paper"}
+          {open ? "Done" : resources.length ? "Share another" : "Share a paper"}
         </button>
       </div>
       {resources.map((r) => (
@@ -457,11 +648,10 @@ function ResourceShare({
               setSource("");
               setUrl("");
               setTakeaway("");
-              setOpen(false);
             }}
             className="rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white"
           >
-            Add to this condition
+            {resources.length ? "Add another paper" : "Add to this condition"}
           </button>
         </div>
       )}
@@ -626,7 +816,12 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
       months: "end of 3",
       desc: `Topics averaging below ${THRESHOLD} are flagged as priority educational needs, and a baseline knowledge assessment is taken.`,
     },
-    { n: 3, title: "Resident-led remediation", months: "4–6", desc: "Claimed gaps become peer-teaching modules, journal clubs or case repositories." },
+    {
+      n: 3,
+      title: "Resident-led remediation",
+      months: "4–6",
+      desc: "Claim priority educational topics and turn them into peer-teaching modules, journal clubs or case repositories.",
+    },
     { n: 4, title: "Impact evaluation", months: "end of 6", desc: "A follow-up assessment checks whether the learning held." },
   ];
   return (
@@ -746,9 +941,9 @@ function StartPhase3({ resident, onStarted }: { resident: Resident; onStarted: (
     <div className="rounded-2xl bg-[#DCEFEB] p-4 shadow-sm">
       <h3 className="font-bold text-[#064B45]">Ready to begin resident-led remediation?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#064B45]">
-        Once baseline scores are in and priority educational topics are claimed above, move into months 4–6:
-        building and delivering on what was claimed. Any resident can start this, but talk it over with{" "}
-        {resident.pgy} and your program director first.
+        Once baseline scores are in, move into months 4–6 to claim priority educational topics and start building
+        on them. Any resident can start this, but talk it over with {resident.pgy} and your program director
+        first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>

@@ -175,7 +175,9 @@ export interface Claim {
   cycle_id: string;
   resident_id: string;
   topic_title: string;
-  format: ClaimFormat;
+  // One of CLAIM_FORMATS, or a resident's own free text when they chose
+  // "Other" — not restricted to the preset list at the database level.
+  format: string;
   status: "planned" | "delivered";
   scholarly: boolean;
 }

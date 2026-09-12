@@ -1043,9 +1043,9 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
       </div>
 
       <p className="mt-3.5 rounded-xl bg-[#F0F5F4] px-3 py-2.5 text-[11.5px] leading-relaxed text-[#232D30]">
-        This is visible only within your PGY year — never to faculty or a program lead. It might feel like one
-        more thing to check, but think of it as a mirror on your own training: closing these gaps benefits you
-        directly, and you're the one with the power to do it.
+        This is visible only within your PGY year, never to faculty. It might feel like one more thing to check,
+        but think of it as a mirror on your own training: closing these gaps benefits you directly, and you're the
+        one with the power to do it.
       </p>
     </div>
   );
