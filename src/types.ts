@@ -185,6 +185,9 @@ export interface Claim {
   deliver_time: string | null;
   deliver_location: string | null;
   format_edited: boolean;
+  // Flips true the first time a resident reschedules after missing a
+  // session — a one-time redo, not unlimited retries.
+  rescheduled: boolean;
 }
 
 export interface Assessment {

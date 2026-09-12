@@ -618,6 +618,10 @@ create table claims (
   -- change of plans) — this flips true on that one edit and the option
   -- disappears from then on.
   format_edited boolean not null default false,
+  -- After a claim is missed, the resident gets exactly one reschedule to
+  -- try again — this flips true the first time that happens, after which
+  -- the schedule stays locked even if missed again.
+  rescheduled boolean not null default false,
   created_at timestamptz not null default now()
 );
 

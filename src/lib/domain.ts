@@ -107,11 +107,14 @@ export function claimDeliveryState(status: "planned" | "delivered", deliverDate:
 // Day/time/location can't be changed from 6 days before the scheduled
 // date through 3 days after it (the same grace window above) — close
 // enough that changing it would disrupt colleagues counting on it. Once a
-// session is actually missed, this reopens so the resident can reschedule.
-export function claimScheduleLocked(deliverDate: string | null): boolean {
+// session is actually missed, this reopens once, so the resident gets a
+// single reschedule to try again — if `rescheduled` is already true (that
+// one redo has been used), it stays locked even after missing again.
+export function claimScheduleLocked(deliverDate: string | null, rescheduled: boolean): boolean {
   if (!deliverDate) return false;
   const daysPast = daysSinceStart(deliverDate);
-  return daysPast >= -6 && daysPast <= 3;
+  if (daysPast > 3) return rescheduled;
+  return daysPast >= -6;
 }
 
 export function cyclePhase(startDate: string): 1 | 2 | 3 | 4 {

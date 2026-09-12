@@ -192,12 +192,19 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Claimed · you'll build this over months 4–6.");
   }
 
-  async function updateClaimDetails(id: string, deliverDate: string, deliverTime: string, deliverLocation: string) {
-    const details = {
+  async function updateClaimDetails(
+    id: string,
+    deliverDate: string,
+    deliverTime: string,
+    deliverLocation: string,
+    markRescheduled: boolean,
+  ) {
+    const details: Partial<Claim> = {
       deliver_date: deliverDate || null,
       deliver_time: deliverTime || null,
       deliver_location: deliverLocation.trim() || null,
     };
+    if (markRescheduled) details.rescheduled = true;
     const { error } = await supabase.from("claims").update(details).eq("id", id);
     if (error) return flash(error.message);
     setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, ...details } : c)));
@@ -643,7 +650,7 @@ function Phase2({
   cohortCount: number;
   onClaim: (title: string, format: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
   onRelease: (id: string) => void;
-  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
   onEditAssess: (id: string, score: number) => void;
   onExport: () => void;
@@ -912,7 +919,7 @@ function Phase3({
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
-  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onEditFormat: (id: string, format: string) => void;
 }) {
   const [open, setOpen] = useState(true);
@@ -1151,7 +1158,7 @@ function DeliveryDetailsEditor({
   claims: Claim[];
   codeById: Record<string, string>;
   showReminder?: boolean;
-  onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
 }) {
   const [editing, setEditing] = useState(false);
   const [date, setDate] = useState(claim.deliver_date ?? "");
@@ -1176,7 +1183,8 @@ function DeliveryDetailsEditor({
         <div className="flex gap-2">
           <button
             onClick={() => {
-              onSave(claim.id, date, time, location);
+              const wasMissed = claimDeliveryState(claim.status, claim.deliver_date) === "missed" && !claim.rescheduled;
+              onSave(claim.id, date, time, location, wasMissed);
               setEditing(false);
             }}
             className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
@@ -1192,14 +1200,16 @@ function DeliveryDetailsEditor({
   }
 
   const when = formatWhenWhere(claim.deliver_date, claim.deliver_time, claim.deliver_location);
-  const locked = claimScheduleLocked(claim.deliver_date);
+  const locked = claimScheduleLocked(claim.deliver_date, claim.rescheduled);
+  const usedUpReschedule = locked && claimDeliveryState(claim.status, claim.deliver_date) === "missed";
   return (
     <div className="mt-1.5">
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
       {locked ? (
         <div className="mt-0.5 text-[10.5px] text-[#343E42]">
-          Can't be changed within 6 days of the scheduled date, to help you stay committed and keep things steady
-          for your colleagues' plans.
+          {usedUpReschedule
+            ? "You've already used your one reschedule for this topic. Talk to your program director about how to proceed."
+            : "Can't be changed within 6 days of the scheduled date, to help you stay committed and keep things steady for your colleagues' plans."}
         </div>
       ) : (
         <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
@@ -1251,7 +1261,7 @@ function CommittedTopicRow({
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
-  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onEditFormat: (id: string, format: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
@@ -1316,8 +1326,9 @@ function CommittedTopicRow({
         <div className={forceOpen ? "" : "mt-2.5 border-t border-[#E2EAE9] pt-2.5"}>
           {isMine && deliveryState === "missed" && (
             <div className="mb-1.5 rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11.5px] font-semibold leading-relaxed text-[#93393E]">
-              This session's window closed without being marked delivered. Reschedule a new day/time below to try
-              again.
+              {c.rescheduled
+                ? "This session's window closed again after your one reschedule. Talk to your program director about how to proceed."
+                : "This session's window closed without being marked delivered. You get one reschedule: pick a new day/time below to try again."}
             </div>
           )}
           {isMine && deliveryState === "pending" && (
