@@ -156,7 +156,9 @@ export interface Cycle {
   program_id: string;
   pgy: Pgy;
   start_date: string;
-  remediation_started_at: string | null;
+  // Set only when a resident explicitly starts each phase — see CycleTab.tsx.
+  phase2_started_at: string | null;
+  phase3_started_at: string | null;
 }
 
 export const CLAIM_FORMATS = ["Peer-teaching module", "SoC journal club", "Digital repository case set"] as const;

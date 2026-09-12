@@ -588,11 +588,12 @@ create table cycles (
   program_id uuid not null references programs (id),
   pgy text not null check (pgy in ('PGY-2', 'PGY-3', 'PGY-4')),
   start_date date not null,
-  -- Null until someone explicitly starts the remediation phase (months
-  -- 4-6) once 3 months have passed — see start_remediation_phase() below.
-  -- Kept separate from start_date so that transition is always a
-  -- deliberate, visible action instead of a silent date-based flip.
-  remediation_started_at timestamptz,
+  -- Each null until a resident explicitly starts that phase — see
+  -- start_phase2()/start_phase3() below. Kept separate from start_date and
+  -- from each other so every phase transition is a deliberate, visible
+  -- action instead of a silent date-based (or all-at-once) flip.
+  phase2_started_at timestamptz,
+  phase3_started_at timestamptz,
   unique (program_id, pgy)
 );
 
@@ -664,7 +665,10 @@ $$;
 
 grant execute on function start_cycle(text) to authenticated;
 
-create or replace function start_remediation_phase(p_pgy text)
+-- Phase 2: "Identification and baseline" — flags every topic scoring
+-- below threshold as a priority need and opens the baseline assessment.
+-- Date-gated (3 months must have actually passed) as well as click-gated.
+create or replace function start_phase2(p_pgy text)
 returns void
 language plpgsql security definer set search_path = public as $$
 declare
@@ -680,18 +684,48 @@ begin
   if v_cycle.id is null then
     raise exception 'Cycle 1 hasn''t started yet';
   end if;
-  if v_cycle.remediation_started_at is not null then
-    raise exception 'The remediation phase has already started';
+  if v_cycle.phase2_started_at is not null then
+    raise exception 'Identification and baseline has already started';
   end if;
   if v_cycle.start_date + 90 > current_date then
-    raise exception 'The remediation phase can''t start until 3 months into Cycle 1';
+    raise exception 'Identification and baseline can''t start until 3 months into Cycle 1';
   end if;
 
-  update cycles set remediation_started_at = now() where id = v_cycle.id;
+  update cycles set phase2_started_at = now() where id = v_cycle.id;
 end;
 $$;
 
-grant execute on function start_remediation_phase(text) to authenticated;
+grant execute on function start_phase2(text) to authenticated;
+
+-- Phase 3: "Resident-led remediation" — building/delivering on claimed
+-- gaps. Only requires phase 2 to have started first; not separately
+-- date-gated, since the cohort decides for itself when baseline and
+-- claiming are actually done, not the calendar.
+create or replace function start_phase3(p_pgy text)
+returns void
+language plpgsql security definer set search_path = public as $$
+declare
+  v_program_id uuid;
+  v_cycle cycles%rowtype;
+begin
+  v_program_id := my_program_id();
+  if v_program_id is null or p_pgy <> my_pgy() then
+    raise exception 'Not authorized for this program year';
+  end if;
+
+  select * into v_cycle from cycles where program_id = v_program_id and pgy = p_pgy;
+  if v_cycle.id is null or v_cycle.phase2_started_at is null then
+    raise exception 'Identification and baseline hasn''t started yet';
+  end if;
+  if v_cycle.phase3_started_at is not null then
+    raise exception 'Resident-led remediation has already started';
+  end if;
+
+  update cycles set phase3_started_at = now() where id = v_cycle.id;
+end;
+$$;
+
+grant execute on function start_phase3(text) to authenticated;
 
 create policy claims_select on claims for select
   using (

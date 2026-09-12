@@ -94,7 +94,8 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
   const phase = cyclePhase(cycle.start_date);
   const month = cycleMonth(cycle.start_date);
-  const remediationStarted = !!cycle.remediation_started_at;
+  const phase2Started = !!cycle.phase2_started_at;
+  const phase3Started = !!cycle.phase3_started_at;
   const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const responsiveness = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
@@ -184,22 +185,25 @@ export function CycleTab({ resident }: { resident: Resident }) {
       </div>
 
       {phase === 1 && <Phase1 count={priority.length} />}
-      {phase !== 1 && !remediationStarted && <StartRemediationPhase resident={resident} onStarted={load} />}
-      {phase === 2 && remediationStarted && (
-        <Phase2
-          priority={priority}
-          claims={claims}
-          resident={resident}
-          onClaim={claimTopic}
-          onRelease={releaseClaim}
-          assessments={assessments}
-          onAssess={recordAssessment}
-        />
+      {phase !== 1 && !phase2Started && <StartPhase2 resident={resident} onStarted={load} />}
+      {phase2Started && !phase3Started && (
+        <>
+          <Phase2
+            priority={priority}
+            claims={claims}
+            resident={resident}
+            onClaim={claimTopic}
+            onRelease={releaseClaim}
+            assessments={assessments}
+            onAssess={recordAssessment}
+          />
+          <StartPhase3 resident={resident} onStarted={load} />
+        </>
       )}
-      {phase === 3 && remediationStarted && (
+      {phase3Started && phase !== 4 && (
         <Phase3 mine={mine} resources={resources} onDeliver={markDelivered} onScholarly={markScholarly} onShare={shareResource} />
       )}
-      {phase === 4 && remediationStarted && (
+      {phase3Started && phase === 4 && (
         <Phase4 assessments={assessments} resident={resident} claims={claims} onAssess={recordAssessment} />
       )}
 
@@ -630,14 +634,14 @@ function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: ()
   );
 }
 
-function StartRemediationPhase({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
+function StartPhase2({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
 
   async function start() {
     setBusy(true);
     setError("");
-    const { error: rpcError } = await supabase.rpc("start_remediation_phase", { p_pgy: resident.pgy });
+    const { error: rpcError } = await supabase.rpc("start_phase2", { p_pgy: resident.pgy });
     setBusy(false);
     if (rpcError) return setError(rpcError.message);
     onStarted();
@@ -645,10 +649,10 @@ function StartRemediationPhase({ resident, onStarted }: { resident: Resident; on
 
   return (
     <div className="rounded-2xl bg-[#FAEBD4] p-4 shadow-sm">
-      <h3 className="font-bold text-[#8F5205]">3 months are up — ready for the remediation phase?</h3>
+      <h3 className="font-bold text-[#8F5205]">3 months are up — begin identification and baseline?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8F5205]">
-        Months 4–6 are for claiming and delivering on the gaps found so far. Any resident can start this, but talk
-        it over with {resident.pgy} and your program director first.
+        This flags every topic scoring below {THRESHOLD} as a priority need and opens the baseline assessment. Any
+        resident can start this, but talk it over with {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
@@ -658,7 +662,42 @@ function StartRemediationPhase({ resident, onStarted }: { resident: Resident; on
         disabled={busy}
         className="mt-3 w-full rounded-2xl bg-[#8F5205] py-3 text-sm font-bold text-white disabled:opacity-60"
       >
-        {busy ? "Starting…" : "Start remediation cycle"}
+        {busy ? "Starting…" : "Begin identification and baseline"}
+      </button>
+    </div>
+  );
+}
+
+function StartPhase3({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function start() {
+    setBusy(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("start_phase3", { p_pgy: resident.pgy });
+    setBusy(false);
+    if (rpcError) return setError(rpcError.message);
+    onStarted();
+  }
+
+  return (
+    <div className="rounded-2xl bg-[#DCEFEB] p-4 shadow-sm">
+      <h3 className="font-bold text-[#064B45]">Ready to begin resident-led remediation?</h3>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#064B45]">
+        Once baseline scores are in and gaps are claimed above, move into months 4–6 — building and delivering on
+        what was claimed. Any resident can start this, but talk it over with {resident.pgy} and your program
+        director first.
+      </p>
+      {error && (
+        <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
+      )}
+      <button
+        onClick={start}
+        disabled={busy}
+        className="mt-3 w-full rounded-2xl bg-[#0E7C72] py-3 text-sm font-bold text-white disabled:opacity-60"
+      >
+        {busy ? "Starting…" : "Begin resident-led remediation"}
       </button>
     </div>
   );
