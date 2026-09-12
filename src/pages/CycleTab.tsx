@@ -39,57 +39,44 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
   const [loadError, setLoadError] = useState("");
 
+  // Everything the tab needs comes back from one function call instead of
+  // several sequential round trips — see get_cycle_dashboard() in
+  // schema.sql / patch_cycle_dashboard_rpc.sql. That used to be the real
+  // source of the Cycle tab feeling slow to open: not any one query being
+  // heavy, just the fixed latency of each round trip adding up.
   const load = useCallback(async () => {
-    const [{ data: cycleRow, error: selectError }, { count: cohortCountResult }] = await Promise.all([
-      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
-      supabase
-        .from("residents")
-        .select("id", { count: "exact", head: true })
-        .eq("program_id", resident.program_id)
-        .eq("pgy", resident.pgy),
-    ]);
+    const { data, error } = await supabase.rpc("get_cycle_dashboard", { p_pgy: resident.pgy });
 
-    if (selectError) {
-      setLoadError(selectError.message);
+    if (error) {
+      setLoadError(error.message);
       setLoading(false);
       return;
     }
 
-    setCycle(cycleRow as Cycle | null);
-    setCohortCount(cohortCountResult ?? 0);
+    const result = data as {
+      cycle: Cycle | null;
+      cohort_count: number;
+      claims: Claim[];
+      assessments: Assessment[];
+      resources: Resource[];
+      priority_topics: { title: string; ratings: Pick<Rating, "depth" | "clarity" | "nuance" | "mgmt" | "conf">[] }[];
+    };
 
-    if (cycleRow) {
-      const [{ data: claimRows }, { data: assessRows }, { data: resourceRows }, { data: topicRows }] = await Promise.all([
-        supabase.from("claims").select("*").eq("cycle_id", cycleRow.id),
-        supabase.from("assessments").select("*").eq("cycle_id", cycleRow.id),
-        supabase.from("resources").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).order("created_at", { ascending: false }),
-        supabase.from("topics").select("title, ratings(*)").eq("soc_covered", true),
-      ]);
-      setClaims((claimRows as Claim[] | null) ?? []);
-      setAssessments((assessRows as Assessment[] | null) ?? []);
-      setResources((resourceRows as Resource[] | null) ?? []);
+    setCycle(result.cycle);
+    setCohortCount(result.cohort_count ?? 0);
+    setClaims(result.claims ?? []);
+    setAssessments(result.assessments ?? []);
+    setResources(result.resources ?? []);
 
-      // Grouped by title, not by individual topic row — the same subject
-      // (e.g. "Melanoma") can be logged across several sessions, and it's
-      // one combined educational need to claim, not one entry per
-      // occurrence. Grouping also avoids duplicate React keys below, which
-      // previously caused claiming one instance to visually affect another
-      // same-titled entry.
-      const rows = (topicRows as { title: string; ratings: Rating[] }[] | null) ?? [];
-      const ratingsByTitle = new Map<string, Rating[]>();
-      for (const r of rows) {
-        ratingsByTitle.set(r.title, (ratingsByTitle.get(r.title) ?? []).concat(r.ratings));
-      }
-      const gaps: PriorityTopic[] = [];
-      for (const [title, ratings] of ratingsByTitle) {
-        const sc = scoreTopic(ratings);
-        if (sc && isBelowThreshold(sc.overall)) gaps.push({ title, overall: sc.overall, perItem: sc.perItem });
-      }
-      setPriority(gaps);
+    const gaps: PriorityTopic[] = [];
+    for (const t of result.priority_topics ?? []) {
+      const sc = scoreTopic(t.ratings as Rating[]);
+      if (sc && isBelowThreshold(sc.overall)) gaps.push({ title: t.title, overall: sc.overall, perItem: sc.perItem });
     }
+    setPriority(gaps);
 
     setLoading(false);
-  }, [resident.program_id, resident.pgy]);
+  }, [resident.pgy]);
 
   useEffect(() => {
     load();
@@ -204,9 +191,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   function exportTopicNotesCsv(title: string) {
-    const rows = resources.filter((r) => r.topic_title === title).map((r) => [r.source, r.url ?? "", r.takeaway]);
+    const rows = resources.filter((r) => r.topic_title === title).map((r) => [title, r.source, r.url ?? "", r.takeaway]);
     downloadCsv(`soc-teq_notes_${title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}.csv`, [
-      ["source", "url", "takeaway"],
+      ["topic", "source", "url", "takeaway"],
       ...rows,
     ]);
   }
@@ -340,6 +327,54 @@ function LikertBreakdown({ perItem }: { perItem: Record<string, number> }) {
   );
 }
 
+// A typeahead over the priority list itself — same pattern as the topic
+// search in Today.tsx's Quick Capture — so residents can see and pick from
+// what's actually on the list instead of having to know the exact title.
+function TopicSearchInput({
+  topics,
+  value,
+  onChange,
+}: {
+  topics: string[];
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const q = value.trim().toLowerCase();
+  const suggestions = (q ? topics.filter((t) => t.toLowerCase().includes(q)) : topics).slice(0, 8);
+  return (
+    <div className="relative mt-3">
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setShowSuggestions(true)}
+        onBlur={() => setTimeout(() => setShowSuggestions(false), 120)}
+        placeholder="Search topics…"
+        autoComplete="off"
+        className="input"
+      />
+      {showSuggestions && suggestions.length > 0 && (
+        <div className="absolute z-10 mt-1 w-full overflow-hidden rounded-2xl bg-white shadow-lg">
+          {suggestions.map((t) => (
+            <button
+              key={t}
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={() => {
+                onChange(t);
+                setShowSuggestions(false);
+              }}
+              className="block w-full px-3 py-2.5 text-left text-[13px] text-[#232D30] hover:bg-[#F5F8F7]"
+            >
+              {t}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Phase 2: identification + baseline only — display, not claiming. See
 // Phase3 for where claiming a topic and choosing a teaching format live.
 function Phase2({
@@ -385,12 +420,7 @@ function Phase2({
         ) : (
           <>
             {priority.length > 5 && (
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search topics…"
-                className="input mt-3"
-              />
+              <TopicSearchInput topics={priority.map((p) => p.title)} value={search} onChange={setSearch} />
             )}
             {filtered.map((p) => (
               <div key={p.title} className="border-t border-[#E2EAE9] py-3">
@@ -474,12 +504,7 @@ function Phase3({
               .
             </div>
             {priority.length > 5 && (
-              <input
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search topics…"
-                className="input mt-2.5"
-              />
+              <TopicSearchInput topics={priority.map((p) => p.title)} value={search} onChange={setSearch} />
             )}
             {filtered.map((p) => {
               const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
