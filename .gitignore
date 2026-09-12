@@ -19,6 +19,7 @@ dist-ssr
 SMTP key.pdf
 *.pdf
 namecheap backup codes.docx
+API access.docx
 
 # Editor directories and files
 .vscode/*

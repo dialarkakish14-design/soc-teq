@@ -782,6 +782,24 @@ create policy private_notes_update on private_notes for update
 create policy private_notes_delete on private_notes for delete
   using (resident_id = auth.uid());
 
+-- ---------- admin utilities ----------
+-- See supabase/patch_reset_program_data.sql for the full commentary. Not
+-- reachable from the app or by any resident — only callable directly in
+-- the Supabase SQL Editor (which runs as the postgres superuser and
+-- bypasses grants).
+
+create or replace function reset_program_data(p_program_id uuid)
+returns void
+language plpgsql security definer set search_path = public as $$
+begin
+  delete from days where program_id = p_program_id;
+  delete from cycles where program_id = p_program_id;
+  delete from resources where program_id = p_program_id;
+end;
+$$;
+
+revoke all on function reset_program_data(uuid) from public, anon, authenticated, service_role;
+
 -- ---------- seed: the Wayne State pilot program ----------
 
 insert into programs (name, access_code, profile_complete)
