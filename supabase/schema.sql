@@ -836,6 +836,9 @@ create policy resources_select on resources for select
 create policy resources_insert on resources for insert
   with check (resident_id = auth.uid() and program_id = my_program_id() and pgy = my_pgy());
 
+create policy resources_delete on resources for delete
+  using (resident_id = auth.uid());
+
 -- ---------- program profile ----------
 -- See supabase/patch_program_profile.sql for the full commentary.
 

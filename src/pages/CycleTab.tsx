@@ -110,6 +110,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
+  const allClaimed = priority.length > 0 && claimedTitles.size >= priority.length;
   const delivered = claims.filter((c) => c.status === "delivered");
   const scholarly = claims.filter((c) => c.scholarly);
 
@@ -198,6 +199,13 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Shared with your group.");
   }
 
+  async function deleteResource(id: string) {
+    const { error } = await supabase.from("resources").delete().eq("id", id);
+    if (error) return flash(error.message);
+    setResources((prev) => prev.filter((r) => r.id !== id));
+    flash("Removed.");
+  }
+
   function exportPriorityCsv() {
     const header = ["topic", "overall_rm", ...RATING_DOMAINS.map((d) => d.key)];
     const rows = priority.map((p) => [
@@ -253,30 +261,35 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <>
           <Phase2
             priority={priority}
+            claims={claims}
             assessments={assessments}
             resident={resident}
             cohortCount={cohortCount}
+            onClaim={claimTopic}
+            onRelease={releaseClaim}
             onAssess={recordAssessment}
             onExport={exportPriorityCsv}
           />
-          <StartPhase3 resident={resident} onStarted={load} />
+          {allClaimed ? (
+            <StartPhase3 resident={resident} onStarted={load} />
+          ) : (
+            <div className="rounded-2xl bg-[#F5F8F7] px-4 py-3.5 text-[12.5px] text-[#3F4C50]">
+              {claimedTitles.size} of {priority.length} priority topics claimed so far. Once every topic is
+              claimed, the option to begin resident-led remediation appears here.
+            </div>
+          )}
         </>
       )}
       {phase3Started && phase !== 4 && (
         <Phase3
-          priority={priority}
-          claims={claims}
           mine={mine}
           resources={resources}
-          resident={resident}
-          cohortCount={cohortCount}
-          onClaim={claimTopic}
-          onRelease={releaseClaim}
           onDeliver={markDelivered}
           onUndoDeliver={undoDelivered}
           onScholarly={markScholarly}
           onUndoScholarly={undoScholarly}
           onShare={shareResource}
+          onDeleteResource={deleteResource}
           onExportNotes={exportTopicNotesCsv}
         />
       )}
@@ -364,114 +377,30 @@ function TopicSearchInput({
   );
 }
 
-// Phase 2: identification + baseline only — display, not claiming. See
-// Phase3 for where claiming a topic and choosing a teaching format live.
+// Phase 2: identification and baseline — the priority list, claiming a
+// topic and choosing a teaching format, and the baseline assessment all
+// live here. Phase 3 is delivery/tracking only for what was already
+// claimed here — see Phase3 below.
 function Phase2({
   priority,
-  assessments,
-  resident,
-  cohortCount,
-  onAssess,
-  onExport,
-}: {
-  priority: PriorityTopic[];
-  assessments: Assessment[];
-  resident: Resident;
-  cohortCount: number;
-  onAssess: (phase: "baseline" | "followup", score: number) => void;
-  onExport: () => void;
-}) {
-  const [search, setSearch] = useState("");
-  const filtered = priority.filter((p) => p.title.toLowerCase().includes(search.trim().toLowerCase()));
-
-  return (
-    <>
-      <div className="rounded-3xl bg-white p-4 shadow-sm">
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
-            <p className="mt-1 text-[12.5px] text-[#232D30]">
-              Everything scoring below {THRESHOLD}. Claiming one opens once resident-led remediation begins.
-            </p>
-          </div>
-          {priority.length > 0 && (
-            <button onClick={onExport} className="whitespace-nowrap rounded-xl bg-[#F5F8F7] px-3 py-2 text-xs font-bold text-[#064B45]">
-              Export (CSV)
-            </button>
-          )}
-        </div>
-        <p className="mt-2 text-[11px] text-[#3F4C50]">
-          The export includes every flagged topic's 5-Likert breakdown, so your program director can see exactly
-          what to prep questions on.
-        </p>
-        {priority.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
-        ) : (
-          <>
-            {priority.length > 5 && (
-              <TopicSearchInput topics={priority.map((p) => p.title)} value={search} onChange={setSearch} />
-            )}
-            {filtered.map((p) => (
-              <div key={p.title} className="border-t border-[#E2EAE9] py-3">
-                <div className="flex items-center justify-between">
-                  <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                  <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
-                    {p.overall.toFixed(2)}
-                  </span>
-                </div>
-                <LikertBreakdown perItem={p.perItem} />
-              </div>
-            ))}
-          </>
-        )}
-      </div>
-      <AssessmentCard
-        phase="baseline"
-        label="Baseline assessment"
-        desc="Taken now, before remediation begins."
-        assessments={assessments}
-        resident={resident}
-        cohortCount={cohortCount}
-        onAssess={onAssess}
-      />
-    </>
-  );
-}
-
-// Phase 3: resident-led remediation — claiming a priority topic and
-// choosing a teaching format now live here, not in Phase 2, alongside
-// tracking what was committed to (delivered, scholarly output, shared
-// readings).
-function Phase3({
-  priority,
   claims,
-  mine,
-  resources,
+  assessments,
   resident,
   cohortCount,
   onClaim,
   onRelease,
-  onDeliver,
-  onUndoDeliver,
-  onScholarly,
-  onUndoScholarly,
-  onShare,
-  onExportNotes,
+  onAssess,
+  onExport,
 }: {
   priority: PriorityTopic[];
   claims: Claim[];
-  mine: Claim[];
-  resources: Resource[];
+  assessments: Assessment[];
   resident: Resident;
   cohortCount: number;
   onClaim: (title: string, format: string) => void;
   onRelease: (id: string) => void;
-  onDeliver: (id: string) => void;
-  onUndoDeliver: (id: string) => void;
-  onScholarly: (id: string) => void;
-  onUndoScholarly: (id: string) => void;
-  onShare: (title: string, source: string, url: string, takeaway: string) => void;
-  onExportNotes: (title: string) => void;
+  onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onExport: () => void;
 }) {
   const [formats, setFormats] = useState<Record<string, string>>({});
   const [customFormats, setCustomFormats] = useState<Record<string, string>>({});
@@ -483,8 +412,21 @@ function Phase3({
   return (
     <>
       <div className="rounded-3xl bg-white p-4 shadow-sm">
-        <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
-        <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
+        <div className="flex items-start justify-between gap-2">
+          <div>
+            <h3 className="font-bold text-[#0E1A1C]">Priority educational needs</h3>
+            <p className="mt-1 text-[12.5px] text-[#232D30]">Claim the ones you'll build something on over months 4–6.</p>
+          </div>
+          {priority.length > 0 && (
+            <button onClick={onExport} className="whitespace-nowrap rounded-xl bg-[#F5F8F7] px-3 py-2 text-xs font-bold text-[#064B45]">
+              Export (CSV)
+            </button>
+          )}
+        </div>
+        <p className="mt-2 text-[11px] text-[#3F4C50]">
+          The export includes every flagged topic's 5-Likert breakdown, so your program director can see exactly
+          what to prep questions on.
+        </p>
         {priority.length === 0 ? (
           <div className="mt-3 text-center text-sm text-[#3F4C50]">Nothing scored below {THRESHOLD} this cycle.</div>
         ) : (
@@ -564,28 +506,65 @@ function Phase3({
           </>
         )}
       </div>
-
-      <div className="rounded-3xl bg-white p-4 shadow-sm">
-        <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
-        {mine.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
-        ) : (
-          mine.map((c) => (
-            <CommittedTopicRow
-              key={c.id}
-              claim={c}
-              resources={resources.filter((r) => r.topic_title === c.topic_title)}
-              onDeliver={onDeliver}
-              onUndoDeliver={onUndoDeliver}
-              onScholarly={onScholarly}
-              onUndoScholarly={onUndoScholarly}
-              onShare={onShare}
-              onExportNotes={onExportNotes}
-            />
-          ))
-        )}
-      </div>
+      <AssessmentCard
+        phase="baseline"
+        label="Baseline assessment"
+        desc="Taken now, before remediation begins."
+        assessments={assessments}
+        resident={resident}
+        cohortCount={cohortCount}
+        onAssess={onAssess}
+      />
     </>
+  );
+}
+
+// Phase 3: resident-led remediation — tracking what was already claimed
+// in Phase 2 (delivered, scholarly output, shared readings). No claiming
+// UI here; that only happens in Phase 2.
+function Phase3({
+  mine,
+  resources,
+  onDeliver,
+  onUndoDeliver,
+  onScholarly,
+  onUndoScholarly,
+  onShare,
+  onDeleteResource,
+  onExportNotes,
+}: {
+  mine: Claim[];
+  resources: Resource[];
+  onDeliver: (id: string) => void;
+  onUndoDeliver: (id: string) => void;
+  onScholarly: (id: string) => void;
+  onUndoScholarly: (id: string) => void;
+  onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onDeleteResource: (id: string) => void;
+  onExportNotes: (title: string) => void;
+}) {
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
+      {mine.length === 0 ? (
+        <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
+      ) : (
+        mine.map((c) => (
+          <CommittedTopicRow
+            key={c.id}
+            claim={c}
+            resources={resources.filter((r) => r.topic_title === c.topic_title)}
+            onDeliver={onDeliver}
+            onUndoDeliver={onUndoDeliver}
+            onScholarly={onScholarly}
+            onUndoScholarly={onUndoScholarly}
+            onShare={onShare}
+            onDeleteResource={onDeleteResource}
+            onExportNotes={onExportNotes}
+          />
+        ))
+      )}
+    </div>
   );
 }
 
@@ -593,10 +572,12 @@ function ResourceShare({
   title,
   resources,
   onShare,
+  onDelete,
 }: {
   title: string;
   resources: Resource[];
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onDelete: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [source, setSource] = useState("");
@@ -614,9 +595,14 @@ function ResourceShare({
         </button>
       </div>
       {resources.map((r) => (
-        <div key={r.id} className="mt-2 border-t border-[#E2EAE9] pt-2 text-[12px] text-[#232D30]">
-          <div className="font-semibold">{r.source}</div>
-          <p className="mt-0.5">{r.takeaway}</p>
+        <div key={r.id} className="mt-2 flex items-start justify-between gap-2 border-t border-[#E2EAE9] pt-2">
+          <div className="text-[12px] text-[#232D30]">
+            <div className="font-semibold">{r.source}</div>
+            <p className="mt-0.5">{r.takeaway}</p>
+          </div>
+          <button onClick={() => onDelete(r.id)} className="shrink-0 text-[11px] font-semibold text-[#93393E]">
+            Delete
+          </button>
         </div>
       ))}
       {open && (
@@ -649,6 +635,7 @@ function CommittedTopicRow({
   onScholarly,
   onUndoScholarly,
   onShare,
+  onDeleteResource,
   onExportNotes,
 }: {
   claim: Claim;
@@ -658,6 +645,7 @@ function CommittedTopicRow({
   onScholarly: (id: string) => void;
   onUndoScholarly: (id: string) => void;
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onDeleteResource: (id: string) => void;
   onExportNotes: (title: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
@@ -723,7 +711,7 @@ function CommittedTopicRow({
           presentation, or a publication, not just delivering the session.
         </p>
       )}
-      <ResourceShare title={c.topic_title} resources={resources} onShare={onShare} />
+      <ResourceShare title={c.topic_title} resources={resources} onShare={onShare} onDelete={onDeleteResource} />
     </div>
   );
 }
@@ -883,13 +871,13 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
       n: 2,
       title: "Identification and baseline",
       months: "end of 3",
-      desc: `Topics averaging below ${THRESHOLD} are flagged as priority educational needs, and a baseline knowledge assessment is taken.`,
+      desc: `Topics averaging below ${THRESHOLD} are flagged as priority educational needs, claimed by residents, and a baseline knowledge assessment is taken.`,
     },
     {
       n: 3,
       title: "Resident-led remediation",
       months: "4–6",
-      desc: "Claim priority educational topics and turn them into peer-teaching modules, journal clubs or case repositories.",
+      desc: "Build and deliver on what was claimed in Phase 2: peer-teaching modules, journal clubs, case repositories, and more.",
     },
     { n: 4, title: "Impact evaluation", months: "end of 6", desc: "A follow-up assessment checks whether the learning held." },
   ];
@@ -976,8 +964,9 @@ function StartPhase2({ resident, onStarted }: { resident: Resident; onStarted: (
     <div className="rounded-2xl bg-[#FAEBD4] p-4 shadow-sm">
       <h3 className="font-bold text-[#8F5205]">3 months are up. Begin identification and baseline?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8F5205]">
-        This flags every topic scoring below {THRESHOLD} as a priority need and opens the baseline assessment. Any
-        resident can start this, but talk it over with {resident.pgy} and your program director first.
+        This flags every topic scoring below {THRESHOLD} as a priority need, opens claiming (choosing what
+        you'll build over months 4–6) and the baseline assessment. Any resident can start this, but talk it over
+        with {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
@@ -1008,11 +997,10 @@ function StartPhase3({ resident, onStarted }: { resident: Resident; onStarted: (
 
   return (
     <div className="rounded-2xl bg-[#DCEFEB] p-4 shadow-sm">
-      <h3 className="font-bold text-[#064B45]">Ready to begin resident-led remediation?</h3>
+      <h3 className="font-bold text-[#064B45]">Every topic is claimed. Begin resident-led remediation?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#064B45]">
-        Once baseline scores are in, move into months 4–6 to claim priority educational topics and start building
-        on them. Any resident can start this, but talk it over with {resident.pgy} and your program director
-        first.
+        Move into months 4–6 to start building and delivering on what was claimed above. Any resident can start
+        this, but talk it over with {resident.pgy} and your program director first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
