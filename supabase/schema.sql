@@ -636,6 +636,11 @@ create table resources (
   source text not null,
   url text,
   takeaway text not null,
+  -- Set when a resident attaches an actual file (a PDF, or a screenshot
+  -- of one) instead of/alongside a link — see the resource-papers
+  -- Storage bucket and its policies further down.
+  file_path text,
+  file_name text,
   created_at timestamptz not null default now()
 );
 
@@ -844,6 +849,32 @@ create policy resources_insert on resources for insert
 
 create policy resources_delete on resources for delete
   using (resident_id = auth.uid());
+
+-- ---------- resource paper uploads ----------
+-- See supabase/patch_resource_uploads.sql for the full commentary.
+
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values (
+  'resource-papers', 'resource-papers', false, 20971520,
+  array['application/pdf', 'image/png', 'image/jpeg']
+)
+on conflict (id) do update set
+  file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+
+create policy resource_papers_select on storage.objects for select
+  using (
+    bucket_id = 'resource-papers'
+    and (storage.foldername(name))[1] = my_program_id()::text
+    and (storage.foldername(name))[2] = my_pgy()
+  );
+
+create policy resource_papers_insert on storage.objects for insert
+  with check (
+    bucket_id = 'resource-papers'
+    and (storage.foldername(name))[1] = my_program_id()::text
+    and (storage.foldername(name))[2] = my_pgy()
+  );
 
 -- ---------- program profile ----------
 -- See supabase/patch_program_profile.sql for the full commentary.

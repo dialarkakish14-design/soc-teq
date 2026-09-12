@@ -212,8 +212,18 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Score recorded.");
   }
 
-  async function shareResource(title: string, source: string, url: string, takeaway: string) {
+  async function shareResource(title: string, source: string, url: string, takeaway: string, file: File | null) {
     if (!source.trim() || !takeaway.trim()) return flash("Add where it's from and what you took from it.");
+
+    let filePath: string | null = null;
+    let fileName: string | null = null;
+    if (file) {
+      filePath = `${resident.program_id}/${resident.pgy}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("resource-papers").upload(filePath, file);
+      if (uploadError) return flash(uploadError.message);
+      fileName = file.name;
+    }
+
     const { data, error } = await supabase
       .from("resources")
       .insert({
@@ -224,6 +234,8 @@ export function CycleTab({ resident }: { resident: Resident }) {
         source: source.trim(),
         url: url.trim() || null,
         takeaway: takeaway.trim(),
+        file_path: filePath,
+        file_name: fileName,
       })
       .select("*")
       .single();
@@ -237,6 +249,18 @@ export function CycleTab({ resident }: { resident: Resident }) {
     if (error) return flash(error.message);
     setResources((prev) => prev.filter((r) => r.id !== id));
     flash("Removed.");
+  }
+
+  async function downloadResourceFile(path: string, name: string) {
+    const { data, error } = await supabase.storage.from("resource-papers").download(path);
+    if (error) return flash(error.message);
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(data);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
   function exportPriorityCsv() {
@@ -316,6 +340,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onUndoScholarly={undoScholarly}
           onShare={shareResource}
           onDeleteResource={deleteResource}
+          onDownloadFile={downloadResourceFile}
           onExportNotes={exportTopicNotesCsv}
           onUpdateDetails={updateClaimDetails}
         />
@@ -549,7 +574,7 @@ function Phase2({
                         return (
                           <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
                             {c.resident_id === resident.id ? "You claimed this" : "Claimed"}: {c.format}
-                            {when && <div className="mt-0.5 text-[11px] text-[#3F4C50]">{when}</div>}
+                            {when && <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
                           </div>
                         );
                       })}
@@ -654,6 +679,7 @@ function Phase3({
   onUndoScholarly,
   onShare,
   onDeleteResource,
+  onDownloadFile,
   onExportNotes,
   onUpdateDetails,
 }: {
@@ -663,8 +689,9 @@ function Phase3({
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
   onUndoScholarly: (id: string) => void;
-  onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
+  onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
@@ -685,6 +712,7 @@ function Phase3({
             onUndoScholarly={onUndoScholarly}
             onShare={onShare}
             onDeleteResource={onDeleteResource}
+            onDownloadFile={onDownloadFile}
             onExportNotes={onExportNotes}
             onUpdateDetails={onUpdateDetails}
           />
@@ -699,16 +727,19 @@ function ResourceShare({
   resources,
   onShare,
   onDelete,
+  onDownloadFile,
 }: {
   title: string;
   resources: Resource[];
-  onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDelete: (id: string) => void;
+  onDownloadFile: (path: string, name: string) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [source, setSource] = useState("");
   const [url, setUrl] = useState("");
   const [takeaway, setTakeaway] = useState("");
+  const [file, setFile] = useState<File | null>(null);
 
   return (
     <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
@@ -725,6 +756,14 @@ function ResourceShare({
           <div className="text-[12px] text-[#232D30]">
             <div className="font-semibold">{r.source}</div>
             <p className="mt-0.5">{r.takeaway}</p>
+            {r.file_path && r.file_name && (
+              <button
+                onClick={() => onDownloadFile(r.file_path!, r.file_name!)}
+                className="mt-1 text-[11px] font-bold text-[#0E7C72]"
+              >
+                Download {r.file_name}
+              </button>
+            )}
           </div>
           <button onClick={() => onDelete(r.id)} className="shrink-0 text-[11px] font-semibold text-[#93393E]">
             Delete
@@ -733,15 +772,29 @@ function ResourceShare({
       ))}
       {open && (
         <div className="mt-2 flex flex-col gap-2">
+          <p className="text-[11px] leading-relaxed text-[#3F4C50]">
+            You can write a summary, note what stood out, or upload the paper itself (a PDF, or a photo of the
+            highlighted pages).
+          </p>
           <input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Where it's from (e.g. JAAD)" className="input" />
           <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Link" className="input" />
           <textarea value={takeaway} onChange={(e) => setTakeaway(e.target.value)} placeholder="What a co-resident should know" className="input min-h-[60px]" />
+          <label className="block">
+            <div className="mb-1 text-[11px] font-semibold text-[#3F4C50]">Upload the paper (optional, PDF or image, up to 20MB)</div>
+            <input
+              type="file"
+              accept="application/pdf,image/png,image/jpeg"
+              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
+              className="text-[12px]"
+            />
+          </label>
           <button
             onClick={() => {
-              onShare(title, source, url, takeaway);
+              onShare(title, source, url, takeaway, file);
               setSource("");
               setUrl("");
               setTakeaway("");
+              setFile(null);
             }}
             className="rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white"
           >
@@ -762,6 +815,7 @@ function CommittedTopicRow({
   onUndoScholarly,
   onShare,
   onDeleteResource,
+  onDownloadFile,
   onExportNotes,
   onUpdateDetails,
 }: {
@@ -771,8 +825,9 @@ function CommittedTopicRow({
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
   onUndoScholarly: (id: string) => void;
-  onShare: (title: string, source: string, url: string, takeaway: string) => void;
+  onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
+  onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
@@ -796,7 +851,7 @@ function CommittedTopicRow({
           <div className="text-xs text-[#3F4C50]">{c.format}</div>
           {!editingDetails &&
             formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
-              <div className="mt-0.5 text-[11px] text-[#3F4C50]">
+              <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">
                 {formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location)}
               </div>
             )}
@@ -881,7 +936,13 @@ function CommittedTopicRow({
           presentation, or a publication, not just delivering the session.
         </p>
       )}
-      <ResourceShare title={c.topic_title} resources={resources} onShare={onShare} onDelete={onDeleteResource} />
+      <ResourceShare
+        title={c.topic_title}
+        resources={resources}
+        onShare={onShare}
+        onDelete={onDeleteResource}
+        onDownloadFile={onDownloadFile}
+      />
     </div>
   );
 }

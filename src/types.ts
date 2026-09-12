@@ -203,5 +203,7 @@ export interface Resource {
   source: string;
   url: string | null;
   takeaway: string;
+  file_path: string | null;
+  file_name: string | null;
   created_at: string;
 }
