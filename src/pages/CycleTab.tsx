@@ -1144,11 +1144,13 @@ function DeliveryDetailsEditor({
   claim,
   claims,
   codeById,
+  showReminder,
   onSave,
 }: {
   claim: Claim;
   claims: Claim[];
   codeById: Record<string, string>;
+  showReminder?: boolean;
   onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -1203,6 +1205,11 @@ function DeliveryDetailsEditor({
         <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
           {when ? "Edit day/time/location" : "Add day/time/location"}
         </button>
+      )}
+      {!locked && showReminder && claim.deliver_date && (
+        <div className="mt-1 text-[10px] text-[#343E42]">
+          Heads up: this locks in once you're within 6 days of the date.
+        </div>
       )}
     </div>
   );
@@ -1319,7 +1326,7 @@ function CommittedTopicRow({
             </div>
           )}
           {isMine ? (
-            <DeliveryDetailsEditor claim={c} claims={claims} codeById={codeById} onSave={onUpdateDetails} />
+            <DeliveryDetailsEditor claim={c} claims={claims} codeById={codeById} showReminder={forceOpen} onSave={onUpdateDetails} />
           ) : (
             formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
               <div className="text-[11px] font-bold text-[#2B5F8A]">
