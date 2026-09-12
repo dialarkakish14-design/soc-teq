@@ -1196,8 +1196,8 @@ function DeliveryDetailsEditor({
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
       {locked ? (
         <div className="mt-0.5 text-[10.5px] text-[#343E42]">
-          Can't be changed within 6 days of the scheduled date, to help you stay committed and avoid throwing off
-          your colleagues' plans.
+          Can't be changed within 6 days of the scheduled date, to help you stay committed and keep things steady
+          for your colleagues' plans.
         </div>
       ) : (
         <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
