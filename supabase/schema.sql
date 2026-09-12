@@ -756,6 +756,7 @@ declare
   v_cycle jsonb;
   v_cycle_id uuid;
   v_cohort_count int;
+  v_cohort jsonb;
   v_claims jsonb;
   v_assessments jsonb;
   v_resources jsonb;
@@ -770,6 +771,9 @@ begin
   from cycles c where c.program_id = v_program_id and c.pgy = p_pgy;
 
   select count(*) into v_cohort_count
+  from residents where program_id = v_program_id and pgy = p_pgy;
+
+  select coalesce(jsonb_agg(jsonb_build_object('id', id, 'resident_code', resident_code)), '[]'::jsonb) into v_cohort
   from residents where program_id = v_program_id and pgy = p_pgy;
 
   if v_cycle_id is not null then
@@ -809,6 +813,7 @@ begin
   return jsonb_build_object(
     'cycle', v_cycle,
     'cohort_count', v_cohort_count,
+    'cohort', v_cohort,
     'claims', v_claims,
     'assessments', v_assessments,
     'resources', v_resources,

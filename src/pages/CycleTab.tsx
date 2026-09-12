@@ -56,6 +56,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const [resources, setResources] = useState<Resource[]>([]);
   const [priority, setPriority] = useState<PriorityTopic[]>([]);
   const [cohortCount, setCohortCount] = useState(0);
+  const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
 
@@ -83,6 +84,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
     const result = data as {
       cycle: Cycle | null;
       cohort_count: number;
+      cohort: { id: string; resident_code: string }[];
       claims: Claim[];
       assessments: Assessment[];
       resources: Resource[];
@@ -95,6 +97,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
     setCycle(result.cycle);
     setCohortCount(result.cohort_count ?? 0);
+    setCodeById(Object.fromEntries((result.cohort ?? []).map((r) => [r.id, r.resident_code])));
     setClaims(result.claims ?? []);
     setAssessments(result.assessments ?? []);
     setResources(result.resources ?? []);
@@ -139,7 +142,6 @@ export function CycleTab({ resident }: { resident: Resident }) {
   // to reflect that instead of still reading "Phase 2" while Phase 3's
   // claiming/delivery content is what's actually on screen.
   const displayPhase: 1 | 2 | 3 | 4 = !phase2Started ? 1 : !phase3Started ? 2 : phase === 4 ? 4 : 3;
-  const mine = claims.filter((c) => c.resident_id === resident.id);
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
   const allClaimed = priority.length > 0 && claimedTitles.size >= priority.length;
@@ -406,7 +408,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
       )}
       {phase3Started && phase !== 4 && (
         <Phase3
-          mine={mine}
+          claims={claims}
+          resident={resident}
+          codeById={codeById}
           resources={resources}
           onDeliver={markDelivered}
           onUndoDeliver={undoDelivered}
@@ -839,8 +843,15 @@ function Phase2({
 // Phase 3: resident-led remediation — tracking what was already claimed
 // in Phase 2 (delivered, scholarly output, shared readings). No claiming
 // UI here; that only happens in Phase 2.
+// Shared across the whole cohort — every resident sees everyone's
+// claimed topics here, not just their own, so the group can see what's
+// coming up regardless of who claimed it. Action controls (deliver,
+// scholarly, edit format/details) only render on a resident's own
+// claims; everyone else's show as read-only.
 function Phase3({
-  mine,
+  claims,
+  resident,
+  codeById,
   resources,
   onDeliver,
   onUndoDeliver,
@@ -854,7 +865,9 @@ function Phase3({
   onUpdateDetails,
   onEditFormat,
 }: {
-  mine: Claim[];
+  claims: Claim[];
+  resident: Resident;
+  codeById: Record<string, string>;
   resources: Resource[];
   onDeliver: (id: string) => void;
   onUndoDeliver: (id: string) => void;
@@ -872,8 +885,8 @@ function Phase3({
 
   // Not-yet-delivered topics stay up top (soonest scheduled first, unscheduled
   // ones after), delivered ones get pushed to the bottom — so whatever's
-  // still coming up is always what's easiest to find.
-  const sorted = [...mine].sort((a, b) => {
+  // still coming up is always what's easiest to find, for the whole cohort.
+  const sorted = [...claims].sort((a, b) => {
     if ((a.status === "delivered") !== (b.status === "delivered")) return a.status === "delivered" ? 1 : -1;
     const whenOf = (c: Claim) => (c.deliver_date ? `${c.deliver_date}T${c.deliver_time ?? "00:00"}` : null);
     const aw = whenOf(a);
@@ -888,17 +901,17 @@ function Phase3({
   return (
     <div className="rounded-3xl bg-gradient-to-br from-[#E4EEF8] to-[#FAFCFE] p-4 shadow-sm">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
-        <h3 className="font-extrabold text-[#2B5F8A]">What you committed to</h3>
+        <h3 className="font-extrabold text-[#2B5F8A]">What everyone committed to</h3>
         <span className={`shrink-0 text-xl font-extrabold text-[#2B5F8A] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
-      {open && mine.length > 0 && (
+      {open && claims.length > 0 && (
         <p className="mt-1 text-[11px] leading-relaxed text-[#2B5F8A]">
-          When you deliver, consider all 5 Likert items and try to cover them all. Your next 3 upcoming topics stay
-          expanded up top; the rest collapse below.
+          Everyone's claimed topics, closest upcoming first. When you deliver, consider all 5 Likert items. Your
+          next 3 upcoming topics stay expanded up top; the rest collapse below.
         </p>
       )}
-      {!open ? null : mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#2B5F8A]">You didn't claim any topics this cycle.</div>
+      {!open ? null : claims.length === 0 ? (
+        <div className="mt-3 text-center text-sm text-[#2B5F8A]">Nobody's claimed a topic this cycle yet.</div>
       ) : (
         sorted.map((c) => {
           const featured = c.status !== "delivered" && upcomingSeen < 3;
@@ -908,6 +921,8 @@ function Phase3({
               key={c.id}
               claim={c}
               forceOpen={featured}
+              isMine={c.resident_id === resident.id}
+              code={codeById[c.resident_id] ?? "?"}
               resources={resources.filter((r) => r.topic_title === c.topic_title)}
               onDeliver={onDeliver}
               onUndoDeliver={onUndoDeliver}
@@ -1138,6 +1153,8 @@ function DeliveryDetailsEditor({
 function CommittedTopicRow({
   claim,
   forceOpen,
+  isMine,
+  code,
   resources,
   onDeliver,
   onUndoDeliver,
@@ -1153,6 +1170,8 @@ function CommittedTopicRow({
 }: {
   claim: Claim;
   forceOpen: boolean;
+  isMine: boolean;
+  code: string;
   resources: Resource[];
   onDeliver: (id: string) => void;
   onUndoDeliver: (id: string) => void;
@@ -1186,7 +1205,9 @@ function CommittedTopicRow({
         <div className="flex items-center justify-between">
           <div>
             <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-            <div className="text-xs text-[#343E42]">{c.format}</div>
+            <div className="text-xs text-[#343E42]">
+              {isMine ? "You" : code} · {c.format}
+            </div>
           </div>
           <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
             {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
@@ -1196,7 +1217,9 @@ function CommittedTopicRow({
         <button onClick={() => setExpanded((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
           <div>
             <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-            <div className="text-xs text-[#343E42]">{c.format}</div>
+            <div className="text-xs text-[#343E42]">
+              {isMine ? "You" : code} · {c.format}
+            </div>
           </div>
           <div className="flex shrink-0 items-center gap-2">
             <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
@@ -1208,8 +1231,17 @@ function CommittedTopicRow({
       )}
       {open && (
         <div className={forceOpen ? "" : "mt-2.5 border-t border-[#E2EAE9] pt-2.5"}>
-          <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
-          {!c.format_edited &&
+          {isMine ? (
+            <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
+          ) : (
+            formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
+              <div className="text-[11px] font-bold text-[#2B5F8A]">
+                {formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location)}
+              </div>
+            )
+          )}
+          {isMine &&
+            !c.format_edited &&
             (editingFormat ? (
               <div className="mt-2 flex flex-col gap-2">
                 <select
@@ -1259,21 +1291,22 @@ function CommittedTopicRow({
               </button>
             ))}
           <div className="mt-2 flex flex-wrap items-center gap-2">
-            {c.status !== "delivered" ? (
+            {isMine && c.status !== "delivered" && (
               <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
                 Mark delivered
               </button>
-            ) : (
+            )}
+            {isMine && c.status === "delivered" && (
               <button onClick={() => onUndoDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
                 Undo delivered
               </button>
             )}
-            {c.status === "delivered" && !c.scholarly && (
+            {isMine && c.status === "delivered" && !c.scholarly && (
               <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
                 Became scholarly work
               </button>
             )}
-            {c.scholarly && (
+            {isMine && c.scholarly && (
               <button onClick={() => onUndoScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
                 Undo scholarly work
               </button>
