@@ -58,6 +58,15 @@ function formatWhenWhere(date: string | null, time: string | null, location: str
   return parts.length ? parts.join(" · ") : null;
 }
 
+// Finds another claim already sitting in the exact same day+time slot, so
+// two residents don't unknowingly book competing sessions. Scoped across
+// every claim in the cycle, not just the same topic — a clash is a clash
+// regardless of what's being taught.
+function findScheduleClash(claims: Claim[], date: string, time: string, excludeClaimId?: string): Claim | null {
+  if (!date || !time) return null;
+  return claims.find((c) => c.id !== excludeClaimId && c.deliver_date === date && c.deliver_time === time) ?? null;
+}
+
 export function CycleTab({ resident }: { resident: Resident }) {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -395,6 +404,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           <Phase2
             priority={priority}
             claims={claims}
+            codeById={codeById}
             assessments={assessments}
             resident={resident}
             cohortCount={cohortCount}
@@ -614,6 +624,7 @@ function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
 function Phase2({
   priority,
   claims,
+  codeById,
   assessments,
   resident,
   cohortCount,
@@ -626,6 +637,7 @@ function Phase2({
 }: {
   priority: PriorityTopic[];
   claims: Claim[];
+  codeById: Record<string, string>;
   assessments: Assessment[];
   resident: Resident;
   cohortCount: number;
@@ -752,7 +764,7 @@ function Phase2({
                       )}
                       {mineClaim ? (
                         <>
-                          <DeliveryDetailsEditor claim={mineClaim} onSave={onUpdateDetails} />
+                          <DeliveryDetailsEditor claim={mineClaim} claims={claims} codeById={codeById} onSave={onUpdateDetails} />
                           {baselineSubmitted ? (
                             <div className="mt-1.5 text-[11px] text-[#343E42]">
                               Can't be released after your baseline score is in.
@@ -806,9 +818,22 @@ function Phase2({
                             placeholder="Where (optional)"
                             className="input mt-2"
                           />
+                          {(() => {
+                            const clash = findScheduleClash(claims, deliverDates[p.title] ?? "", deliverTimes[p.title] ?? "");
+                            return (
+                              clash && (
+                                <div className="mt-1.5 rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11px] font-semibold text-[#93393E]">
+                                  {codeById[clash.resident_id] ?? "Someone"} already claimed "{clash.topic_title}" for this
+                                  exact day and time. Pick a different slot to avoid a clash.
+                                </div>
+                              )
+                            );
+                          })()}
                           <div className="mt-1 text-[10.5px] text-[#343E42]">
                             Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
-                            set. You can edit them here, or later in Phase 3, any time.
+                            set. You can edit them here, or later in Phase 3, any time. You can present any time in
+                            the next 3 months, but choosing sooner gives you and your colleagues more room to revise
+                            before the follow-up assessment at month 6.
                           </div>
                           <button
                             onClick={() =>
@@ -919,7 +944,7 @@ function Phase3({
       {open && claims.length > 0 && (
         <p className="mt-1 text-[11px] leading-relaxed text-[#2B5F8A]">
           Everyone's claimed topics, closest upcoming first. When you deliver, consider all 5 Likert items. Your
-          next 3 upcoming topics stay expanded up top; the rest collapse below.
+          next 3 upcoming topics stay expanded up top; the rest are pushed below · tap to expand.
         </p>
       )}
       {!open ? null : claims.length === 0 ? (
@@ -932,6 +957,8 @@ function Phase3({
             <CommittedTopicRow
               key={c.id}
               claim={c}
+              claims={claims}
+              codeById={codeById}
               forceOpen={featured}
               isMine={c.resident_id === resident.id}
               code={codeById[c.resident_id] ?? "?"}
@@ -1115,9 +1142,13 @@ function ResourceShare({
 // changed from either place, at any point.
 function DeliveryDetailsEditor({
   claim,
+  claims,
+  codeById,
   onSave,
 }: {
   claim: Claim;
+  claims: Claim[];
+  codeById: Record<string, string>;
   onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
   const [editing, setEditing] = useState(false);
@@ -1126,6 +1157,7 @@ function DeliveryDetailsEditor({
   const [location, setLocation] = useState(claim.deliver_location ?? "");
 
   if (editing) {
+    const clash = findScheduleClash(claims, date, time, claim.id);
     return (
       <div className="mt-2 flex flex-col gap-2">
         <div className="flex gap-2">
@@ -1133,6 +1165,12 @@ function DeliveryDetailsEditor({
           <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input flex-1" />
         </div>
         <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Where (optional)" className="input" />
+        {clash && (
+          <div className="rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11px] font-semibold text-[#93393E]">
+            {codeById[clash.resident_id] ?? "Someone"} already claimed "{clash.topic_title}" for this exact day and
+            time. Pick a different slot to avoid a clash.
+          </div>
+        )}
         <div className="flex gap-2">
           <button
             onClick={() => {
@@ -1158,7 +1196,8 @@ function DeliveryDetailsEditor({
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
       {locked ? (
         <div className="mt-0.5 text-[10.5px] text-[#343E42]">
-          Can't be changed within 6 days of the scheduled date, to avoid disrupting colleagues.
+          Can't be changed within 6 days of the scheduled date, to help you stay committed and avoid throwing off
+          your colleagues' plans.
         </div>
       ) : (
         <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
@@ -1171,6 +1210,8 @@ function DeliveryDetailsEditor({
 
 function CommittedTopicRow({
   claim,
+  claims,
+  codeById,
   forceOpen,
   isMine,
   code,
@@ -1188,6 +1229,8 @@ function CommittedTopicRow({
   onEditFormat,
 }: {
   claim: Claim;
+  claims: Claim[];
+  codeById: Record<string, string>;
   forceOpen: boolean;
   isMine: boolean;
   code: string;
@@ -1276,7 +1319,7 @@ function CommittedTopicRow({
             </div>
           )}
           {isMine ? (
-            <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
+            <DeliveryDetailsEditor claim={c} claims={claims} codeById={codeById} onSave={onUpdateDetails} />
           ) : (
             formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
               <div className="text-[11px] font-bold text-[#2B5F8A]">

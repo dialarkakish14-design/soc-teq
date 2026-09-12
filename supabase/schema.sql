@@ -1043,6 +1043,21 @@ create policy private_notes_update on private_notes for update
 create policy private_notes_delete on private_notes for delete
   using (resident_id = auth.uid());
 
+-- ---------- performance indexes ----------
+-- Foreign key columns don't automatically get an index in Postgres.
+-- These are the ones get_cycle_dashboard() and friends join/filter on
+-- most heavily — see patch_cycle_indexes.sql for the full commentary.
+
+create index if not exists idx_days_program_pgy on days (program_id, pgy);
+create index if not exists idx_sessions_day_id on sessions (day_id);
+create index if not exists idx_topics_session_id on topics (session_id);
+create index if not exists idx_ratings_topic_id on ratings (topic_id);
+create index if not exists idx_absences_topic_id on absences (topic_id);
+create index if not exists idx_claims_cycle_id on claims (cycle_id);
+create index if not exists idx_assessments_cycle_id on assessments (cycle_id);
+create index if not exists idx_resources_program_pgy on resources (program_id, pgy);
+create index if not exists idx_residents_program_pgy on residents (program_id, pgy);
+
 -- ---------- admin utilities ----------
 -- See supabase/patch_reset_program_data.sql for the full commentary. Not
 -- reachable from the app or by any resident — only callable directly in
