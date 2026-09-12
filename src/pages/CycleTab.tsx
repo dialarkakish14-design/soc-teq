@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import { cycleMonth, cyclePhase, daysSinceStart, formatDateShort, isBelowThreshold, scoreTopic } from "../lib/domain";
 import { downloadCsv } from "../lib/csv";
-import { LikertBreakdown } from "../components/LikertBreakdown";
 import {
   CLAIM_FORMATS,
   FITZPATRICK_TONES,
@@ -618,6 +617,7 @@ function Phase2({
   const [deliverTimes, setDeliverTimes] = useState<Record<string, string>>({});
   const [deliverLocations, setDeliverLocations] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
   const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
   const filtered = priority.filter((p) => p.title.toLowerCase().includes(search.trim().toLowerCase()));
@@ -662,115 +662,147 @@ function Phase2({
               const claimsForTopic = claims.filter((c) => c.topic_title === p.title);
               const mineClaim = claimsForTopic.find((c) => c.resident_id === resident.id);
               const chosen = formats[p.title] ?? "";
+              const isOpen = expanded.has(p.title);
+              const availableDomains = RATING_DOMAINS.filter((d) => p.perItem[d.key] != null);
               return (
                 <div key={p.title} className="mt-2.5 rounded-2xl border-l-[5px] border-l-[#E8A93C] bg-white p-3 shadow-sm">
-                  <div className="flex items-center justify-between">
+                  <button
+                    onClick={() =>
+                      setExpanded((prev) => {
+                        const next = new Set(prev);
+                        if (next.has(p.title)) next.delete(p.title);
+                        else next.add(p.title);
+                        return next;
+                      })
+                    }
+                    className="flex w-full items-center justify-between gap-2 text-left"
+                  >
                     <div>
                       <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
                       <div className="text-xs text-[#343E42]">
                         {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
                       </div>
                     </div>
-                    <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
-                      {p.overall.toFixed(2)}
-                    </span>
-                  </div>
-                  <LikertBreakdown perItem={p.perItem} />
-                  <FitzpatrickStrip tones={p.tones} />
-                  {claimsForTopic.length > 0 && (
-                    <div className="mt-2 flex flex-col gap-1.5">
-                      {claimsForTopic.map((c) => {
-                        // Skip the "when" line for my own claim here — the
-                        // DeliveryDetailsEditor below already shows it
-                        // (plus lets me edit it), so repeating it here just
-                        // duplicates the same line right above it.
-                        const mine = c.resident_id === resident.id;
-                        const when = mine ? null : formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location);
-                        return (
-                          <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                            {mine ? "You claimed this" : "Claimed"}: {c.format}
-                            {when && <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
-                          </div>
-                        );
-                      })}
+                    <div className="flex shrink-0 items-center gap-2">
+                      <span className="whitespace-nowrap rounded-lg bg-[#FAEBD4] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#8F5205]">
+                        {p.overall.toFixed(2)}
+                      </span>
+                      <span className={`text-xl font-extrabold text-[#E8A93C] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                        ▾
+                      </span>
                     </div>
-                  )}
-                  {mineClaim ? (
-                    <>
-                      <DeliveryDetailsEditor claim={mineClaim} onSave={onUpdateDetails} />
-                      {baselineSubmitted ? (
-                        <div className="mt-1.5 text-[11px] text-[#343E42]">
-                          Can't be released after your baseline score is in.
+                  </button>
+                  {isOpen && (
+                    <div className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+                      {availableDomains.length > 0 && (
+                        <div className="flex flex-col gap-1 rounded-xl bg-[#F5F8F7] px-3 py-2">
+                          {availableDomains.map((d) => (
+                            <div key={d.key} className="flex items-center justify-between text-[11.5px] text-[#232D30]">
+                              <span>{d.name}</span>
+                              <b className={`font-mono ${isBelowThreshold(p.perItem[d.key]) ? "text-[#8F5205]" : "text-[#064B45]"}`}>
+                                {p.perItem[d.key].toFixed(2)}
+                              </b>
+                            </div>
+                          ))}
                         </div>
+                      )}
+                      <FitzpatrickStrip tones={p.tones} />
+                      {claimsForTopic.length > 0 && (
+                        <div className="mt-2 flex flex-col gap-1.5">
+                          {claimsForTopic.map((c) => {
+                            // Skip the "when" line for my own claim here —
+                            // the DeliveryDetailsEditor below already shows
+                            // it (plus lets me edit it), so repeating it
+                            // here just duplicates the same line above it.
+                            const mine = c.resident_id === resident.id;
+                            const when = mine ? null : formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location);
+                            return (
+                              <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
+                                {mine ? "You claimed this" : "Claimed"}: {c.format}
+                                {when && <div className="mt-0.5 text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                      {mineClaim ? (
+                        <>
+                          <DeliveryDetailsEditor claim={mineClaim} onSave={onUpdateDetails} />
+                          {baselineSubmitted ? (
+                            <div className="mt-1.5 text-[11px] text-[#343E42]">
+                              Can't be released after your baseline score is in.
+                            </div>
+                          ) : (
+                            <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#343E42]">
+                              Release this topic
+                            </button>
+                          )}
+                        </>
                       ) : (
-                        <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#343E42]">
-                          Release this topic
-                        </button>
+                        <>
+                          <select
+                            value={chosen}
+                            onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value }))}
+                            className="input mt-2"
+                          >
+                            <option value="" disabled>
+                              Choose how you'll teach it…
+                            </option>
+                            {CLAIM_FORMATS.map((f) => (
+                              <option key={f}>{f}</option>
+                            ))}
+                            <option value={OTHER_FORMAT}>Other…</option>
+                          </select>
+                          {chosen === OTHER_FORMAT && (
+                            <input
+                              value={customFormats[p.title] ?? ""}
+                              onChange={(e) => setCustomFormats((c) => ({ ...c, [p.title]: e.target.value }))}
+                              placeholder="Describe how you'll teach it"
+                              className="input mt-2"
+                            />
+                          )}
+                          <div className="mt-2 flex gap-2">
+                            <input
+                              type="date"
+                              value={deliverDates[p.title] ?? ""}
+                              onChange={(e) => setDeliverDates((d) => ({ ...d, [p.title]: e.target.value }))}
+                              className="input flex-1"
+                            />
+                            <input
+                              type="time"
+                              value={deliverTimes[p.title] ?? ""}
+                              onChange={(e) => setDeliverTimes((t) => ({ ...t, [p.title]: e.target.value }))}
+                              className="input flex-1"
+                            />
+                          </div>
+                          <input
+                            value={deliverLocations[p.title] ?? ""}
+                            onChange={(e) => setDeliverLocations((l) => ({ ...l, [p.title]: e.target.value }))}
+                            placeholder="Where (optional)"
+                            className="input mt-2"
+                          />
+                          <div className="mt-1 text-[10.5px] text-[#343E42]">
+                            Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
+                            set. You can edit them here, or later in Phase 3, any time.
+                          </div>
+                          <button
+                            onClick={() =>
+                              onClaim(
+                                p.title,
+                                chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen,
+                                deliverDates[p.title] ?? "",
+                                deliverTimes[p.title] ?? "",
+                                deliverLocations[p.title] ?? "",
+                              )
+                            }
+                            disabled={!chosen || (chosen === OTHER_FORMAT && !(customFormats[p.title] ?? "").trim())}
+                            className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
+                          >
+                            Claim this topic
+                          </button>
+                        </>
                       )}
-                    </>
-                  ) : (
-                    <>
-                      <select
-                        value={chosen}
-                        onChange={(e) => setFormats((f) => ({ ...f, [p.title]: e.target.value }))}
-                        className="input mt-2"
-                      >
-                        <option value="" disabled>
-                          Choose how you'll teach it…
-                        </option>
-                        {CLAIM_FORMATS.map((f) => (
-                          <option key={f}>{f}</option>
-                        ))}
-                        <option value={OTHER_FORMAT}>Other…</option>
-                      </select>
-                      {chosen === OTHER_FORMAT && (
-                        <input
-                          value={customFormats[p.title] ?? ""}
-                          onChange={(e) => setCustomFormats((c) => ({ ...c, [p.title]: e.target.value }))}
-                          placeholder="Describe how you'll teach it"
-                          className="input mt-2"
-                        />
-                      )}
-                      <div className="mt-2 flex gap-2">
-                        <input
-                          type="date"
-                          value={deliverDates[p.title] ?? ""}
-                          onChange={(e) => setDeliverDates((d) => ({ ...d, [p.title]: e.target.value }))}
-                          className="input flex-1"
-                        />
-                        <input
-                          type="time"
-                          value={deliverTimes[p.title] ?? ""}
-                          onChange={(e) => setDeliverTimes((t) => ({ ...t, [p.title]: e.target.value }))}
-                          className="input flex-1"
-                        />
-                      </div>
-                      <input
-                        value={deliverLocations[p.title] ?? ""}
-                        onChange={(e) => setDeliverLocations((l) => ({ ...l, [p.title]: e.target.value }))}
-                        placeholder="Where (optional)"
-                        className="input mt-2"
-                      />
-                      <div className="mt-1 text-[10.5px] text-[#343E42]">
-                        Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
-                        set. You can edit them here, or later in Phase 3, any time.
-                      </div>
-                      <button
-                        onClick={() =>
-                          onClaim(
-                            p.title,
-                            chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen,
-                            deliverDates[p.title] ?? "",
-                            deliverTimes[p.title] ?? "",
-                            deliverLocations[p.title] ?? "",
-                          )
-                        }
-                        disabled={!chosen || (chosen === OTHER_FORMAT && !(customFormats[p.title] ?? "").trim())}
-                        className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
-                      >
-                        Claim this topic
-                      </button>
-                    </>
+                    </div>
                   )}
                 </div>
               );
