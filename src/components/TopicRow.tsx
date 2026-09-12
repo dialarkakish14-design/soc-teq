@@ -64,12 +64,12 @@ export function TopicRow({
               </span>
             )}
           </div>
-          <div className="mt-0.5 text-[11.5px] text-[#3F4C50]">{meta}</div>
+          <div className="mt-0.5 text-[11.5px] text-[#343E42]">{meta}</div>
         </div>
         {badge}
       </button>
       {onEdit && (
-        <button onClick={onEdit} aria-label="Edit topic" className="shrink-0 rounded-lg p-2 text-[#3F4C50] active:bg-[#F7FAFA]">
+        <button onClick={onEdit} aria-label="Edit topic" className="shrink-0 rounded-lg p-2 text-[#343E42] active:bg-[#F7FAFA]">
           <EditIcon />
         </button>
       )}

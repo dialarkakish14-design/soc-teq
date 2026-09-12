@@ -170,7 +170,7 @@ export function SignUp({
               {showPassword ? "hide" : "show"}
             </button>
           </div>
-          <div className="mt-1.5 text-xs text-[#3F4C50]">Forgotten passwords are reset by email.</div>
+          <div className="mt-1.5 text-xs text-[#343E42]">Forgotten passwords are reset by email.</div>
         </Field>
 
         <Field label="Email">
@@ -204,7 +204,7 @@ export function SignUp({
               </option>
             ))}
           </select>
-          <p className="mt-1.5 text-[11.5px] text-[#3F4C50]">
+          <p className="mt-1.5 text-[11.5px] text-[#343E42]">
             SoC-TEQ is in early pilot with a small number of programs. Interested in piloting it at
             yours? Email{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
@@ -253,7 +253,7 @@ export function SignUp({
           {busy ? "Creating…" : "Create account"}
         </button>
 
-        <div className="text-xs text-[#3F4C50]">
+        <div className="text-xs text-[#343E42]">
           Your name is visible to your group. It never appears next to a rating or in exported
           data.
         </div>

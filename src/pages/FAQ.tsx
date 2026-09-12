@@ -44,7 +44,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Q&amp;As</h1>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#343E42]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -59,7 +59,7 @@ export function FAQ({ resident, onAbout }: { resident: Resident; onAbout: () => 
               <div key={item.question} className="rounded-2xl bg-white p-4 shadow-sm">
                 <button onClick={() => toggle(i)} className="flex w-full items-center justify-between gap-3 text-left">
                   <span className="text-[14.5px] font-bold text-[#0E1A1C]">{item.question}</span>
-                  <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                  <span className={`shrink-0 text-xl font-extrabold text-[#343E42] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                     ▾
                   </span>
                 </button>

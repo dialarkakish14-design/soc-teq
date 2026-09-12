@@ -123,7 +123,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   if (loading) {
-    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">Loading…</div>;
+    return <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">Loading…</div>;
   }
 
   if (!cycle) {
@@ -186,8 +186,12 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   async function releaseClaim(id: string) {
-    const { error } = await supabase.from("claims").delete().eq("id", id);
+    // A delete blocked by RLS (baseline already submitted) still comes
+    // back with no error — Postgres just matches zero rows — so check
+    // what actually came back instead of trusting a lack of error alone.
+    const { data, error } = await supabase.from("claims").delete().eq("id", id).select("id");
     if (error) return flash(error.message);
+    if (!data || data.length === 0) return flash("Can't be released after your baseline score is in.");
     setClaims((prev) => prev.filter((c) => c.id !== id));
     flash("Released.");
   }
@@ -348,7 +352,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         <div className="flex items-center justify-between">
           <div>
             <h3 className="font-bold text-[#0E1A1C]">Cycle 1</h3>
-            <div className="text-xs text-[#3F4C50]">
+            <div className="text-xs text-[#343E42]">
               Month {month} of 6 · started {formatDateShort(cycle.start_date)}
             </div>
           </div>
@@ -383,7 +387,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           {allClaimed ? (
             <StartPhase3 resident={resident} onStarted={load} />
           ) : (
-            <div className="rounded-2xl bg-[#F5F8F7] px-4 py-3.5 text-[12.5px] text-[#3F4C50]">
+            <div className="rounded-2xl bg-[#F5F8F7] px-4 py-3.5 text-[12.5px] text-[#343E42]">
               {claimedTitles.size} of {priority.length} priority topics claimed so far. Once every topic is
               claimed, the option to begin resident-led remediation appears here.
             </div>
@@ -432,7 +436,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">{label}</div>
+      <div className="mt-0.5 text-[10.5px] text-[#343E42]">{label}</div>
     </div>
   );
 }
@@ -455,7 +459,7 @@ function EngagementBox({ claimRate, delivered, scholarly }: { claimRate: number;
           className={`flex-1 rounded-xl py-1 ${expanded === "delivered" ? "bg-[#F5F8F7]" : ""}`}
         >
           <h2 className="text-xl font-extrabold text-[#0E1A1C]">{delivered.length}</h2>
-          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#3F4C50]">
+          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#343E42]">
             Sessions delivered
             <span className={`text-[9px] transition-transform ${expanded === "delivered" ? "rotate-180" : ""}`}>▾</span>
           </div>
@@ -465,22 +469,22 @@ function EngagementBox({ claimRate, delivered, scholarly }: { claimRate: number;
           className={`flex-1 rounded-xl py-1 ${expanded === "scholarly" ? "bg-[#F5F8F7]" : ""}`}
         >
           <h2 className="text-xl font-extrabold text-[#0E1A1C]">{scholarly.length}</h2>
-          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#3F4C50]">
+          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#343E42]">
             Scholarly output
             <span className={`text-[9px] transition-transform ${expanded === "scholarly" ? "rotate-180" : ""}`}>▾</span>
           </div>
         </button>
       </div>
-      {!expanded && <p className="mt-1.5 text-center text-[10px] text-[#3F4C50]">Tap a stat to see what's behind it.</p>}
+      {!expanded && <p className="mt-1.5 text-center text-[10px] text-[#343E42]">Tap a stat to see what's behind it.</p>}
       {list && (
         <div className="mt-3 border-t border-[#E2EAE9] pt-2">
           {list.length === 0 ? (
-            <div className="py-2 text-center text-[12.5px] text-[#3F4C50]">Nothing here yet.</div>
+            <div className="py-2 text-center text-[12.5px] text-[#343E42]">Nothing here yet.</div>
           ) : (
             list.map((c) => (
               <div key={c.id} className="flex items-center justify-between border-t border-[#E2EAE9] py-2 first:border-t-0">
                 <div className="text-[13px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-[11px] text-[#3F4C50]">{c.format}</div>
+                <div className="text-[11px] text-[#343E42]">{c.format}</div>
               </div>
             ))
           )}
@@ -563,7 +567,7 @@ function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
           <span
             key={t}
             className={`flex-1 rounded-lg py-1 text-center font-mono text-[10px] font-semibold ${
-              tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#3F4C50]"
+              tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#343E42]"
             }`}
           >
             {t.replace("Fitzpatrick ", "")}
@@ -571,7 +575,7 @@ function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
         ))}
       </div>
       {missing.length > 0 && (
-        <div className="mt-1 text-[10.5px] text-[#3F4C50]">
+        <div className="mt-1 text-[10.5px] text-[#343E42]">
           Not yet shown in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
         </div>
       )}
@@ -617,6 +621,10 @@ function Phase2({
   const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
   const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
   const filtered = priority.filter((p) => p.title.toLowerCase().includes(search.trim().toLowerCase()));
+  // Once a resident has entered their baseline score, their claimed set is
+  // effectively locked in — releasing a topic after that would leave the
+  // baseline no longer matching what they're actually committed to.
+  const baselineSubmitted = assessments.some((a) => a.phase === "baseline" && a.resident_id === resident.id);
 
   return (
     <>
@@ -659,7 +667,7 @@ function Phase2({
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="text-[14.5px] font-bold text-[#0E1A1C]">{p.title}</div>
-                      <div className="text-xs text-[#3F4C50]">
+                      <div className="text-xs text-[#343E42]">
                         {claimsForTopic.length ? `Claimed by ${claimsForTopic.length} resident${claimsForTopic.length > 1 ? "s" : ""}` : "Not yet claimed"}
                       </div>
                     </div>
@@ -690,9 +698,15 @@ function Phase2({
                   {mineClaim ? (
                     <>
                       <DeliveryDetailsEditor claim={mineClaim} onSave={onUpdateDetails} />
-                      <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-                        Release this topic
-                      </button>
+                      {baselineSubmitted ? (
+                        <div className="mt-1.5 text-[11px] text-[#343E42]">
+                          Can't be released after your baseline score is in.
+                        </div>
+                      ) : (
+                        <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#343E42]">
+                          Release this topic
+                        </button>
+                      )}
                     </>
                   ) : (
                     <>
@@ -737,7 +751,7 @@ function Phase2({
                         placeholder="Where (optional)"
                         className="input mt-2"
                       />
-                      <div className="mt-1 text-[10.5px] text-[#3F4C50]">
+                      <div className="mt-1 text-[10.5px] text-[#343E42]">
                         Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
                         set. You can edit them here, or later in Phase 3, any time.
                       </div>
@@ -813,15 +827,15 @@ function Phase3({
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
         <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
-        <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+        <span className={`shrink-0 text-xl font-extrabold text-[#343E42] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && mine.length > 0 && (
-        <p className="mt-1 text-[11px] leading-relaxed text-[#3F4C50]">
+        <p className="mt-1 text-[11px] leading-relaxed text-[#343E42]">
           When you deliver, consider all 5 Likert items and try to cover them all.
         </p>
       )}
       {!open ? null : mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
+        <div className="mt-3 text-center text-sm text-[#343E42]">You didn't claim any topics this cycle.</div>
       ) : (
         mine.map((c) => (
           <CommittedTopicRow
@@ -848,12 +862,12 @@ function Phase3({
 function FilePicker({ file, onChange }: { file: File | null; onChange: (f: File | null) => void }) {
   return (
     <label className="block">
-      <div className="mb-1 text-[11px] font-semibold text-[#3F4C50]">Upload the paper (optional, PDF or image, up to 20MB)</div>
+      <div className="mb-1 text-[11px] font-semibold text-[#343E42]">Upload the paper (optional, PDF or image, up to 20MB)</div>
       <div className="flex items-center gap-2">
         <span className="cursor-pointer whitespace-nowrap rounded-lg bg-[#EAEFEE] px-3 py-1.5 text-[11px] font-bold text-[#232D30]">
           Choose file
         </span>
-        {file && <span className="truncate text-[11px] text-[#3F4C50]">{file.name}</span>}
+        {file && <span className="truncate text-[11px] text-[#343E42]">{file.name}</span>}
         <input
           type="file"
           accept="application/pdf,image/png,image/jpeg"
@@ -890,7 +904,7 @@ function ResourceRow({
         <textarea value={takeaway} onChange={(e) => setTakeaway(e.target.value)} placeholder="What a co-resident should know" className="input min-h-[60px]" />
         <FilePicker file={file} onChange={setFile} />
         {resource.file_name && !file && (
-          <div className="text-[11px] text-[#3F4C50]">Current file: {resource.file_name} · choose a new one to replace it</div>
+          <div className="text-[11px] text-[#343E42]">Current file: {resource.file_name} · choose a new one to replace it</div>
         )}
         <div className="flex gap-2">
           <button
@@ -925,7 +939,7 @@ function ResourceRow({
         )}
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1.5">
-        <button onClick={() => setEditing(true)} className="text-[11px] font-semibold text-[#3F4C50]">
+        <button onClick={() => setEditing(true)} className="text-[11px] font-semibold text-[#343E42]">
           Edit
         </button>
         <button onClick={() => onDelete(resource.id)} className="text-[11px] font-semibold text-[#93393E]">
@@ -974,7 +988,7 @@ function ResourceShare({
       ))}
       {open && (
         <div className="mt-2 flex flex-col gap-2">
-          <p className="text-[11px] leading-relaxed text-[#3F4C50]">
+          <p className="text-[11px] leading-relaxed text-[#343E42]">
             You can write a summary, note what stood out, or upload the paper itself (a PDF, or a photo of the
             highlighted pages).
           </p>
@@ -1045,7 +1059,7 @@ function DeliveryDetailsEditor({
   return (
     <div className="mt-1.5">
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
-      <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#3F4C50]">
+      <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
         {when ? "Edit day/time/location" : "Add day/time/location"}
       </button>
     </div>
@@ -1092,7 +1106,7 @@ function CommittedTopicRow({
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-          <div className="text-xs text-[#3F4C50]">{c.format}</div>
+          <div className="text-xs text-[#343E42]">{c.format}</div>
         </div>
         <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
           {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
@@ -1206,17 +1220,17 @@ function Phase4({
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <h3 className="font-bold text-[#0E1A1C]">What was claimed this cycle</h3>
         {claims.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#3F4C50]">No topics were claimed this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#343E42]">No topics were claimed this cycle.</div>
         ) : (
           claims.map((c) => (
             <div key={c.id} className="flex items-center justify-between border-t border-[#E2EAE9] py-3">
               <div>
                 <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                <div className="text-xs text-[#3F4C50]">{c.format}</div>
+                <div className="text-xs text-[#343E42]">{c.format}</div>
               </div>
               <span
                 className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
+                  c.status === "delivered" ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#343E42]"
                 }`}
               >
                 {c.status === "delivered" ? "Delivered" : "Not delivered"}
@@ -1260,17 +1274,17 @@ function AssessmentCard({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{label}</h3>
-          <p className="mt-0.5 text-[12.5px] text-[#3F4C50]">{desc}</p>
+          <p className="mt-0.5 text-[12.5px] text-[#343E42]">{desc}</p>
         </div>
         <span
           className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
+            mine ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#343E42]"
           }`}
         >
           {mine ? `${mine.score}%` : "Not taken"}
         </span>
       </div>
-      <p className="mt-2 text-[11.5px] leading-relaxed text-[#3F4C50]">
+      <p className="mt-2 text-[11.5px] leading-relaxed text-[#343E42]">
         Enter your own score below · it's yours alone to see until every {resident.pgy} resident has entered
         theirs, then the group average appears here instead of individual scores.
       </p>
@@ -1281,7 +1295,7 @@ function AssessmentCard({
         </div>
       ) : (
         phaseAssessments.length > 0 && (
-          <div className="mt-3 border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#3F4C50]">
+          <div className="mt-3 border-t border-[#E2EAE9] pt-3 text-[12.5px] text-[#343E42]">
             {phaseAssessments.length} of {cohortCount || "?"} entered so far · average shows once everyone's in.
           </div>
         )
@@ -1292,7 +1306,7 @@ function AssessmentCard({
             setScore(String(mine.score));
             setEditing(true);
           }}
-          className="mt-2 text-xs font-semibold text-[#3F4C50]"
+          className="mt-2 text-xs font-semibold text-[#343E42]"
         >
           Edit score · typo, or the grade was corrected
         </button>
@@ -1370,7 +1384,7 @@ function PhaseCards({ phase }: { phase: 1 | 2 | 3 | 4 }) {
             </div>
             <span
               className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
+                phase === c.n ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#343E42]"
               }`}
             >
               {phase === c.n ? "Now" : phase > c.n ? "Done" : "Ahead"}
@@ -1399,7 +1413,7 @@ function NoCycleYet({ resident, onStarted }: { resident: Resident; onStarted: ()
   return (
     <div className="rounded-3xl bg-white p-6 text-center shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">Begin Cycle 1</h3>
-      <p className="mt-2 text-[13px] leading-relaxed text-[#3F4C50]">
+      <p className="mt-2 text-[13px] leading-relaxed text-[#343E42]">
         This starts the 6-month tracking cycle for {resident.pgy}: months 1–3 gather data, months 4–6 are for
         claiming and delivering on the priority educational topics found. Any resident can start it, but make sure
         you've discussed this with the rest of {resident.pgy} and your program director first.

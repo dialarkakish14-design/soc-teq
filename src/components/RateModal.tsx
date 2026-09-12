@@ -115,7 +115,7 @@ export function RateModal({
               return (
                 <div key={d.key} className="rounded-2xl bg-[#EAEFEE] px-3.5 py-3">
                   <div className="text-[12.5px] font-bold text-[#232D30]">{d.name} · outside this session's scope</div>
-                  {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#3F4C50]">{reason}</p>}
+                  {reason && <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#343E42]">{reason}</p>}
                 </div>
               );
             })}
@@ -131,7 +131,7 @@ export function RateModal({
                   <span className="text-[15px] font-extrabold text-[#0E1A1C]">{d.name}</span>
                   <span
                     className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-sm font-bold ${
-                      set ? "bg-[#F0E9F5] text-[#5E3F73]" : "bg-[#F5F8F7] text-[#3F4C50]"
+                      set ? "bg-[#F0E9F5] text-[#5E3F73]" : "bg-[#F5F8F7] text-[#343E42]"
                     }`}
                   >
                     {set ? vals[d.key] : "—"}
@@ -143,7 +143,7 @@ export function RateModal({
                     <button
                       type="button"
                       onClick={() => toggleHint(d.key)}
-                      className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-[#3F4C50]"
+                      className="mt-1 flex items-center gap-1 text-[11px] font-semibold text-[#343E42]"
                     >
                       More info
                       <span
@@ -153,7 +153,7 @@ export function RateModal({
                       </span>
                     </button>
                     {expandedHints.has(d.key) && (
-                      <p className="mt-1 text-[11.5px] italic leading-relaxed text-[#3F4C50]">{d.hint}</p>
+                      <p className="mt-1 text-[11.5px] italic leading-relaxed text-[#343E42]">{d.hint}</p>
                     )}
                   </>
                 )}
@@ -182,7 +182,7 @@ export function RateModal({
                     setVals((prev) => ({ ...prev, [d.key]: v }));
                   }}
                 />
-                <div className="mt-1 flex justify-between text-[10.5px] text-[#3F4C50]">
+                <div className="mt-1 flex justify-between text-[10.5px] text-[#343E42]">
                   <span>Strongly disagree</span>
                   <span>Strongly agree</span>
                 </div>
@@ -192,7 +192,7 @@ export function RateModal({
         </div>
 
         {!complete && (
-          <div className="text-[11px] text-[#3F4C50]">
+          <div className="text-[11px] text-[#343E42]">
             Tap anywhere on a scale to set it. Nothing is pre-selected.
           </div>
         )}
@@ -213,7 +213,7 @@ export function RateModal({
 
         <label className="mt-4 block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">
-            Note <span className="font-normal text-[#3F4C50]">· optional</span>
+            Note <span className="font-normal text-[#343E42]">· optional</span>
           </div>
           <textarea
             value={note}
@@ -239,11 +239,11 @@ export function RateModal({
         <button
           onClick={markAbsent}
           disabled={busy}
-          className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#3F4C50] disabled:opacity-60"
+          className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#343E42] disabled:opacity-60"
         >
           I wasn't at this session
         </button>
-        <button onClick={onClose} className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#3F4C50]">
+        <button onClick={onClose} className="mt-1 w-full rounded-2xl py-2.5 text-sm font-semibold text-[#343E42]">
           Cancel
         </button>
       </div>

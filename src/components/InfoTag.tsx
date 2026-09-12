@@ -10,7 +10,7 @@ export function InfoTag({ label, definition, dark }: { label: string; definition
     <div className="inline-block">
       <button
         onClick={() => setOpen((o) => !o)}
-        className={`flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-widest ${dark ? "opacity-85" : "text-[#3F4C50]"}`}
+        className={`flex items-center gap-1 font-mono text-[9.5px] uppercase tracking-widest ${dark ? "opacity-85" : "text-[#343E42]"}`}
       >
         {label}
         <span

@@ -112,7 +112,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
   }, [active, load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#343E42]">Loading…</div>;
   }
 
   const titleKey = (t: string) => t.trim().toLowerCase();
@@ -176,7 +176,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
           <p className="mt-1 text-[13px] text-[#232D30]">See which Fitzpatrick skin types are represented for each condition.</p>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#343E42]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -185,7 +185,7 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
 
       <div className="px-5">
         {conditions.length === 0 ? (
-          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+          <div className="mt-4 rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
             Nothing here yet.
           </div>
         ) : (
@@ -237,15 +237,15 @@ export function Cases({ resident, active, onAbout }: { resident: Resident; activ
                       <span className="flex items-center text-[13.5px] font-extrabold text-[#0E1A1C]">
                         <span
                           className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                          style={{ background: SESSION_TYPE_COLOR[g.type] ?? "#3F4C50" }}
+                          style={{ background: SESSION_TYPE_COLOR[g.type] ?? "#343E42" }}
                         />
                         {g.type}
                       </span>
                       <span className="flex items-center gap-2">
-                        <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
+                        <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
                           {g.conditions.length} condition{g.conditions.length === 1 ? "" : "s"}
                         </span>
-                        <span className={`text-xl font-extrabold text-[#3F4C50] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                        <span className={`text-xl font-extrabold text-[#343E42] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                           ▾
                         </span>
                       </span>
@@ -279,7 +279,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
       <div className="flex items-center justify-between gap-3">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{c.title}</h3>
-          <div className="mt-0.5 text-xs text-[#3F4C50]">
+          <div className="mt-0.5 text-xs text-[#343E42]">
             {c.instances.length} session{c.instances.length > 1 ? "s" : ""} · {formatDateShort(c.latest.date)}
           </div>
         </div>
@@ -296,7 +296,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
           <span
             key={t}
             className={`flex-1 rounded-lg py-1.5 text-center font-mono text-[10.5px] font-semibold ${
-              c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#3F4C50]"
+              c.tones.has(t) ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#343E42]"
             }`}
           >
             {t.replace("Fitzpatrick ", "")}
@@ -304,7 +304,7 @@ function ConditionCard({ c, onOpen }: { c: ConditionSummary; onOpen: () => void 
         ))}
       </div>
       {missing.length > 0 && (
-        <div className="mt-2 text-[11px] text-[#3F4C50]">
+        <div className="mt-2 text-[11px] text-[#343E42]">
           Not yet shown in {missing.map((m) => m.replace("Fitzpatrick ", "type ")).join(" and ")}.
         </div>
       )}

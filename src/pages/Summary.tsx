@@ -148,7 +148,7 @@ export function Summary({
   }
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#343E42]">Loading…</div>;
   }
 
   const mine = rows.filter((r) => r.sessions?.days);
@@ -165,7 +165,7 @@ export function Summary({
           <h1 className="mt-1 text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Team record</h1>
         </div>
         <div className="mt-0.5 text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#343E42]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -179,7 +179,7 @@ export function Summary({
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 rounded-xl py-2.5 text-[13px] font-bold capitalize ${
-                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#3F4C50]"
+                tab === t ? "bg-white text-[#064B45] shadow-sm" : "text-[#343E42]"
               }`}
             >
               {t}
@@ -270,7 +270,7 @@ function SessionDot({ type }: { type: string }) {
   return (
     <span
       className="mr-2 inline-block h-2.5 w-2.5 rounded-full align-middle"
-      style={{ background: SESSION_TYPE_COLOR[type] ?? "#3F4C50" }}
+      style={{ background: SESSION_TYPE_COLOR[type] ?? "#343E42" }}
     />
   );
 }
@@ -359,7 +359,7 @@ function DayTab({
             key={f}
             onClick={() => setCoverageFilter(f)}
             className={`flex-1 rounded-xl py-2 text-[12px] font-bold ${
-              coverageFilter === f ? "bg-white text-[#064B45] shadow-sm" : "text-[#3F4C50]"
+              coverageFilter === f ? "bg-white text-[#064B45] shadow-sm" : "text-[#343E42]"
             }`}
           >
             {label}
@@ -374,12 +374,12 @@ function DayTab({
         const viewExclusions = exclusionSummary(inView.map(toEntry));
         return (
           <div className="rounded-2xl bg-white px-3.5 py-2.5 shadow-sm">
-            <p className="text-[11.5px] font-semibold text-[#3F4C50]">
+            <p className="text-[11.5px] font-semibold text-[#343E42]">
               Teaching exposure: <span className="text-[#0E1A1C]">{viewStats.exposurePct}%</span> of visually relevant
               topics {filterDate ? "on this day" : "logged"} were SoC-covered.
             </p>
             {viewExclusions && viewExclusions.withExclusion > 0 && (
-              <p className="mt-1 text-[11px] leading-relaxed text-[#3F4C50]">
+              <p className="mt-1 text-[11px] leading-relaxed text-[#343E42]">
                 {viewExclusions.withExclusion} of {viewExclusions.covered} covered topic
                 {viewExclusions.covered === 1 ? "" : "s"} had Nuance and/or Management marked outside scope.
               </p>
@@ -389,7 +389,7 @@ function DayTab({
       })()}
 
       {days.length === 0 && (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
           {filterDate ? "Nothing logged on that day." : "Nothing logged yet."}
         </div>
       )}
@@ -415,7 +415,7 @@ function DayTab({
 
         return (
           <div key={date}>
-            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#3F4C50]">
+            <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#343E42]">
               {date === todayLocalDate() ? "Today, " : ""}
               {formatDateLong(date)} · {covered.length} SoC topic{covered.length === 1 ? "" : "s"}
               {isDayOpen(date, programTimezone) ? " · open" : ""}
@@ -424,7 +424,7 @@ function DayTab({
             {coverageFilter === "all" && (
               <div className="mt-2 rounded-3xl bg-white p-4 shadow-sm">
                 <h3 className="font-bold text-[#0E1A1C]">Day snapshot</h3>
-                <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Everything logged and rated on this day.</p>
+                <p className="mt-0.5 text-[11.5px] text-[#343E42]">Everything logged and rated on this day.</p>
                 <div className="mt-2.5 flex flex-wrap gap-2">
                   {[...sessionTypeCounts.entries()].map(([type, count]) => (
                     <span
@@ -438,7 +438,7 @@ function DayTab({
                   ))}
                 </div>
                 <div className="mt-3 border-t border-[#E2EAE9] pt-3">
-                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-[#343E42]">
                     Fitzpatrick tones shown
                   </div>
                   <div className="mt-2 flex gap-1.5">
@@ -452,7 +452,7 @@ function DayTab({
                           onClick={() => count > 0 && toggleTone(key)}
                           disabled={count === 0}
                           className={`flex-1 rounded-lg py-2 text-center font-mono text-[11px] font-semibold transition-colors ${
-                            count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#3F4C50]"
+                            count ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EEF1F0] text-[#343E42]"
                           } ${isOpen ? "ring-2 ring-[#0E7C72]" : ""}`}
                         >
                           {t.replace("Fitzpatrick ", "")}
@@ -478,7 +478,7 @@ function DayTab({
             )}
 
             {sessions.length === 0 ? (
-              <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+              <div className="mt-2 rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
                 Nothing matches this filter on this day.
               </div>
             ) : (
@@ -496,10 +496,10 @@ function DayTab({
                           {s.type}
                         </span>
                         <span className="flex items-center gap-2">
-                          <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
+                          <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
                             {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                           </span>
-                          <span className={`text-xl font-extrabold text-[#3F4C50] transition-transform ${isOpen ? "rotate-180" : ""}`}>
+                          <span className={`text-xl font-extrabold text-[#343E42] transition-transform ${isOpen ? "rotate-180" : ""}`}>
                             ▾
                           </span>
                         </span>
@@ -591,7 +591,7 @@ function NotesTab({
               {privateCount}
             </span>
           </div>
-          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Only visible to you.</p>
+          <p className="mt-1 text-[12.5px] text-[#343E42]">Only visible to you.</p>
         </button>
         <button onClick={exportPrivateNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
           Export private notes (CSV)
@@ -605,7 +605,7 @@ function NotesTab({
               {publicCount}
             </span>
           </div>
-          <p className="mt-1 text-[12.5px] text-[#3F4C50]">Left while rating · visible to your whole group.</p>
+          <p className="mt-1 text-[12.5px] text-[#343E42]">Left while rating · visible to your whole group.</p>
         </button>
         <button onClick={exportPublicNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
           Export public notes (CSV)
@@ -656,7 +656,7 @@ function NotesBrowserShell({
           <span className="text-[13px] font-bold text-[#0E1A1C]">
             Topics mentioned{selectedTitle ? ` · ${selectedTitle}` : ""}
           </span>
-          <span className={`text-lg font-extrabold text-[#3F4C50] transition-transform ${showTopicList ? "rotate-180" : ""}`}>
+          <span className={`text-lg font-extrabold text-[#343E42] transition-transform ${showTopicList ? "rotate-180" : ""}`}>
             ▾
           </span>
         </button>
@@ -685,7 +685,7 @@ function NotesBrowserShell({
                 }`}
               >
                 <span>{t.title}</span>
-                <span className="font-mono text-[10px] text-[#3F4C50]">{t.count}</span>
+                <span className="font-mono text-[10px] text-[#343E42]">{t.count}</span>
               </button>
             ))}
           </div>
@@ -749,7 +749,7 @@ function PrivateNotesBrowser({
       onSelectTitle={setSelectedTitle}
     >
       {filtered.length === 0 ? (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
           {privateNotes.length === 0 ? "No private notes yet." : "No notes match."}
         </div>
       ) : (
@@ -758,7 +758,7 @@ function PrivateNotesBrowser({
             <h3 className="font-bold text-[#0E1A1C]">{g.title}</h3>
             {g.entries.map((e) => (
               <div key={e.note.topic_id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
-                <button onClick={() => onOpenTopic(e.topic)} className="text-[11px] font-semibold text-[#3F4C50]">
+                <button onClick={() => onOpenTopic(e.topic)} className="text-[11px] font-semibold text-[#343E42]">
                   {e.topic.sessions!.type} · {formatDateShort(e.topic.sessions!.days.date)}
                 </button>
                 <p className="mt-1 text-[13px] leading-relaxed text-[#232D30]">{e.note.note}</p>
@@ -824,7 +824,7 @@ function PublicNotesBrowser({
       onSelectTitle={setSelectedTitle}
     >
       {filtered.length === 0 ? (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
           {groups.length === 0 ? "No notes yet. Notes left while rating a topic will collect here." : "No notes match."}
         </div>
       ) : (
@@ -836,12 +836,12 @@ function PublicNotesBrowser({
               if (notes.length === 0) return null;
               return (
                 <div key={t.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
-                  <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#3F4C50]">
+                  <button onClick={() => onOpenTopic(t)} className="text-[11px] font-semibold text-[#343E42]">
                     {t.sessions!.type} · {formatDateShort(t.sessions!.days.date)}
                   </button>
                   {notes.map((rt) => (
                     <div key={rt.id} className="mt-1.5">
-                      <div className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
+                      <div className="text-[11px] font-semibold uppercase tracking-wide text-[#343E42]">
                         {codeById[rt.resident_id] ?? "Resident"}
                       </div>
                       <p className="mt-0.5 text-[13px] leading-relaxed text-[#232D30]">{rt.note}</p>
@@ -939,7 +939,7 @@ function PeriodTab({
       {engagementPoints && <EngagementTrendCard points={engagementPoints} />}
 
       {!entries.length ? (
-        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
           Nothing logged in this period.
         </div>
       ) : (
@@ -959,7 +959,7 @@ function ScoreTrendCard({ points }: { points: ScorePoint[] }) {
   const previous = scored[scored.length - 2];
   const delta = latest && previous ? latest.mean! - previous.mean! : 0;
   const trendWord = !previous || Math.abs(delta) < 0.005 ? "holding steady" : delta > 0 ? "rising" : "falling";
-  const trendColor = delta > 0.005 ? "#0E7C72" : delta < -0.005 ? "#8F5205" : "#3F4C50";
+  const trendColor = delta > 0.005 ? "#0E7C72" : delta < -0.005 ? "#8F5205" : "#343E42";
   const weekLabel = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
   return (
@@ -967,7 +967,7 @@ function ScoreTrendCard({ points }: { points: ScorePoint[] }) {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">Score trend</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean RM, last 8 weeks</p>
+          <p className="mt-0.5 text-[11.5px] text-[#343E42]">Mean RM, last 8 weeks</p>
         </div>
         <div className="text-right">
           <div className="font-mono text-2xl font-extrabold text-[#0E1A1C]">{latest ? latest.mean!.toFixed(2) : "—"}</div>
@@ -992,13 +992,13 @@ function ScoreTrendCard({ points }: { points: ScorePoint[] }) {
       </div>
       <div className="mt-1 flex gap-1.5">
         {points.map((p, i) => (
-          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#3F4C50]">
+          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#343E42]">
             {i % 2 === 0 ? weekLabel(p.weekStart) : ""}
           </div>
         ))}
       </div>
 
-      <p className="mt-3.5 text-[11.5px] leading-relaxed text-[#3F4C50]">
+      <p className="mt-3.5 text-[11.5px] leading-relaxed text-[#343E42]">
         Amber bars are weeks that averaged below {THRESHOLD}. Gray means nothing was rated that week.
       </p>
     </div>
@@ -1014,7 +1014,7 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
   const previous = points[points.length - 2];
   const delta = previous ? latest.pct - previous.pct : 0;
   const trendWord = !previous || delta === 0 ? "holding steady" : delta > 0 ? "rising" : "falling";
-  const trendColor = delta > 0 ? "#0E7C72" : delta < 0 ? "#8F5205" : "#3F4C50";
+  const trendColor = delta > 0 ? "#0E7C72" : delta < 0 ? "#8F5205" : "#343E42";
   const weekLabel = (d: string) => new Date(d + "T00:00:00").toLocaleDateString(undefined, { day: "numeric", month: "short" });
 
   return (
@@ -1022,7 +1022,7 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
       <div className="flex items-start justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">Your engagement over time</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Response rate, last 8 weeks</p>
+          <p className="mt-0.5 text-[11.5px] text-[#343E42]">Response rate, last 8 weeks</p>
         </div>
         <div className="text-right">
           <div className="font-mono text-2xl font-extrabold text-[#0E1A1C]">{latest.pct}%</div>
@@ -1045,7 +1045,7 @@ function EngagementTrendCard({ points }: { points: EngagementPoint[] }) {
       </div>
       <div className="mt-1 flex gap-1.5">
         {points.map((p, i) => (
-          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#3F4C50]">
+          <div key={p.weekStart} className="flex-1 text-center font-mono text-[9px] text-[#343E42]">
             {i % 2 === 0 ? weekLabel(p.weekStart) : ""}
           </div>
         ))}
@@ -1088,7 +1088,7 @@ function PeriodContent({
         <div className="font-mono text-[10px] font-semibold uppercase tracking-widest text-[#0E7C72]">
           {period === "week" ? "Weekly summary" : "Monthly summary"}
         </div>
-        <p className="mt-1 text-[12px] text-[#3F4C50]">
+        <p className="mt-1 text-[12px] text-[#343E42]">
           Everything logged and rated across this {period} as a whole, not broken out by individual day.
         </p>
       </div>
@@ -1101,7 +1101,7 @@ function PeriodContent({
             <h2 className={`text-2xl font-extrabold ${stats.avgScore != null && stats.avgScore < THRESHOLD ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>
               {stats.avgScore ? stats.avgScore.toFixed(2) : "—"}
             </h2>
-            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#3F4C50]">
+            <button onClick={() => setShowRmInfo((s) => !s)} className="mt-0.5 flex items-center justify-center gap-1 text-[11px] text-[#343E42]">
               Mean RM
               <span className={`flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-bold ${showRmInfo ? "bg-[#0E7C72] text-white" : "bg-[#DCEFEB] text-[#064B45]"}`}>
                 i
@@ -1119,7 +1119,7 @@ function PeriodContent({
           {stats.gaps.length} flagged below {THRESHOLD}.
         </p>
         {exclusions && exclusions.withExclusion > 0 && (
-          <p className="mt-1.5 text-[11px] leading-relaxed text-[#3F4C50]">
+          <p className="mt-1.5 text-[11px] leading-relaxed text-[#343E42]">
             {exclusions.withExclusion} of {exclusions.covered} covered topic{exclusions.covered === 1 ? "" : "s"} had Nuance
             and/or Management marked outside scope, so the average above isn't a like-for-like 5-domain mean across every
             topic.
@@ -1130,7 +1130,7 @@ function PeriodContent({
       {perItem && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Team item averages</h3>
-          <p className="mt-0.5 text-[11.5px] text-[#3F4C50]">Mean across every resident's rating this period, not an individual score.</p>
+          <p className="mt-0.5 text-[11.5px] text-[#343E42]">Mean across every resident's rating this period, not an individual score.</p>
           {Object.entries(perItem).map(([k, v]) => (
             <div key={k} className="mt-2.5">
               <div className="flex justify-between text-[12.5px] font-semibold">
@@ -1170,7 +1170,7 @@ function PeriodContent({
       {stats.gaps.length > 0 && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">
-            Priority educational needs <span className="font-normal text-[#3F4C50]">· below {THRESHOLD}</span>
+            Priority educational needs <span className="font-normal text-[#343E42]">· below {THRESHOLD}</span>
           </h3>
           {stats.gaps.map(({ entry, score }) => {
             const full = byId.get(entry.id);
@@ -1182,7 +1182,7 @@ function PeriodContent({
               >
                 <div>
                   <div className="text-[14px] font-bold text-[#0E1A1C]">{entry.title}</div>
-                  <div className="text-[11.5px] text-[#3F4C50]">
+                  <div className="text-[11.5px] text-[#343E42]">
                     {entry.sessionType} · {formatDateShort(entry.date)}
                   </div>
                 </div>
@@ -1208,7 +1208,7 @@ function Stat({ n, label, tone }: { n: string | number; label: string; tone?: "t
   return (
     <div className="flex-1">
       <h2 className={`text-2xl font-extrabold ${tone === "amber" ? "text-[#8F5205]" : "text-[#0E1A1C]"}`}>{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#3F4C50]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#343E42]">{label}</div>
     </div>
   );
 }

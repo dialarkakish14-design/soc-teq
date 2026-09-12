@@ -89,7 +89,7 @@ export function TrackMyInfo({
   }, [active, load]);
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#343E42]">Loading…</div>;
   }
 
   const codeById = Object.fromEntries(cohort.map((c) => [c.id, c.resident_code]));
@@ -342,7 +342,7 @@ export function TrackMyInfo({
           My profile
         </div>
         <div className="text-right">
-          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
+          <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#343E42]">Home page</div>
           <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
             SoC-TEQ
           </button>
@@ -356,7 +356,7 @@ export function TrackMyInfo({
           </div>
           <div>
             <h1 className="text-xl font-extrabold tracking-tight text-[#0E1A1C]">{resident.full_name}</h1>
-            <div className="text-xs text-[#3F4C50]">
+            <div className="text-xs text-[#343E42]">
               {resident.pgy} · @{resident.username} · you appear as <b className="text-[#0E1A1C]">{resident.resident_code}</b> in all
               data
             </div>
@@ -375,7 +375,7 @@ export function TrackMyInfo({
 
         <div className="mt-4 rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Rating reminders</h3>
-          <p className="mt-1 text-[11.5px] leading-relaxed text-[#3F4C50]">
+          <p className="mt-1 text-[11.5px] leading-relaxed text-[#343E42]">
             Optional email if you still have a topic to rate before today closes. Off by default.
           </p>
           <div className="mt-3 flex gap-2">
@@ -399,7 +399,7 @@ export function TrackMyInfo({
             <button
               disabled={reminderBusy}
               onClick={() => setReminderPreference(false, 1)}
-              className="mt-2.5 w-full text-center text-[12px] font-semibold text-[#3F4C50] disabled:opacity-60"
+              className="mt-2.5 w-full text-center text-[12px] font-semibold text-[#343E42] disabled:opacity-60"
             >
               Turn off reminders
             </button>
@@ -441,7 +441,7 @@ export function TrackMyInfo({
             <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
               <button onClick={() => setShowRated((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
                 <h3 className="font-bold text-[#0E1A1C]">Topics you rated</h3>
-                <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${showRated ? "rotate-180" : ""}`}>
+                <span className={`shrink-0 text-xl font-extrabold text-[#343E42] transition-transform ${showRated ? "rotate-180" : ""}`}>
                   ▾
                 </span>
               </button>
@@ -457,7 +457,7 @@ export function TrackMyInfo({
                   >
                     <div>
                       <div className="text-[14px] font-bold text-[#0E1A1C]">{r.title}</div>
-                      <div className="text-[11.5px] text-[#3F4C50]">
+                      <div className="text-[11.5px] text-[#343E42]">
                         {r.sessions!.type} · {formatDateShort(r.sessions!.days.date)} · team {sc?.overall.toFixed(2)}
                       </div>
                     </div>
@@ -474,7 +474,7 @@ export function TrackMyInfo({
             </div>
           </>
         ) : (
-          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+          <div className="mt-3 rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
             You haven't rated anything yet.
           </div>
         )}
@@ -483,7 +483,7 @@ export function TrackMyInfo({
           <div className="mt-3 rounded-3xl bg-white p-4 shadow-sm">
             <button onClick={() => setShowClaimed((s) => !s)} className="flex w-full items-center justify-between gap-2 text-left">
               <h3 className="font-bold text-[#0E1A1C]">Topics you claimed</h3>
-              <span className={`shrink-0 text-xl font-extrabold text-[#3F4C50] transition-transform ${showClaimed ? "rotate-180" : ""}`}>
+              <span className={`shrink-0 text-xl font-extrabold text-[#343E42] transition-transform ${showClaimed ? "rotate-180" : ""}`}>
                 ▾
               </span>
             </button>
@@ -495,7 +495,7 @@ export function TrackMyInfo({
                     <div className="flex items-center justify-between">
                       <div>
                         <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-                        <div className="text-[11.5px] text-[#3F4C50]">{c.format}</div>
+                        <div className="text-[11.5px] text-[#343E42]">{c.format}</div>
                       </div>
                       <span
                         className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
@@ -516,23 +516,23 @@ export function TrackMyInfo({
           </div>
         )}
 
-        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#3F4C50]">Export</div>
+        <div className="mt-6 font-mono text-[10px] font-semibold uppercase tracking-widest text-[#343E42]">Export</div>
         <button onClick={exportMyStatsCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export my stats (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#3F4C50]">
+        <div className="mt-1.5 text-[11px] text-[#343E42]">
           Your rated/absent/logger counts, mean RM vs. team, and weekly engagement trend.
         </div>
         <button onClick={exportTopicCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export topic data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#3F4C50]">
+        <div className="mt-1.5 text-[11px] text-[#343E42]">
           One row per topic. No rater identities · this is the analysis file.
         </div>
         <button onClick={exportRaterCsv} className="mt-3 w-full rounded-2xl bg-white py-3.5 text-sm font-bold text-[#064B45] shadow-sm">
           Export rating-level data (CSV)
         </button>
-        <div className="mt-1.5 text-[11px] text-[#3F4C50]">
+        <div className="mt-1.5 text-[11px] text-[#343E42]">
           One row per rating, resident codes only. Needed for inter-rater reliability.
         </div>
 
@@ -554,7 +554,7 @@ export function TrackMyInfo({
 function AccountRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-center justify-between border-t border-[#E2EAE9] pt-2 first:border-t-0 first:pt-0">
-      <span className="text-[#3F4C50]">{label}</span>
+      <span className="text-[#343E42]">{label}</span>
       <span className="font-semibold text-[#0E1A1C]">{value}</span>
     </div>
   );
@@ -564,7 +564,7 @@ function Stat({ n, label }: { n: string | number; label: string }) {
   return (
     <div className="flex-1">
       <h2 className="text-2xl font-extrabold text-[#0E1A1C]">{n}</h2>
-      <div className="mt-0.5 text-[11px] text-[#3F4C50]">{label}</div>
+      <div className="mt-0.5 text-[11px] text-[#343E42]">{label}</div>
     </div>
   );
 }

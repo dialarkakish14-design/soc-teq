@@ -106,7 +106,7 @@ export function CoverageModal({
             className="flex w-full items-center justify-between gap-2 px-3.5 py-3 text-left"
           >
             <span className="text-[13px] font-bold text-[#0E7C72]">What counts?</span>
-            <span className={`shrink-0 text-lg font-extrabold text-[#3F4C50] transition-transform ${showDefs ? "rotate-180" : ""}`}>
+            <span className={`shrink-0 text-lg font-extrabold text-[#343E42] transition-transform ${showDefs ? "rotate-180" : ""}`}>
               ▾
             </span>
           </button>
@@ -169,7 +169,7 @@ export function CoverageModal({
                   </div>
                   <span
                     className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
-                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#3F4C50]"
+                      covered ? "bg-[#DCEFEB] text-[#064B45]" : "bg-[#EAEFEE] text-[#343E42]"
                     }`}
                   >
                     {covered ? "Yes" : "No"}
@@ -207,7 +207,7 @@ export function CoverageModal({
                 >
                   <h3 className="font-bold text-[#0E1A1C]">Domains outside this session's scope</h3>
                   <span
-                    className={`shrink-0 text-lg font-extrabold text-[#3F4C50] transition-transform ${showScopeInfo ? "rotate-180" : ""}`}
+                    className={`shrink-0 text-lg font-extrabold text-[#343E42] transition-transform ${showScopeInfo ? "rotate-180" : ""}`}
                   >
                     ▾
                   </span>
@@ -302,7 +302,7 @@ function ScopeCheckbox({
             type="button"
             onClick={() => setShowHint((s) => !s)}
             className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-              showHint ? "bg-[#0E7C72] text-white" : "bg-[#EAEFEE] text-[#3F4C50]"
+              showHint ? "bg-[#0E7C72] text-white" : "bg-[#EAEFEE] text-[#343E42]"
             }`}
             aria-label={`What does ${label} mean?`}
           >
@@ -311,10 +311,10 @@ function ScopeCheckbox({
         )}
       </div>
       {showHint && hint && (
-        <p className="mt-1.5 pl-[30px] text-[11.5px] italic leading-relaxed text-[#3F4C50]">{hint}</p>
+        <p className="mt-1.5 pl-[30px] text-[11.5px] italic leading-relaxed text-[#343E42]">{hint}</p>
       )}
       <div className="mt-2 pl-[30px]">
-        <label className="text-[11px] font-semibold uppercase tracking-wide text-[#3F4C50]">
+        <label className="text-[11px] font-semibold uppercase tracking-wide text-[#343E42]">
           Why was this outside the session's scope? <span className="font-normal normal-case">· optional</span>
         </label>
         <textarea

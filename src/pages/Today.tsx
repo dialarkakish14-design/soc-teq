@@ -303,7 +303,7 @@ export function Today({
   );
 
   if (loading) {
-    return <div className="p-8 text-center text-sm text-[#3F4C50]">Loading…</div>;
+    return <div className="p-8 text-center text-sm text-[#343E42]">Loading…</div>;
   }
 
   return (
@@ -319,19 +319,19 @@ export function Today({
         </div>
         <div className="flex flex-col items-end gap-1.5">
           <div className="text-right">
-            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#3F4C50]">Home page</div>
+            <div className="text-[8.5px] font-semibold uppercase tracking-wide text-[#343E42]">Home page</div>
             <button onClick={onAbout} className="text-xs font-bold text-[#0E7C72]">
               SoC-TEQ
             </button>
           </div>
-          <button onClick={onLogout} className="text-xs font-bold text-[#3F4C50]">
+          <button onClick={onLogout} className="text-xs font-bold text-[#343E42]">
             Log out
           </button>
         </div>
       </div>
 
       <div className="px-5">
-        <div className="mt-2 text-xs text-[#3F4C50]">
+        <div className="mt-2 text-xs text-[#343E42]">
           You are <b className="text-[#0E1A1C]">{resident.resident_code}</b> · {open ? `open until ${closesAtLabel(date)}` : "closed"}
         </div>
 
@@ -371,12 +371,12 @@ export function Today({
                     rest rate.
                   </p>
                 </div>
-                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
+                <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
                   Open
                 </span>
               </div>
               {captureLocked ? (
-                <div className="mt-2 text-[11px] text-[#3F4C50]">
+                <div className="mt-2 text-[11px] text-[#343E42]">
                   Topic capture is closed · this cycle has moved past Phase 1 (data gathering).
                 </div>
               ) : open ? (
@@ -387,7 +387,7 @@ export function Today({
                   Claim logger
                 </button>
               ) : (
-                <div className="mt-2 text-[11px] text-[#3F4C50]">This day closed without a logger.</div>
+                <div className="mt-2 text-[11px] text-[#343E42]">This day closed without a logger.</div>
               )}
             </>
           ) : (
@@ -430,7 +430,7 @@ export function Today({
                     </span>
                     <span className="text-[12px] font-bold text-[#2B5F8A]">Backup claim</span>
                   </div>
-                  <p className="mt-1 text-[10.5px] leading-relaxed text-[#3F4C50]">
+                  <p className="mt-1 text-[10.5px] leading-relaxed text-[#343E42]">
                     Takes the logger role from {logger?.full_name ?? "the current logger"}. Use only if they're no
                     longer available and forgot to unclaim, or are unreachable. Can be used up to 2 times per day;{" "}
                     {Math.max(0, 2 - day.emergency_claims)} use{Math.max(0, 2 - day.emergency_claims) === 1 ? "" : "s"}{" "}
@@ -451,7 +451,7 @@ export function Today({
 
         {/* quick capture */}
         {iAmLogger && open && captureLocked && (
-          <div className="mt-4 rounded-2xl bg-white px-4 py-3.5 text-[12.5px] text-[#3F4C50] shadow-sm">
+          <div className="mt-4 rounded-2xl bg-white px-4 py-3.5 text-[12.5px] text-[#343E42] shadow-sm">
             Topic capture is closed for this cycle · Phase 1 (data gathering) has ended. Existing topics can still
             be rated and marked for coverage. To review, go to Summary and open Cycle.
           </div>
@@ -536,7 +536,7 @@ export function Today({
         )}
         <div className="mt-4 flex flex-col gap-3">
           {sessions.length === 0 && (
-            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+            <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
               Nothing registered for this day yet.
             </div>
           )}
@@ -552,11 +552,11 @@ export function Today({
                   <span className="flex items-center text-[13.5px] font-extrabold text-[#0E1A1C]">
                     <span
                       className="mr-2 inline-block h-2.5 w-2.5 rounded-full"
-                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#3F4C50" }}
+                      style={{ background: SESSION_TYPE_COLOR[s.type] ?? "#343E42" }}
                     />
                     {s.type}
                   </span>
-                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#3F4C50]">
+                  <span className="whitespace-nowrap rounded-lg bg-[#EAEFEE] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#343E42]">
                     {s.topics.length} topic{s.topics.length === 1 ? "" : "s"}
                   </span>
                 </div>
@@ -575,7 +575,7 @@ export function Today({
           {sessions.length > 0 &&
             search.trim() &&
             sessions.every((s) => !s.topics.some((t) => t.title.toLowerCase().includes(search.trim().toLowerCase()))) && (
-              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#3F4C50] shadow-sm">
+              <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
                 No topics match "{search.trim()}".
               </div>
             )}

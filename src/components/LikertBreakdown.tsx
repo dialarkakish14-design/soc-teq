@@ -15,7 +15,7 @@ export function LikertBreakdown({ perItem }: { perItem: Record<string, number> }
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1 text-[11px] font-semibold text-[#3F4C50]"
+        className="flex items-center gap-1 text-[11px] font-semibold text-[#343E42]"
       >
         {open ? "Hide" : "Show"} Likert breakdown
         <span className={`text-sm font-extrabold transition-transform ${open ? "rotate-180" : ""}`}>▾</span>

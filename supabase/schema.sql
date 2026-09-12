@@ -830,8 +830,17 @@ create policy claims_update on claims for update
   using (resident_id = auth.uid())
   with check (resident_id = auth.uid());
 
+-- Locked once the resident's baseline score is in (see
+-- patch_lock_claims_after_baseline.sql) — their claimed set is meant to
+-- match what the baseline was actually taken against.
 create policy claims_delete on claims for delete
-  using (resident_id = auth.uid());
+  using (
+    resident_id = auth.uid()
+    and not exists (
+      select 1 from assessments a
+      where a.cycle_id = claims.cycle_id and a.resident_id = auth.uid() and a.phase = 'baseline'
+    )
+  );
 
 create policy assessments_select on assessments for select
   using (
