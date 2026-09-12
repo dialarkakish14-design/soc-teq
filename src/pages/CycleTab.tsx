@@ -121,15 +121,34 @@ export function CycleTab({ resident }: { resident: Resident }) {
   // We already know the result of our own write, so there's no reason to
   // wait on a fresh round trip just to show it.
 
-  async function claimTopic(title: string, format: string) {
+  async function claimTopic(title: string, format: string, deliverDate: string, deliverLocation: string) {
     const { data, error } = await supabase
       .from("claims")
-      .insert({ cycle_id: cycle!.id, resident_id: resident.id, topic_title: title, format })
+      .insert({
+        cycle_id: cycle!.id,
+        resident_id: resident.id,
+        topic_title: title,
+        format,
+        deliver_date: deliverDate || null,
+        deliver_location: deliverLocation.trim() || null,
+      })
       .select("*")
       .single();
     if (error) return flash(error.message);
     setClaims((prev) => [...prev, data as Claim]);
     flash("Claimed · you'll build this over months 4–6.");
+  }
+
+  async function updateClaimDetails(id: string, deliverDate: string, deliverLocation: string) {
+    const { error } = await supabase
+      .from("claims")
+      .update({ deliver_date: deliverDate || null, deliver_location: deliverLocation.trim() || null })
+      .eq("id", id);
+    if (error) return flash(error.message);
+    setClaims((prev) =>
+      prev.map((c) => (c.id === id ? { ...c, deliver_date: deliverDate || null, deliver_location: deliverLocation.trim() || null } : c)),
+    );
+    flash("Updated.");
   }
 
   async function releaseClaim(id: string) {
@@ -284,6 +303,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onShare={shareResource}
           onDeleteResource={deleteResource}
           onExportNotes={exportTopicNotesCsv}
+          onUpdateDetails={updateClaimDetails}
         />
       )}
       {phase3Started && phase === 4 && (
@@ -436,13 +456,15 @@ function Phase2({
   assessments: Assessment[];
   resident: Resident;
   cohortCount: number;
-  onClaim: (title: string, format: string) => void;
+  onClaim: (title: string, format: string, deliverDate: string, deliverLocation: string) => void;
   onRelease: (id: string) => void;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
   onExport: () => void;
 }) {
   const [formats, setFormats] = useState<Record<string, string>>({});
   const [customFormats, setCustomFormats] = useState<Record<string, string>>({});
+  const [deliverDates, setDeliverDates] = useState<Record<string, string>>({});
+  const [deliverLocations, setDeliverLocations] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
   const fairShare = cohortCount > 0 ? Math.ceil(priority.length / cohortCount) : null;
@@ -498,15 +520,26 @@ function Phase2({
                     </span>
                   </div>
                   <LikertBreakdown perItem={p.perItem} />
+                  {claimsForTopic.length > 0 && (
+                    <div className="mt-2 flex flex-col gap-1.5">
+                      {claimsForTopic.map((c) => (
+                        <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
+                          {c.resident_id === resident.id ? "You claimed this" : "Claimed"}: {c.format}
+                          {(c.deliver_date || c.deliver_location) && (
+                            <div className="mt-0.5 text-[11px] text-[#3F4C50]">
+                              {c.deliver_date && formatDateShort(c.deliver_date)}
+                              {c.deliver_date && c.deliver_location && " · "}
+                              {c.deliver_location}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                   {mineClaim ? (
-                    <>
-                      <div className="mt-2 rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                        You claimed this: {mineClaim.format}.
-                      </div>
-                      <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-                        Release this topic
-                      </button>
-                    </>
+                    <button onClick={() => onRelease(mineClaim.id)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
+                      Release this topic
+                    </button>
                   ) : (
                     <>
                       <select
@@ -530,8 +563,32 @@ function Phase2({
                           className="input mt-2"
                         />
                       )}
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          type="date"
+                          value={deliverDates[p.title] ?? ""}
+                          onChange={(e) => setDeliverDates((d) => ({ ...d, [p.title]: e.target.value }))}
+                          className="input flex-1"
+                        />
+                        <input
+                          value={deliverLocations[p.title] ?? ""}
+                          onChange={(e) => setDeliverLocations((l) => ({ ...l, [p.title]: e.target.value }))}
+                          placeholder="Where (optional)"
+                          className="input flex-1"
+                        />
+                      </div>
+                      <div className="mt-1 text-[10.5px] text-[#3F4C50]">
+                        Day and location are optional, and visible to the rest of {resident.pgy} once set.
+                      </div>
                       <button
-                        onClick={() => onClaim(p.title, chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen)}
+                        onClick={() =>
+                          onClaim(
+                            p.title,
+                            chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen,
+                            deliverDates[p.title] ?? "",
+                            deliverLocations[p.title] ?? "",
+                          )
+                        }
                         disabled={!chosen || (chosen === OTHER_FORMAT && !(customFormats[p.title] ?? "").trim())}
                         className="mt-2 w-full rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-50"
                       >
@@ -571,6 +628,7 @@ function Phase3({
   onShare,
   onDeleteResource,
   onExportNotes,
+  onUpdateDetails,
 }: {
   mine: Claim[];
   resources: Resource[];
@@ -581,6 +639,7 @@ function Phase3({
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
   onDeleteResource: (id: string) => void;
   onExportNotes: (title: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverLocation: string) => void;
 }) {
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -600,6 +659,7 @@ function Phase3({
             onShare={onShare}
             onDeleteResource={onDeleteResource}
             onExportNotes={onExportNotes}
+            onUpdateDetails={onUpdateDetails}
           />
         ))
       )}
@@ -676,6 +736,7 @@ function CommittedTopicRow({
   onShare,
   onDeleteResource,
   onExportNotes,
+  onUpdateDetails,
 }: {
   claim: Claim;
   resources: Resource[];
@@ -686,8 +747,12 @@ function CommittedTopicRow({
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
   onDeleteResource: (id: string) => void;
   onExportNotes: (title: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverLocation: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
+  const [editingDetails, setEditingDetails] = useState(false);
+  const [editDate, setEditDate] = useState(claim.deliver_date ?? "");
+  const [editLocation, setEditLocation] = useState(claim.deliver_location ?? "");
   const c = claim;
   const statusColor = c.scholarly
     ? "bg-[#EEE7F3] text-[#5E3F73]"
@@ -701,11 +766,49 @@ function CommittedTopicRow({
         <div>
           <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
           <div className="text-xs text-[#3F4C50]">{c.format}</div>
+          {(c.deliver_date || c.deliver_location) && !editingDetails && (
+            <div className="mt-0.5 text-[11px] text-[#3F4C50]">
+              {c.deliver_date && formatDateShort(c.deliver_date)}
+              {c.deliver_date && c.deliver_location && " · "}
+              {c.deliver_location}
+            </div>
+          )}
         </div>
         <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
           {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
         </span>
       </div>
+      {editingDetails ? (
+        <div className="mt-2 flex flex-col gap-2">
+          <div className="flex gap-2">
+            <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="input flex-1" />
+            <input
+              value={editLocation}
+              onChange={(e) => setEditLocation(e.target.value)}
+              placeholder="Where (optional)"
+              className="input flex-1"
+            />
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                onUpdateDetails(c.id, editDate, editLocation);
+                setEditingDetails(false);
+              }}
+              className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
+            >
+              Save
+            </button>
+            <button onClick={() => setEditingDetails(false)} className="flex-1 rounded-xl bg-[#EAEFEE] py-2 text-xs font-bold text-[#232D30]">
+              Cancel
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button onClick={() => setEditingDetails(true)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
+          {c.deliver_date || c.deliver_location ? "Edit day/location" : "Add day/location"}
+        </button>
+      )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
         {c.status !== "delivered" ? (
           <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">

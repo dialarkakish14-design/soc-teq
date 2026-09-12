@@ -180,6 +180,9 @@ export interface Claim {
   format: string;
   status: "planned" | "delivered";
   scholarly: boolean;
+  // Optional — visible to the whole cohort, not just whoever claimed it.
+  deliver_date: string | null;
+  deliver_location: string | null;
 }
 
 export interface Assessment {

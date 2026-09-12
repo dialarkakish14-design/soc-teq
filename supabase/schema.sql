@@ -608,6 +608,11 @@ create table claims (
   format text not null check (length(trim(format)) > 0),
   status text not null default 'planned' check (status in ('planned', 'delivered')),
   scholarly boolean not null default false,
+  -- Optional "when and where" for delivering this — visible to the whole
+  -- cohort, not just the resident who claimed it. Set at claim time in
+  -- Phase 2, editable later in Phase 3.
+  deliver_date date,
+  deliver_location text,
   created_at timestamptz not null default now()
 );
 
