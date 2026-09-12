@@ -779,7 +779,7 @@ function Phase2({
                       )}
                       {mineClaim ? (
                         <>
-                          <DeliveryDetailsEditor claim={mineClaim} claims={claims} codeById={codeById} onSave={onUpdateDetails} />
+                          <DeliveryScheduler claim={mineClaim} claims={claims} codeById={codeById} onSave={onUpdateDetails} />
                           {baselineSubmitted ? (
                             <div className="mt-1.5 text-[11px] text-[#343E42]">
                               Can't be released after your baseline score is in.
@@ -1194,8 +1194,7 @@ function DeliveryDetailsEditor({
         <div className="flex gap-2">
           <button
             onClick={() => {
-              const wasMissed = claimDeliveryState(claim.status, claim.deliver_date) === "missed" && !claim.rescheduled;
-              onSave(claim.id, date, time, location, wasMissed);
+              onSave(claim.id, date, time, location, false);
               setEditing(false);
             }}
             className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
@@ -1212,28 +1211,101 @@ function DeliveryDetailsEditor({
 
   const when = formatWhenWhere(claim.deliver_date, claim.deliver_time, claim.deliver_location);
   const locked = claimScheduleLocked(claim.deliver_date, claim.rescheduled);
-  const usedUpReschedule = locked && claimDeliveryState(claim.status, claim.deliver_date) === "missed";
   return (
     <div className="mt-1.5">
       {when && <div className="text-[11px] font-bold text-[#2B5F8A]">{when}</div>}
       {locked ? (
         <div className="mt-0.5 text-[10.5px] text-[#343E42]">
-          {usedUpReschedule
-            ? "You've already used your one reschedule for this topic. Talk to your program director about how to proceed."
-            : "Can't be changed within 6 days of the scheduled date, to help you stay committed and keep things steady for your colleagues' plans."}
+          Can't be changed within 6 days of the scheduled date, to help you stay committed and keep things steady
+          for your colleagues' plans.
         </div>
       ) : (
         <button onClick={() => setEditing(true)} className="mt-0.5 text-xs font-semibold text-[#343E42]">
           {when ? "Edit day/time/location" : "Add day/time/location"}
         </button>
       )}
-      {!locked && showReminder && claim.deliver_date && claimDeliveryState(claim.status, claim.deliver_date) !== "missed" && (
+      {!locked && showReminder && claim.deliver_date && (
         <div className="mt-1 text-[10px] text-[#343E42]">
           Heads up: this locks in once you're within 6 days of the date.
         </div>
       )}
     </div>
   );
+}
+
+// A missed session isn't "edited" back into shape — it's rescheduled onto a
+// fresh slot, once. Always open, never subject to the 6-day lock, since the
+// whole point is letting a resident recover from a missed date.
+function ScheduleNewSlot({
+  claim,
+  claims,
+  codeById,
+  onSave,
+}: {
+  claim: Claim;
+  claims: Claim[];
+  codeById: Record<string, string>;
+  onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
+}) {
+  const [date, setDate] = useState("");
+  const [time, setTime] = useState("");
+  const [location, setLocation] = useState("");
+  const clash = findScheduleClash(claims, date, time, claim.id);
+
+  return (
+    <div className="mt-1.5 flex flex-col gap-2">
+      <div className="text-xs font-semibold text-[#343E42]">Schedule a new day/time/location</div>
+      <div className="flex gap-2">
+        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className="input flex-1" />
+        <input type="time" value={time} onChange={(e) => setTime(e.target.value)} className="input flex-1" />
+      </div>
+      <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Where (optional)" className="input" />
+      {clash && (
+        <div className="rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11px] font-semibold text-[#93393E]">
+          {codeById[clash.resident_id] ?? "Someone"} already claimed "{clash.topic_title}" for this exact day and
+          time. Pick a different slot to avoid a clash.
+        </div>
+      )}
+      <button
+        disabled={!date}
+        onClick={() => onSave(claim.id, date, time, location, true)}
+        className="rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white disabled:opacity-40"
+      >
+        Save new date
+      </button>
+    </div>
+  );
+}
+
+// Routes a claim's schedule editor to the right flow: a normal edit for
+// planned/pending/delivered claims, or a dedicated one-time reschedule slot
+// for a missed claim, which is never gated by the 6-day lock.
+function DeliveryScheduler({
+  claim,
+  claims,
+  codeById,
+  showReminder,
+  onSave,
+}: {
+  claim: Claim;
+  claims: Claim[];
+  codeById: Record<string, string>;
+  showReminder?: boolean;
+  onSave: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
+}) {
+  const deliveryState = claimDeliveryState(claim.status, claim.deliver_date);
+  if (deliveryState === "missed") {
+    if (claim.rescheduled) {
+      return (
+        <div className="mt-1.5 text-[10.5px] text-[#343E42]">
+          You've already used your one reschedule for this topic. Talk to your program director about how to
+          proceed.
+        </div>
+      );
+    }
+    return <ScheduleNewSlot claim={claim} claims={claims} codeById={codeById} onSave={onSave} />;
+  }
+  return <DeliveryDetailsEditor claim={claim} claims={claims} codeById={codeById} showReminder={showReminder} onSave={onSave} />;
 }
 
 function CommittedTopicRow({
@@ -1340,7 +1412,7 @@ function CommittedTopicRow({
           {isMine && deliveryState === "missed" && (
             <div className="mb-1.5 rounded-xl bg-[#F8E4E4] px-3 py-2 text-[11.5px] font-semibold leading-relaxed text-[#93393E]">
               {c.rescheduled
-                ? "This session's window closed again after your one reschedule. Talk to your program director about how to proceed."
+                ? "This session's window closed again after your one reschedule."
                 : "This session's window closed without being marked delivered. You get one reschedule: pick a new day/time below to try again."}
             </div>
           )}
@@ -1350,7 +1422,7 @@ function CommittedTopicRow({
             </div>
           )}
           {isMine ? (
-            <DeliveryDetailsEditor claim={c} claims={claims} codeById={codeById} showReminder={forceOpen} onSave={onUpdateDetails} />
+            <DeliveryScheduler claim={c} claims={claims} codeById={codeById} showReminder={forceOpen} onSave={onUpdateDetails} />
           ) : (
             formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
               <div className="text-[11px] font-bold text-[#2B5F8A]">
