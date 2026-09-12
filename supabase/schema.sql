@@ -614,6 +614,10 @@ create table claims (
   deliver_date date,
   deliver_time time,
   deliver_location text,
+  -- The teaching format can be changed exactly once after claiming (a
+  -- change of plans) — this flips true on that one edit and the option
+  -- disappears from then on.
+  format_edited boolean not null default false,
   created_at timestamptz not null default now()
 );
 

@@ -223,6 +223,17 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Undone.");
   }
 
+  // Only reachable once (format_edited stays false until this runs, then
+  // the option disappears — enforced by hiding the control client-side;
+  // the update itself just flips the flag along with the new format).
+  async function editFormat(id: string, format: string) {
+    if (!format.trim()) return flash("Describe how you'll teach it.");
+    const { error } = await supabase.from("claims").update({ format: format.trim(), format_edited: true }).eq("id", id);
+    if (error) return flash(error.message);
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, format: format.trim(), format_edited: true } : c)));
+    flash("Teaching method updated.");
+  }
+
   async function recordAssessment(assessPhase: "baseline" | "followup", score: number) {
     if (!(score >= 0 && score <= 100)) return flash("Enter a score between 0 and 100.");
     const { data, error } = await supabase
@@ -407,6 +418,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onDownloadFile={downloadResourceFile}
           onExportNotes={exportTopicNotesCsv}
           onUpdateDetails={updateClaimDetails}
+          onEditFormat={editFormat}
         />
       )}
       {phase3Started && phase === 4 && (
@@ -840,6 +852,7 @@ function Phase3({
   onDownloadFile,
   onExportNotes,
   onUpdateDetails,
+  onEditFormat,
 }: {
   mine: Claim[];
   resources: Resource[];
@@ -853,39 +866,63 @@ function Phase3({
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onEditFormat: (id: string, format: string) => void;
 }) {
   const [open, setOpen] = useState(true);
+
+  // Not-yet-delivered topics stay up top (soonest scheduled first, unscheduled
+  // ones after), delivered ones get pushed to the bottom — so whatever's
+  // still coming up is always what's easiest to find.
+  const sorted = [...mine].sort((a, b) => {
+    if ((a.status === "delivered") !== (b.status === "delivered")) return a.status === "delivered" ? 1 : -1;
+    const whenOf = (c: Claim) => (c.deliver_date ? `${c.deliver_date}T${c.deliver_time ?? "00:00"}` : null);
+    const aw = whenOf(a);
+    const bw = whenOf(b);
+    if (aw && bw) return aw < bw ? -1 : aw > bw ? 1 : 0;
+    if (aw) return -1;
+    if (bw) return 1;
+    return 0;
+  });
+  let upcomingSeen = 0;
+
   return (
-    <div className="rounded-3xl bg-white p-4 shadow-sm">
+    <div className="rounded-3xl bg-gradient-to-br from-[#E4EEF8] to-[#FAFCFE] p-4 shadow-sm">
       <button onClick={() => setOpen((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
-        <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
-        <span className={`shrink-0 text-xl font-extrabold text-[#343E42] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
+        <h3 className="font-extrabold text-[#2B5F8A]">What you committed to</h3>
+        <span className={`shrink-0 text-xl font-extrabold text-[#2B5F8A] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
       {open && mine.length > 0 && (
-        <p className="mt-1 text-[11px] leading-relaxed text-[#343E42]">
-          When you deliver, consider all 5 Likert items and try to cover them all.
+        <p className="mt-1 text-[11px] leading-relaxed text-[#2B5F8A]">
+          When you deliver, consider all 5 Likert items and try to cover them all. Your next 3 upcoming topics stay
+          expanded up top; the rest collapse below.
         </p>
       )}
       {!open ? null : mine.length === 0 ? (
-        <div className="mt-3 text-center text-sm text-[#343E42]">You didn't claim any topics this cycle.</div>
+        <div className="mt-3 text-center text-sm text-[#2B5F8A]">You didn't claim any topics this cycle.</div>
       ) : (
-        mine.map((c) => (
-          <CommittedTopicRow
-            key={c.id}
-            claim={c}
-            resources={resources.filter((r) => r.topic_title === c.topic_title)}
-            onDeliver={onDeliver}
-            onUndoDeliver={onUndoDeliver}
-            onScholarly={onScholarly}
-            onUndoScholarly={onUndoScholarly}
-            onShare={onShare}
-            onDeleteResource={onDeleteResource}
-            onUpdateResource={onUpdateResource}
-            onDownloadFile={onDownloadFile}
-            onExportNotes={onExportNotes}
-            onUpdateDetails={onUpdateDetails}
-          />
-        ))
+        sorted.map((c) => {
+          const featured = c.status !== "delivered" && upcomingSeen < 3;
+          if (featured) upcomingSeen++;
+          return (
+            <CommittedTopicRow
+              key={c.id}
+              claim={c}
+              forceOpen={featured}
+              resources={resources.filter((r) => r.topic_title === c.topic_title)}
+              onDeliver={onDeliver}
+              onUndoDeliver={onUndoDeliver}
+              onScholarly={onScholarly}
+              onUndoScholarly={onUndoScholarly}
+              onShare={onShare}
+              onDeleteResource={onDeleteResource}
+              onUpdateResource={onUpdateResource}
+              onDownloadFile={onDownloadFile}
+              onExportNotes={onExportNotes}
+              onUpdateDetails={onUpdateDetails}
+              onEditFormat={onEditFormat}
+            />
+          );
+        })
       )}
     </div>
   );
@@ -1100,6 +1137,7 @@ function DeliveryDetailsEditor({
 
 function CommittedTopicRow({
   claim,
+  forceOpen,
   resources,
   onDeliver,
   onUndoDeliver,
@@ -1111,8 +1149,10 @@ function CommittedTopicRow({
   onDownloadFile,
   onExportNotes,
   onUpdateDetails,
+  onEditFormat,
 }: {
   claim: Claim;
+  forceOpen: boolean;
   resources: Resource[];
   onDeliver: (id: string) => void;
   onUndoDeliver: (id: string) => void;
@@ -1124,79 +1164,154 @@ function CommittedTopicRow({
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
+  onEditFormat: (id: string, format: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const [editingFormat, setEditingFormat] = useState(false);
+  const [newFormat, setNewFormat] = useState(claim.format);
+  const [customNewFormat, setCustomNewFormat] = useState("");
   const c = claim;
+  const isOther = !(CLAIM_FORMATS as readonly string[]).includes(c.format);
   const statusColor = c.scholarly
     ? "bg-[#EEE7F3] text-[#5E3F73]"
     : c.status === "delivered"
       ? "bg-[#DCEFEB] text-[#064B45]"
       : "bg-[#FAEBD4] text-[#8F5205]";
+  const open = forceOpen || expanded;
 
   return (
-    <div className="border-t border-[#E2EAE9] py-3">
-      <div className="flex items-center justify-between">
-        <div>
-          <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
-          <div className="text-xs text-[#343E42]">{c.format}</div>
+    <div className="mt-2.5 rounded-2xl border-l-[5px] border-l-[#5B9BD5] bg-white p-3 shadow-sm">
+      {forceOpen ? (
+        <div className="flex items-center justify-between">
+          <div>
+            <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+            <div className="text-xs text-[#343E42]">{c.format}</div>
+          </div>
+          <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+            {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+          </span>
         </div>
-        <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-          {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
-        </span>
-      </div>
-      <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
-      <div className="mt-2 flex flex-wrap items-center gap-2">
-        {c.status !== "delivered" ? (
-          <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
-            Mark delivered
-          </button>
-        ) : (
-          <button onClick={() => onUndoDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
-            Undo delivered
-          </button>
-        )}
-        {c.status === "delivered" && !c.scholarly && (
-          <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
-            Became scholarly work
-          </button>
-        )}
-        {c.scholarly && (
-          <button onClick={() => onUndoScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
-            Undo scholarly work
-          </button>
-        )}
-        {c.status === "delivered" && (
-          <button
-            type="button"
-            onClick={() => setShowScholarlyInfo((o) => !o)}
-            className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EEE7F3] text-[10px] font-bold text-[#5E3F73]"
-          >
-            ?
-          </button>
-        )}
-        {resources.length > 0 && (
-          <button
-            onClick={() => onExportNotes(c.topic_title)}
-            className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]"
-          >
-            Export notes (CSV)
-          </button>
-        )}
-      </div>
-      {showScholarlyInfo && (
-        <p className="mt-1.5 rounded-xl bg-[#EEE7F3] px-3 py-2 text-[11.5px] leading-relaxed text-[#5E3F73]">
-          "Scholarly work" means it led to something beyond the teaching itself, like a poster, a conference
-          presentation, or a publication, not just delivering the session.
-        </p>
+      ) : (
+        <button onClick={() => setExpanded((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
+          <div>
+            <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
+            <div className="text-xs text-[#343E42]">{c.format}</div>
+          </div>
+          <div className="flex shrink-0 items-center gap-2">
+            <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+              {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
+            </span>
+            <span className={`text-xl font-extrabold text-[#5B9BD5] transition-transform ${expanded ? "rotate-180" : ""}`}>▾</span>
+          </div>
+        </button>
       )}
-      <ResourceShare
-        title={c.topic_title}
-        resources={resources}
-        onShare={onShare}
-        onDelete={onDeleteResource}
-        onUpdate={onUpdateResource}
-        onDownloadFile={onDownloadFile}
-      />
+      {open && (
+        <div className={forceOpen ? "" : "mt-2.5 border-t border-[#E2EAE9] pt-2.5"}>
+          <DeliveryDetailsEditor claim={c} onSave={onUpdateDetails} />
+          {!c.format_edited &&
+            (editingFormat ? (
+              <div className="mt-2 flex flex-col gap-2">
+                <select
+                  value={CLAIM_FORMATS.includes(newFormat as (typeof CLAIM_FORMATS)[number]) ? newFormat : OTHER_FORMAT}
+                  onChange={(e) => setNewFormat(e.target.value)}
+                  className="input"
+                >
+                  {CLAIM_FORMATS.map((f) => (
+                    <option key={f}>{f}</option>
+                  ))}
+                  <option value={OTHER_FORMAT}>Other…</option>
+                </select>
+                {newFormat === OTHER_FORMAT && (
+                  <input
+                    value={customNewFormat}
+                    onChange={(e) => setCustomNewFormat(e.target.value)}
+                    placeholder="Describe how you'll teach it"
+                    className="input"
+                  />
+                )}
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => {
+                      onEditFormat(c.id, newFormat === OTHER_FORMAT ? customNewFormat.trim() : newFormat);
+                      setEditingFormat(false);
+                    }}
+                    disabled={newFormat === OTHER_FORMAT && !customNewFormat.trim()}
+                    className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white disabled:opacity-50"
+                  >
+                    Save
+                  </button>
+                  <button onClick={() => setEditingFormat(false)} className="flex-1 rounded-xl bg-[#EAEFEE] py-2 text-xs font-bold text-[#232D30]">
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  setNewFormat(isOther ? OTHER_FORMAT : c.format);
+                  setCustomNewFormat(isOther ? c.format : "");
+                  setEditingFormat(true);
+                }}
+                className="mt-1.5 text-xs font-semibold text-[#343E42]"
+              >
+                Edit teaching method · one change allowed
+              </button>
+            ))}
+          <div className="mt-2 flex flex-wrap items-center gap-2">
+            {c.status !== "delivered" ? (
+              <button onClick={() => onDeliver(c.id)} className="rounded-xl bg-[#0E7C72] px-3 py-2 text-xs font-bold text-white">
+                Mark delivered
+              </button>
+            ) : (
+              <button onClick={() => onUndoDeliver(c.id)} className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]">
+                Undo delivered
+              </button>
+            )}
+            {c.status === "delivered" && !c.scholarly && (
+              <button onClick={() => onScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
+                Became scholarly work
+              </button>
+            )}
+            {c.scholarly && (
+              <button onClick={() => onUndoScholarly(c.id)} className="rounded-xl bg-[#EEE7F3] px-3 py-2 text-xs font-bold text-[#5E3F73]">
+                Undo scholarly work
+              </button>
+            )}
+            {c.status === "delivered" && (
+              <button
+                type="button"
+                onClick={() => setShowScholarlyInfo((o) => !o)}
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#EEE7F3] text-[10px] font-bold text-[#5E3F73]"
+              >
+                ?
+              </button>
+            )}
+            {resources.length > 0 && (
+              <button
+                onClick={() => onExportNotes(c.topic_title)}
+                className="rounded-xl bg-[#EAEFEE] px-3 py-2 text-xs font-bold text-[#232D30]"
+              >
+                Export notes (CSV)
+              </button>
+            )}
+          </div>
+          {showScholarlyInfo && (
+            <p className="mt-1.5 rounded-xl bg-[#EEE7F3] px-3 py-2 text-[11.5px] leading-relaxed text-[#5E3F73]">
+              "Scholarly work" means it led to something beyond the teaching itself, like a poster, a conference
+              presentation, or a publication, not just delivering the session.
+            </p>
+          )}
+          <ResourceShare
+            title={c.topic_title}
+            resources={resources}
+            onShare={onShare}
+            onDelete={onDeleteResource}
+            onUpdate={onUpdateResource}
+            onDownloadFile={onDownloadFile}
+          />
+        </div>
+      )}
     </div>
   );
 }

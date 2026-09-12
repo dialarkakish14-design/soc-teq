@@ -184,6 +184,7 @@ export interface Claim {
   deliver_date: string | null;
   deliver_time: string | null;
   deliver_location: string | null;
+  format_edited: boolean;
 }
 
 export interface Assessment {
