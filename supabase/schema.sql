@@ -612,6 +612,7 @@ create table claims (
   -- cohort, not just the resident who claimed it. Set at claim time in
   -- Phase 2, editable later in Phase 3.
   deliver_date date,
+  deliver_time time,
   deliver_location text,
   created_at timestamptz not null default now()
 );

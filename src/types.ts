@@ -182,6 +182,7 @@ export interface Claim {
   scholarly: boolean;
   // Optional — visible to the whole cohort, not just whoever claimed it.
   deliver_date: string | null;
+  deliver_time: string | null;
   deliver_location: string | null;
 }
 

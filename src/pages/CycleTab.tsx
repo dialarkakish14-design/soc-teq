@@ -23,6 +23,19 @@ interface PriorityTopic {
 
 const OTHER_FORMAT = "__other__";
 
+// "March 5 · 2:00 PM · Room 302" — skips whichever pieces are unset, and
+// returns null if none are, so callers can just check truthiness.
+function formatWhenWhere(date: string | null, time: string | null, location: string | null): string | null {
+  const parts: string[] = [];
+  if (date) parts.push(formatDateShort(date));
+  if (time) {
+    const [h, m] = time.split(":").map(Number);
+    parts.push(new Date(2000, 0, 1, h, m).toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" }));
+  }
+  if (location) parts.push(location);
+  return parts.length ? parts.join(" · ") : null;
+}
+
 export function CycleTab({ resident }: { resident: Resident }) {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -121,7 +134,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   // We already know the result of our own write, so there's no reason to
   // wait on a fresh round trip just to show it.
 
-  async function claimTopic(title: string, format: string, deliverDate: string, deliverLocation: string) {
+  async function claimTopic(title: string, format: string, deliverDate: string, deliverTime: string, deliverLocation: string) {
     const { data, error } = await supabase
       .from("claims")
       .insert({
@@ -130,6 +143,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
         topic_title: title,
         format,
         deliver_date: deliverDate || null,
+        deliver_time: deliverTime || null,
         deliver_location: deliverLocation.trim() || null,
       })
       .select("*")
@@ -139,15 +153,15 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Claimed · you'll build this over months 4–6.");
   }
 
-  async function updateClaimDetails(id: string, deliverDate: string, deliverLocation: string) {
-    const { error } = await supabase
-      .from("claims")
-      .update({ deliver_date: deliverDate || null, deliver_location: deliverLocation.trim() || null })
-      .eq("id", id);
+  async function updateClaimDetails(id: string, deliverDate: string, deliverTime: string, deliverLocation: string) {
+    const details = {
+      deliver_date: deliverDate || null,
+      deliver_time: deliverTime || null,
+      deliver_location: deliverLocation.trim() || null,
+    };
+    const { error } = await supabase.from("claims").update(details).eq("id", id);
     if (error) return flash(error.message);
-    setClaims((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, deliver_date: deliverDate || null, deliver_location: deliverLocation.trim() || null } : c)),
-    );
+    setClaims((prev) => prev.map((c) => (c.id === id ? { ...c, ...details } : c)));
     flash("Updated.");
   }
 
@@ -348,16 +362,23 @@ function EngagementBox({ claimRate, delivered, scholarly }: { claimRate: number;
           className={`flex-1 rounded-xl py-1 ${expanded === "delivered" ? "bg-[#F5F8F7]" : ""}`}
         >
           <h2 className="text-xl font-extrabold text-[#0E1A1C]">{delivered.length}</h2>
-          <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">Sessions delivered</div>
+          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#3F4C50]">
+            Sessions delivered
+            <span className={`text-[9px] transition-transform ${expanded === "delivered" ? "rotate-180" : ""}`}>▾</span>
+          </div>
         </button>
         <button
           onClick={() => setExpanded((e) => (e === "scholarly" ? null : "scholarly"))}
           className={`flex-1 rounded-xl py-1 ${expanded === "scholarly" ? "bg-[#F5F8F7]" : ""}`}
         >
           <h2 className="text-xl font-extrabold text-[#0E1A1C]">{scholarly.length}</h2>
-          <div className="mt-0.5 text-[10.5px] text-[#3F4C50]">Scholarly output</div>
+          <div className="mt-0.5 flex items-center justify-center gap-0.5 text-[10.5px] text-[#3F4C50]">
+            Scholarly output
+            <span className={`text-[9px] transition-transform ${expanded === "scholarly" ? "rotate-180" : ""}`}>▾</span>
+          </div>
         </button>
       </div>
+      {!expanded && <p className="mt-1.5 text-center text-[10px] text-[#3F4C50]">Tap a stat to see what's behind it.</p>}
       {list && (
         <div className="mt-3 border-t border-[#E2EAE9] pt-2">
           {list.length === 0 ? (
@@ -456,7 +477,7 @@ function Phase2({
   assessments: Assessment[];
   resident: Resident;
   cohortCount: number;
-  onClaim: (title: string, format: string, deliverDate: string, deliverLocation: string) => void;
+  onClaim: (title: string, format: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
   onRelease: (id: string) => void;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
   onExport: () => void;
@@ -464,6 +485,7 @@ function Phase2({
   const [formats, setFormats] = useState<Record<string, string>>({});
   const [customFormats, setCustomFormats] = useState<Record<string, string>>({});
   const [deliverDates, setDeliverDates] = useState<Record<string, string>>({});
+  const [deliverTimes, setDeliverTimes] = useState<Record<string, string>>({});
   const [deliverLocations, setDeliverLocations] = useState<Record<string, string>>({});
   const [search, setSearch] = useState("");
   const claimedCount = new Set(claims.map((c) => c.topic_title)).size;
@@ -522,18 +544,15 @@ function Phase2({
                   <LikertBreakdown perItem={p.perItem} />
                   {claimsForTopic.length > 0 && (
                     <div className="mt-2 flex flex-col gap-1.5">
-                      {claimsForTopic.map((c) => (
-                        <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
-                          {c.resident_id === resident.id ? "You claimed this" : "Claimed"}: {c.format}
-                          {(c.deliver_date || c.deliver_location) && (
-                            <div className="mt-0.5 text-[11px] text-[#3F4C50]">
-                              {c.deliver_date && formatDateShort(c.deliver_date)}
-                              {c.deliver_date && c.deliver_location && " · "}
-                              {c.deliver_location}
-                            </div>
-                          )}
-                        </div>
-                      ))}
+                      {claimsForTopic.map((c) => {
+                        const when = formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location);
+                        return (
+                          <div key={c.id} className="rounded-xl bg-[#F5F8F7] px-3 py-2 text-[12.5px] text-[#232D30]">
+                            {c.resident_id === resident.id ? "You claimed this" : "Claimed"}: {c.format}
+                            {when && <div className="mt-0.5 text-[11px] text-[#3F4C50]">{when}</div>}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                   {mineClaim ? (
@@ -571,14 +590,21 @@ function Phase2({
                           className="input flex-1"
                         />
                         <input
-                          value={deliverLocations[p.title] ?? ""}
-                          onChange={(e) => setDeliverLocations((l) => ({ ...l, [p.title]: e.target.value }))}
-                          placeholder="Where (optional)"
+                          type="time"
+                          value={deliverTimes[p.title] ?? ""}
+                          onChange={(e) => setDeliverTimes((t) => ({ ...t, [p.title]: e.target.value }))}
                           className="input flex-1"
                         />
                       </div>
+                      <input
+                        value={deliverLocations[p.title] ?? ""}
+                        onChange={(e) => setDeliverLocations((l) => ({ ...l, [p.title]: e.target.value }))}
+                        placeholder="Where (optional)"
+                        className="input mt-2"
+                      />
                       <div className="mt-1 text-[10.5px] text-[#3F4C50]">
-                        Day and location are optional, and visible to the rest of {resident.pgy} once set.
+                        Day, time, and location are all optional, and visible to the rest of {resident.pgy} once
+                        set.
                       </div>
                       <button
                         onClick={() =>
@@ -586,6 +612,7 @@ function Phase2({
                             p.title,
                             chosen === OTHER_FORMAT ? (customFormats[p.title] ?? "").trim() : chosen,
                             deliverDates[p.title] ?? "",
+                            deliverTimes[p.title] ?? "",
                             deliverLocations[p.title] ?? "",
                           )
                         }
@@ -639,7 +666,7 @@ function Phase3({
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
   onDeleteResource: (id: string) => void;
   onExportNotes: (title: string) => void;
-  onUpdateDetails: (id: string, deliverDate: string, deliverLocation: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -747,11 +774,12 @@ function CommittedTopicRow({
   onShare: (title: string, source: string, url: string, takeaway: string) => void;
   onDeleteResource: (id: string) => void;
   onExportNotes: (title: string) => void;
-  onUpdateDetails: (id: string, deliverDate: string, deliverLocation: string) => void;
+  onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
 }) {
   const [showScholarlyInfo, setShowScholarlyInfo] = useState(false);
   const [editingDetails, setEditingDetails] = useState(false);
   const [editDate, setEditDate] = useState(claim.deliver_date ?? "");
+  const [editTime, setEditTime] = useState(claim.deliver_time ?? "");
   const [editLocation, setEditLocation] = useState(claim.deliver_location ?? "");
   const c = claim;
   const statusColor = c.scholarly
@@ -766,13 +794,12 @@ function CommittedTopicRow({
         <div>
           <div className="text-[14.5px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
           <div className="text-xs text-[#3F4C50]">{c.format}</div>
-          {(c.deliver_date || c.deliver_location) && !editingDetails && (
-            <div className="mt-0.5 text-[11px] text-[#3F4C50]">
-              {c.deliver_date && formatDateShort(c.deliver_date)}
-              {c.deliver_date && c.deliver_location && " · "}
-              {c.deliver_location}
-            </div>
-          )}
+          {!editingDetails &&
+            formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location) && (
+              <div className="mt-0.5 text-[11px] text-[#3F4C50]">
+                {formatWhenWhere(c.deliver_date, c.deliver_time, c.deliver_location)}
+              </div>
+            )}
         </div>
         <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
           {c.scholarly ? "Scholarly" : c.status === "delivered" ? "Delivered" : "Planned"}
@@ -782,17 +809,18 @@ function CommittedTopicRow({
         <div className="mt-2 flex flex-col gap-2">
           <div className="flex gap-2">
             <input type="date" value={editDate} onChange={(e) => setEditDate(e.target.value)} className="input flex-1" />
-            <input
-              value={editLocation}
-              onChange={(e) => setEditLocation(e.target.value)}
-              placeholder="Where (optional)"
-              className="input flex-1"
-            />
+            <input type="time" value={editTime} onChange={(e) => setEditTime(e.target.value)} className="input flex-1" />
           </div>
+          <input
+            value={editLocation}
+            onChange={(e) => setEditLocation(e.target.value)}
+            placeholder="Where (optional)"
+            className="input"
+          />
           <div className="flex gap-2">
             <button
               onClick={() => {
-                onUpdateDetails(c.id, editDate, editLocation);
+                onUpdateDetails(c.id, editDate, editTime, editLocation);
                 setEditingDetails(false);
               }}
               className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
@@ -806,7 +834,7 @@ function CommittedTopicRow({
         </div>
       ) : (
         <button onClick={() => setEditingDetails(true)} className="mt-1.5 text-xs font-semibold text-[#3F4C50]">
-          {c.deliver_date || c.deliver_location ? "Edit day/location" : "Add day/location"}
+          {c.deliver_date || c.deliver_time || c.deliver_location ? "Edit day/time/location" : "Add day/time/location"}
         </button>
       )}
       <div className="mt-2 flex flex-wrap items-center gap-2">
