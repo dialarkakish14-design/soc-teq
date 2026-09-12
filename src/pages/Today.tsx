@@ -239,8 +239,10 @@ export function Today({
 
   function openTopic(t: TopicWithRatings) {
     if (t.incomplete) {
-      if (iAmLogger && open) {
+      if (iAmLogger && open && !captureLocked) {
         setModal({ kind: "coverage", topic: t });
+      } else if (captureLocked) {
+        flash("This cycle has moved past Phase 1. Coverage can no longer be marked.");
       } else {
         flash("The logger hasn't finished this entry yet.");
       }
@@ -252,7 +254,7 @@ export function Today({
     }
     const mine = t.ratings.find((r) => r.resident_id === resident.id);
     const mineAbsent = t.absences.find((a) => a.resident_id === resident.id);
-    if (!mine && !mineAbsent && open) {
+    if (!mine && !mineAbsent && open && !captureLocked) {
       setModal({ kind: "rate", topic: t });
     } else {
       setModal({ kind: "detail", topic: t });
@@ -283,8 +285,10 @@ export function Today({
   }
 
   // Once the cohort has moved past Phase 1 (data gathering) into
-  // Identification and baseline, new topics no longer get captured — see
-  // CycleTab.tsx. Already-registered topics can still be rated/coverage-marked.
+  // Identification and baseline, this cycle's data is frozen entirely —
+  // no new topics, no new ratings, no coverage changes — so the first 3
+  // months' picture can't keep shifting after the fact. Residents can
+  // still view everything, just not add to it. See CycleTab.tsx.
   const captureLocked = !!cycle?.phase2_started_at;
 
   const allTopics = sessions.flatMap((s) => s.topics);
@@ -293,6 +297,7 @@ export function Today({
       !t.incomplete &&
       t.soc_covered &&
       open &&
+      !captureLocked &&
       !t.ratings.some((r) => r.resident_id === resident.id) &&
       !t.absences.some((a) => a.resident_id === resident.id),
   );
@@ -561,8 +566,8 @@ export function Today({
                     topic={t}
                     residentId={resident.id}
                     onOpen={() => openTopic(t)}
-                    onEdit={iAmLogger && open && t.ratings.length === 0 ? () => editTopic(t) : undefined}
-                    onDelete={iAmLogger && open && t.ratings.length === 0 ? () => confirmDeleteTopic(t) : undefined}
+                    onEdit={iAmLogger && open && !captureLocked && t.ratings.length === 0 ? () => editTopic(t) : undefined}
+                    onDelete={iAmLogger && open && !captureLocked && t.ratings.length === 0 ? () => confirmDeleteTopic(t) : undefined}
                   />
                 ))}
               </div>

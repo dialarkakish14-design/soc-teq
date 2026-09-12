@@ -725,6 +725,11 @@ function Phase3({
   return (
     <div className="rounded-3xl bg-white p-4 shadow-sm">
       <h3 className="font-bold text-[#0E1A1C]">What you committed to</h3>
+      {mine.length > 0 && (
+        <p className="mt-1 text-[11px] leading-relaxed text-[#3F4C50]">
+          When you deliver, try to cover all 5 Likert items, not just whichever one flagged this topic.
+        </p>
+      )}
       {mine.length === 0 ? (
         <div className="mt-3 text-center text-sm text-[#3F4C50]">You didn't claim any topics this cycle.</div>
       ) : (

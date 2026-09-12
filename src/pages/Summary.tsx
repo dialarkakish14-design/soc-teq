@@ -22,7 +22,7 @@ import {
   type TopicEntry,
 } from "../lib/domain";
 import { SESSION_TYPE_COLOR, RM_DEFINITION } from "../lib/content";
-import { FITZPATRICK_TONES, THRESHOLD, type Absence, type Rating, type Resident, type SessionType, type Topic } from "../types";
+import { FITZPATRICK_TONES, THRESHOLD, type Absence, type Cycle, type Rating, type Resident, type SessionType, type Topic } from "../types";
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
 import { RateModal } from "../components/RateModal";
@@ -72,6 +72,7 @@ export function Summary({
   const [cohortSize, setCohortSize] = useState(0);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [privateNotes, setPrivateNotes] = useState<PrivateNoteRow[]>([]);
+  const [cycle, setCycle] = useState<Cycle | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
   const [modal, setModal] = useState<{ kind: "rate" | "detail"; topic: TopicFull } | null>(null);
@@ -88,19 +89,21 @@ export function Summary({
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }, { data: noteRows }] = await Promise.all([
-      supabase
-        .from("topics")
-        .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
-        .eq("incomplete", false)
-        .order("created_at", { ascending: false }),
-      supabase
-        .from("residents")
-        .select("id, resident_code", { count: "exact" })
-        .eq("program_id", resident.program_id)
-        .eq("pgy", resident.pgy),
-      supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
-    ]);
+    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }, { data: noteRows }, { data: cycleRow }] =
+      await Promise.all([
+        supabase
+          .from("topics")
+          .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
+          .eq("incomplete", false)
+          .order("created_at", { ascending: false }),
+        supabase
+          .from("residents")
+          .select("id, resident_code", { count: "exact" })
+          .eq("program_id", resident.program_id)
+          .eq("pgy", resident.pgy),
+        supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
+        supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+      ]);
     if (topicsError) flash(topicsError.message);
 
     setRows((topicRows as TopicFull[] | null) ?? []);
@@ -109,6 +112,7 @@ export function Summary({
       Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
     );
     setPrivateNotes((noteRows as PrivateNoteRow[] | null) ?? []);
+    setCycle((cycleRow as Cycle | null) ?? null);
     setLoading(false);
   }, [resident.program_id, resident.pgy, resident.id]);
 
@@ -123,6 +127,11 @@ export function Summary({
     if (active) load();
   }, [active, load]);
 
+  // Once this cycle has moved past Phase 1, no new rating gets added
+  // anywhere in the app for the topics gathered during it — not just from
+  // Today's own rating banner, but from browsing here too. See Today.tsx.
+  const captureLocked = !!cycle?.phase2_started_at;
+
   function openTopic(t: TopicFull) {
     if (t.incomplete || !t.soc_covered || !t.sessions?.days) {
       setModal({ kind: "detail", topic: t });
@@ -131,7 +140,7 @@ export function Summary({
     const mine = t.ratings.find((r) => r.resident_id === resident.id);
     const mineAbsent = t.absences.find((a) => a.resident_id === resident.id);
     const open = isDayOpen(t.sessions.days.date, programTimezone);
-    if (!mine && !mineAbsent && open) {
+    if (!mine && !mineAbsent && open && !captureLocked) {
       setModal({ kind: "rate", topic: t });
     } else {
       setModal({ kind: "detail", topic: t });
