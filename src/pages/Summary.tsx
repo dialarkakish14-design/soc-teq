@@ -22,7 +22,17 @@ import {
   type TopicEntry,
 } from "../lib/domain";
 import { SESSION_TYPE_COLOR, RM_DEFINITION } from "../lib/content";
-import { FITZPATRICK_TONES, THRESHOLD, type Absence, type Cycle, type Rating, type Resident, type SessionType, type Topic } from "../types";
+import {
+  FITZPATRICK_TONES,
+  THRESHOLD,
+  type Absence,
+  type Cycle,
+  type Rating,
+  type Resident,
+  type Resource,
+  type SessionType,
+  type Topic,
+} from "../types";
 import { TopicRow } from "../components/TopicRow";
 import { TopicDetail } from "../components/TopicDetail";
 import { RateModal } from "../components/RateModal";
@@ -72,6 +82,7 @@ export function Summary({
   const [cohortSize, setCohortSize] = useState(0);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
   const [privateNotes, setPrivateNotes] = useState<PrivateNoteRow[]>([]);
+  const [resources, setResources] = useState<Resource[]>([]);
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [loading, setLoading] = useState(true);
   const [toast, setToast] = useState("");
@@ -89,21 +100,32 @@ export function Summary({
   const load = useCallback(async (isInitial = false) => {
     if (isInitial) setLoading(true);
 
-    const [{ data: topicRows, error: topicsError }, { data: cohortRows, count }, { data: noteRows }, { data: cycleRow }] =
-      await Promise.all([
-        supabase
-          .from("topics")
-          .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
-          .eq("incomplete", false)
-          .order("created_at", { ascending: false }),
-        supabase
-          .from("residents")
-          .select("id, resident_code", { count: "exact" })
-          .eq("program_id", resident.program_id)
-          .eq("pgy", resident.pgy),
-        supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
-        supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
-      ]);
+    const [
+      { data: topicRows, error: topicsError },
+      { data: cohortRows, count },
+      { data: noteRows },
+      { data: cycleRow },
+      { data: resourceRows },
+    ] = await Promise.all([
+      supabase
+        .from("topics")
+        .select("*, ratings(*), absences(*), sessions(id, type, days(id, date, pgy))")
+        .eq("incomplete", false)
+        .order("created_at", { ascending: false }),
+      supabase
+        .from("residents")
+        .select("id, resident_code", { count: "exact" })
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy),
+      supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
+      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+      supabase
+        .from("resources")
+        .select("*")
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy)
+        .order("created_at", { ascending: false }),
+    ]);
     if (topicsError) flash(topicsError.message);
 
     setRows((topicRows as TopicFull[] | null) ?? []);
@@ -113,6 +135,7 @@ export function Summary({
     );
     setPrivateNotes((noteRows as PrivateNoteRow[] | null) ?? []);
     setCycle((cycleRow as Cycle | null) ?? null);
+    setResources((resourceRows as Resource[] | null) ?? []);
     setLoading(false);
   }, [resident.program_id, resident.pgy, resident.id]);
 
@@ -234,6 +257,7 @@ export function Summary({
               codeById={codeById}
               onOpenTopic={openTopic}
               privateNotes={privateNotes}
+              resources={resources}
               programTimezone={programTimezone}
             />
           )}
@@ -529,27 +553,33 @@ function NotesTab({
   codeById,
   onOpenTopic,
   privateNotes,
+  resources,
   programTimezone,
 }: {
   rows: TopicFull[];
   codeById: Record<string, string>;
   onOpenTopic: (t: TopicFull) => void;
   privateNotes: PrivateNoteRow[];
+  resources: Resource[];
   programTimezone: string;
 }) {
-  const [view, setView] = useState<"picker" | "private" | "public">("picker");
+  const [view, setView] = useState<"picker" | "private" | "public" | "remediation">("picker");
 
   const privateCount = privateNotes.filter((n) => n.note.trim()).length;
   const publicCount = rows.reduce(
     (n, r) => n + (r.soc_covered ? r.ratings.filter((rt) => rt.note?.trim()).length : 0),
     0,
   );
+  const remediationCount = resources.length;
 
   if (view === "private") {
     return <PrivateNotesBrowser rows={rows} privateNotes={privateNotes} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
   }
   if (view === "public") {
     return <PublicNotesBrowser rows={rows} codeById={codeById} onOpenTopic={onOpenTopic} onBack={() => setView("picker")} />;
+  }
+  if (view === "remediation") {
+    return <RemediationNotesBrowser resources={resources} codeById={codeById} onBack={() => setView("picker")} />;
   }
 
   // Exports only include days that have fully closed (past their program's
@@ -581,6 +611,22 @@ function NotesTab({
     downloadCsv(`soc-teq_public-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
   }
 
+  // Not day-bound like the other two exports (a shared paper is tied to a
+  // claimed topic, not a specific day), so the 4am rule doesn't apply here
+  // — everything shared so far goes in.
+  function exportRemediationNotesCsv() {
+    const header = ["topic", "resident_code", "source", "url", "takeaway", "shared_at"];
+    const dataRows = resources.map((r) => [
+      r.topic_title,
+      codeById[r.resident_id] ?? "Resident",
+      r.source,
+      r.url ?? "",
+      r.takeaway,
+      r.created_at,
+    ]);
+    downloadCsv(`soc-teq_remediation-notes_${new Date().toISOString().slice(0, 10)}.csv`, [header, ...dataRows]);
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -609,6 +655,20 @@ function NotesTab({
         </button>
         <button onClick={exportPublicNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
           Export public notes (CSV)
+        </button>
+      </div>
+      <div className="rounded-3xl bg-white p-4 shadow-sm">
+        <button onClick={() => setView("remediation")} className="w-full text-left">
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-[#0E1A1C]">Remediation notes and papers</h3>
+            <span className="whitespace-nowrap rounded-lg bg-[#DCEAF5] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#2B5F8A]">
+              {remediationCount}
+            </span>
+          </div>
+          <p className="mt-1 text-[12.5px] text-[#343E42]">Shared under claimed topics in Cycle · Phase 3.</p>
+        </button>
+        <button onClick={exportRemediationNotesCsv} className="mt-2.5 text-xs font-bold text-[#064B45]">
+          Export remediation notes (CSV)
         </button>
       </div>
     </div>
@@ -850,6 +910,98 @@ function PublicNotesBrowser({
                 </div>
               );
             })}
+          </div>
+        ))
+      )}
+    </NotesBrowserShell>
+  );
+}
+
+// The papers/notes shared under claimed topics in Cycle > Phase 3 — kept
+// visible here too, alongside the other two note types, instead of only
+// being reachable by digging into a specific claimed topic.
+function RemediationNotesBrowser({
+  resources,
+  codeById,
+  onBack,
+}: {
+  resources: Resource[];
+  codeById: Record<string, string>;
+  onBack: () => void;
+}) {
+  const [search, setSearch] = useState("");
+  const [selectedTitle, setSelectedTitle] = useState<string | null>(null);
+  const titleKey = (t: string) => t.trim().toLowerCase();
+
+  async function downloadFile(path: string, name: string) {
+    const { data, error } = await supabase.storage.from("resource-papers").download(path);
+    if (error || !data) return;
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(data);
+    a.download = name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+
+  const groups = (() => {
+    const m = new Map<string, Resource[]>();
+    for (const r of resources) {
+      const key = titleKey(r.topic_title);
+      if (!m.has(key)) m.set(key, []);
+      m.get(key)!.push(r);
+    }
+    return [...m.values()]
+      .map((entries) => ({ title: entries[0].topic_title, entries }))
+      .sort((a, b) => b.entries.length - a.entries.length);
+  })();
+
+  const q = search.trim().toLowerCase();
+  const filtered = groups
+    .filter((g) => !selectedTitle || g.title === selectedTitle)
+    .map((g) => ({
+      ...g,
+      entries: g.entries.filter(
+        (r) =>
+          !q ||
+          g.title.toLowerCase().includes(q) ||
+          r.source.toLowerCase().includes(q) ||
+          r.takeaway.toLowerCase().includes(q),
+      ),
+    }))
+    .filter((g) => g.entries.length > 0);
+
+  return (
+    <NotesBrowserShell
+      onBack={onBack}
+      search={search}
+      onSearchChange={setSearch}
+      topics={groups.map((g) => ({ title: g.title, count: g.entries.length }))}
+      selectedTitle={selectedTitle}
+      onSelectTitle={setSelectedTitle}
+    >
+      {filtered.length === 0 ? (
+        <div className="rounded-3xl bg-white p-6 text-center text-sm text-[#343E42] shadow-sm">
+          {resources.length === 0 ? "Nothing shared yet. Papers shared under a claimed topic collect here." : "No notes match."}
+        </div>
+      ) : (
+        filtered.map((g) => (
+          <div key={g.title} className="rounded-3xl bg-white p-4 shadow-sm">
+            <h3 className="font-bold text-[#0E1A1C]">{g.title}</h3>
+            {g.entries.map((r) => (
+              <div key={r.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+                <div className="text-[11px] font-semibold uppercase tracking-wide text-[#343E42]">
+                  {codeById[r.resident_id] ?? "Resident"} · {r.source}
+                </div>
+                <p className="mt-0.5 text-[13px] leading-relaxed text-[#232D30]">{r.takeaway}</p>
+                {r.file_path && r.file_name && (
+                  <button onClick={() => downloadFile(r.file_path!, r.file_name!)} className="mt-1 text-[11px] font-bold text-[#0E7C72]">
+                    Download {r.file_name}
+                  </button>
+                )}
+              </div>
+            ))}
           </div>
         ))
       )}
