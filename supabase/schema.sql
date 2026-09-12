@@ -850,6 +850,10 @@ create policy resources_insert on resources for insert
 create policy resources_delete on resources for delete
   using (resident_id = auth.uid());
 
+create policy resources_update on resources for update
+  using (resident_id = auth.uid())
+  with check (resident_id = auth.uid());
+
 -- ---------- resource paper uploads ----------
 -- See supabase/patch_resource_uploads.sql for the full commentary.
 

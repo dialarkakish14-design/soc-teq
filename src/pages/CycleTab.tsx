@@ -251,6 +251,30 @@ export function CycleTab({ resident }: { resident: Resident }) {
     flash("Removed.");
   }
 
+  async function updateResource(id: string, source: string, url: string, takeaway: string, file: File | null) {
+    if (!source.trim() || !takeaway.trim()) return flash("Add where it's from and what you took from it.");
+
+    let filePath: string | undefined;
+    let fileName: string | undefined;
+    if (file) {
+      filePath = `${resident.program_id}/${resident.pgy}/${Date.now()}-${file.name}`;
+      const { error: uploadError } = await supabase.storage.from("resource-papers").upload(filePath, file);
+      if (uploadError) return flash(uploadError.message);
+      fileName = file.name;
+    }
+
+    const updates: Partial<Resource> = { source: source.trim(), url: url.trim() || null, takeaway: takeaway.trim() };
+    if (filePath) {
+      updates.file_path = filePath;
+      updates.file_name = fileName!;
+    }
+
+    const { error } = await supabase.from("resources").update(updates).eq("id", id);
+    if (error) return flash(error.message);
+    setResources((prev) => prev.map((r) => (r.id === id ? { ...r, ...updates } : r)));
+    flash("Updated.");
+  }
+
   async function downloadResourceFile(path: string, name: string) {
     const { data, error } = await supabase.storage.from("resource-papers").download(path);
     if (error) return flash(error.message);
@@ -340,6 +364,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onUndoScholarly={undoScholarly}
           onShare={shareResource}
           onDeleteResource={deleteResource}
+          onUpdateResource={updateResource}
           onDownloadFile={downloadResourceFile}
           onExportNotes={exportTopicNotesCsv}
           onUpdateDetails={updateClaimDetails}
@@ -679,6 +704,7 @@ function Phase3({
   onUndoScholarly,
   onShare,
   onDeleteResource,
+  onUpdateResource,
   onDownloadFile,
   onExportNotes,
   onUpdateDetails,
@@ -691,6 +717,7 @@ function Phase3({
   onUndoScholarly: (id: string) => void;
   onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
+  onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
@@ -712,6 +739,7 @@ function Phase3({
             onUndoScholarly={onUndoScholarly}
             onShare={onShare}
             onDeleteResource={onDeleteResource}
+            onUpdateResource={onUpdateResource}
             onDownloadFile={onDownloadFile}
             onExportNotes={onExportNotes}
             onUpdateDetails={onUpdateDetails}
@@ -722,17 +750,110 @@ function Phase3({
   );
 }
 
+function FilePicker({ file, onChange }: { file: File | null; onChange: (f: File | null) => void }) {
+  return (
+    <label className="block">
+      <div className="mb-1 text-[11px] font-semibold text-[#3F4C50]">Upload the paper (optional, PDF or image, up to 20MB)</div>
+      <div className="flex items-center gap-2">
+        <span className="cursor-pointer whitespace-nowrap rounded-lg bg-[#EAEFEE] px-3 py-1.5 text-[11px] font-bold text-[#232D30]">
+          Choose file
+        </span>
+        {file && <span className="truncate text-[11px] text-[#3F4C50]">{file.name}</span>}
+        <input
+          type="file"
+          accept="application/pdf,image/png,image/jpeg"
+          onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+          className="hidden"
+        />
+      </div>
+    </label>
+  );
+}
+
+function ResourceRow({
+  resource,
+  onDelete,
+  onUpdate,
+  onDownloadFile,
+}: {
+  resource: Resource;
+  onDelete: (id: string) => void;
+  onUpdate: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
+  onDownloadFile: (path: string, name: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [source, setSource] = useState(resource.source);
+  const [url, setUrl] = useState(resource.url ?? "");
+  const [takeaway, setTakeaway] = useState(resource.takeaway);
+  const [file, setFile] = useState<File | null>(null);
+
+  if (editing) {
+    return (
+      <div className="mt-2 flex flex-col gap-2 border-t border-[#E2EAE9] pt-2">
+        <input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Where it's from (e.g. JAAD)" className="input" />
+        <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Link" className="input" />
+        <textarea value={takeaway} onChange={(e) => setTakeaway(e.target.value)} placeholder="What a co-resident should know" className="input min-h-[60px]" />
+        <FilePicker file={file} onChange={setFile} />
+        {resource.file_name && !file && (
+          <div className="text-[11px] text-[#3F4C50]">Current file: {resource.file_name} · choose a new one to replace it</div>
+        )}
+        <div className="flex gap-2">
+          <button
+            onClick={() => {
+              onUpdate(resource.id, source, url, takeaway, file);
+              setEditing(false);
+            }}
+            className="flex-1 rounded-xl bg-[#0E7C72] py-2 text-xs font-bold text-white"
+          >
+            Save
+          </button>
+          <button onClick={() => setEditing(false)} className="flex-1 rounded-xl bg-[#EAEFEE] py-2 text-xs font-bold text-[#232D30]">
+            Cancel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="mt-2 flex items-start justify-between gap-2 border-t border-[#E2EAE9] pt-2">
+      <div className="text-[12px] text-[#232D30]">
+        <div className="font-semibold">{resource.source}</div>
+        <p className="mt-0.5">{resource.takeaway}</p>
+        {resource.file_path && resource.file_name && (
+          <button
+            onClick={() => onDownloadFile(resource.file_path!, resource.file_name!)}
+            className="mt-1 text-[11px] font-bold text-[#0E7C72]"
+          >
+            Download {resource.file_name}
+          </button>
+        )}
+      </div>
+      <div className="flex shrink-0 flex-col items-end gap-1.5">
+        <button onClick={() => setEditing(true)} className="text-[11px] font-semibold text-[#3F4C50]">
+          Edit
+        </button>
+        <button onClick={() => onDelete(resource.id)} className="text-[11px] font-semibold text-[#93393E]">
+          Delete
+        </button>
+      </div>
+    </div>
+  );
+}
+
 function ResourceShare({
   title,
   resources,
   onShare,
   onDelete,
+  onUpdate,
   onDownloadFile,
 }: {
   title: string;
   resources: Resource[];
   onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDelete: (id: string) => void;
+  onUpdate: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -754,23 +875,7 @@ function ResourceShare({
         </button>
       </div>
       {resources.map((r) => (
-        <div key={r.id} className="mt-2 flex items-start justify-between gap-2 border-t border-[#E2EAE9] pt-2">
-          <div className="text-[12px] text-[#232D30]">
-            <div className="font-semibold">{r.source}</div>
-            <p className="mt-0.5">{r.takeaway}</p>
-            {r.file_path && r.file_name && (
-              <button
-                onClick={() => onDownloadFile(r.file_path!, r.file_name!)}
-                className="mt-1 text-[11px] font-bold text-[#0E7C72]"
-              >
-                Download {r.file_name}
-              </button>
-            )}
-          </div>
-          <button onClick={() => onDelete(r.id)} className="shrink-0 text-[11px] font-semibold text-[#93393E]">
-            Delete
-          </button>
-        </div>
+        <ResourceRow key={r.id} resource={r} onDelete={onDelete} onUpdate={onUpdate} onDownloadFile={onDownloadFile} />
       ))}
       {open && (
         <div className="mt-2 flex flex-col gap-2">
@@ -781,15 +886,7 @@ function ResourceShare({
           <input value={source} onChange={(e) => setSource(e.target.value)} placeholder="Where it's from (e.g. JAAD)" className="input" />
           <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="Link" className="input" />
           <textarea value={takeaway} onChange={(e) => setTakeaway(e.target.value)} placeholder="What a co-resident should know" className="input min-h-[60px]" />
-          <label className="block">
-            <div className="mb-1 text-[11px] font-semibold text-[#3F4C50]">Upload the paper (optional, PDF or image, up to 20MB)</div>
-            <input
-              type="file"
-              accept="application/pdf,image/png,image/jpeg"
-              onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-              className="text-[12px]"
-            />
-          </label>
+          <FilePicker file={file} onChange={setFile} />
           <button
             onClick={() => {
               onShare(title, source, url, takeaway, file);
@@ -817,6 +914,7 @@ function CommittedTopicRow({
   onUndoScholarly,
   onShare,
   onDeleteResource,
+  onUpdateResource,
   onDownloadFile,
   onExportNotes,
   onUpdateDetails,
@@ -829,6 +927,7 @@ function CommittedTopicRow({
   onUndoScholarly: (id: string) => void;
   onShare: (title: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDeleteResource: (id: string) => void;
+  onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string) => void;
@@ -943,6 +1042,7 @@ function CommittedTopicRow({
         resources={resources}
         onShare={onShare}
         onDelete={onDeleteResource}
+        onUpdate={onUpdateResource}
         onDownloadFile={onDownloadFile}
       />
     </div>
