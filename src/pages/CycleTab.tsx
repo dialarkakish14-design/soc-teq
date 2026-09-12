@@ -745,7 +745,9 @@ function ResourceShare({
     <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-[#232D30]">
-          {resources.length} shared reading{resources.length === 1 ? "" : "s"} on this condition
+          {resources.length === 0
+            ? "No shared readings yet"
+            : `${resources.length} shared reading${resources.length === 1 ? "" : "s"} on this condition`}
         </span>
         <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
           {open ? "Done" : resources.length ? "Share another" : "Share a paper"}
