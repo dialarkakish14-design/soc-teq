@@ -207,6 +207,25 @@ export interface Assessment {
   score: number;
 }
 
+// Preset angles a resident can flag on a claimed topic, alongside their own
+// free-text comment — both optional, and neither exclusive of the other.
+export const TOPIC_REQUEST_TAGS = [
+  "Myths/misconceptions",
+  "Fun facts",
+  "Geographical differences",
+  "Barriers to care",
+] as const;
+export type TopicRequestTag = (typeof TOPIC_REQUEST_TAGS)[number];
+
+export interface TopicRequest {
+  id: string;
+  claim_id: string;
+  resident_id: string;
+  comment: string;
+  tags: string[];
+  created_at: string;
+}
+
 export interface Resource {
   id: string;
   program_id: string;

@@ -17,6 +17,7 @@ import {
   RATING_DOMAINS,
   SCHOLARLY_STATUSES,
   THRESHOLD,
+  TOPIC_REQUEST_TAGS,
   type Assessment,
   type Claim,
   type Cycle,
@@ -24,6 +25,7 @@ import {
   type Resident,
   type Resource,
   type SkinType,
+  type TopicRequest,
 } from "../types";
 
 interface PriorityTopic {
@@ -73,6 +75,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const [claims, setClaims] = useState<Claim[]>([]);
   const [assessments, setAssessments] = useState<Assessment[]>([]);
   const [resources, setResources] = useState<Resource[]>([]);
+  const [requests, setRequests] = useState<TopicRequest[]>([]);
   const [priority, setPriority] = useState<PriorityTopic[]>([]);
   const [cohortCount, setCohortCount] = useState(0);
   const [codeById, setCodeById] = useState<Record<string, string>>({});
@@ -107,6 +110,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       claims: Claim[];
       assessments: Assessment[];
       resources: Resource[];
+      requests: TopicRequest[];
       priority_topics: {
         title: string;
         ratings: Pick<Rating, "depth" | "clarity" | "nuance" | "mgmt" | "conf">[];
@@ -120,6 +124,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
     setClaims(result.claims ?? []);
     setAssessments(result.assessments ?? []);
     setResources(result.resources ?? []);
+    setRequests(result.requests ?? []);
 
     const gaps: PriorityTopic[] = [];
     for (const t of result.priority_topics ?? []) {
@@ -363,6 +368,25 @@ export function CycleTab({ resident }: { resident: Resident }) {
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
 
+  async function addTopicRequest(claimId: string, comment: string, tags: string[]) {
+    if (!comment.trim() && tags.length === 0) return flash("Add a comment or pick something you'd like covered.");
+    const { data, error } = await supabase
+      .from("topic_requests")
+      .insert({ claim_id: claimId, resident_id: resident.id, comment: comment.trim(), tags })
+      .select("*")
+      .single();
+    if (error) return flash(error.message);
+    setRequests((prev) => [...prev, data as TopicRequest]);
+    flash("Sent to whoever's teaching it.");
+  }
+
+  async function deleteTopicRequest(id: string) {
+    const { error } = await supabase.from("topic_requests").delete().eq("id", id);
+    if (error) return flash(error.message);
+    setRequests((prev) => prev.filter((r) => r.id !== id));
+    flash("Removed.");
+  }
+
   function exportPriorityCsv() {
     const header = [
       "topic",
@@ -445,6 +469,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
           resident={resident}
           codeById={codeById}
           resources={resources}
+          requests={requests}
           onDeliver={markDelivered}
           onUndoDeliver={undoDelivered}
           onScholarly={markScholarly}
@@ -457,6 +482,8 @@ export function CycleTab({ resident }: { resident: Resident }) {
           onExportNotes={exportTopicNotesCsv}
           onUpdateDetails={updateClaimDetails}
           onEditFormat={editFormat}
+          onAddRequest={addTopicRequest}
+          onDeleteRequest={deleteTopicRequest}
         />
       )}
       {phase3Started && phase === 4 && (
@@ -902,6 +929,7 @@ function Phase3({
   resident,
   codeById,
   resources,
+  requests,
   onDeliver,
   onUndoDeliver,
   onScholarly,
@@ -914,11 +942,14 @@ function Phase3({
   onExportNotes,
   onUpdateDetails,
   onEditFormat,
+  onAddRequest,
+  onDeleteRequest,
 }: {
   claims: Claim[];
   resident: Resident;
   codeById: Record<string, string>;
   resources: Resource[];
+  requests: TopicRequest[];
   onDeliver: (id: string) => void;
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
@@ -931,6 +962,8 @@ function Phase3({
   onExportNotes: (title: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onEditFormat: (id: string, format: string) => void;
+  onAddRequest: (claimId: string, comment: string, tags: string[]) => void;
+  onDeleteRequest: (id: string) => void;
 }) {
   const [open, setOpen] = useState(true);
 
@@ -980,6 +1013,8 @@ function Phase3({
               isMine={c.resident_id === resident.id}
               code={codeById[c.resident_id] ?? "?"}
               resources={resources.filter((r) => r.topic_title === c.topic_title)}
+              requests={requests.filter((r) => r.claim_id === c.id)}
+              myResidentId={resident.id}
               onDeliver={onDeliver}
               onUndoDeliver={onUndoDeliver}
               onScholarly={onScholarly}
@@ -992,6 +1027,8 @@ function Phase3({
               onExportNotes={onExportNotes}
               onUpdateDetails={onUpdateDetails}
               onEditFormat={onEditFormat}
+              onAddRequest={onAddRequest}
+              onDeleteRequest={onDeleteRequest}
             />
           );
         })
@@ -1087,6 +1124,111 @@ function ResourceRow({
           Delete
         </button>
       </div>
+    </div>
+  );
+}
+
+// Lets any resident flag something they'd want mentioned when a claimed
+// topic is taught — a free-text comment, one or more preset angles, or
+// both. Visible to the whole cohort; only the person who posted a request
+// can remove it.
+function TopicRequests({
+  claimId,
+  requests,
+  codeById,
+  myResidentId,
+  onAdd,
+  onDelete,
+}: {
+  claimId: string;
+  requests: TopicRequest[];
+  codeById: Record<string, string>;
+  myResidentId: string;
+  onAdd: (claimId: string, comment: string, tags: string[]) => void;
+  onDelete: (id: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [comment, setComment] = useState("");
+  const [tags, setTags] = useState<string[]>([]);
+
+  function toggleTag(tag: string) {
+    setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
+  }
+
+  return (
+    <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-semibold text-[#232D30]">
+          {requests.length === 0 ? "No requests yet" : `${requests.length} request${requests.length === 1 ? "" : "s"} from your cohort`}
+        </span>
+        <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
+          {open ? "Done" : "Ask for something"}
+        </button>
+      </div>
+      {requests.map((r) => (
+        <div key={r.id} className="mt-2 flex items-start justify-between gap-2 border-t border-[#E2EAE9] pt-2">
+          <div className="text-[12px] text-[#232D30]">
+            <div className="text-[10.5px] font-semibold text-[#343E42]">
+              {r.resident_id === myResidentId ? "You" : codeById[r.resident_id] ?? "?"}
+            </div>
+            {r.comment && <p className="mt-0.5">{r.comment}</p>}
+            {r.tags.length > 0 && (
+              <div className="mt-1 flex flex-wrap gap-1">
+                {r.tags.map((t) => (
+                  <span key={t} className="rounded-lg bg-white px-2 py-0.5 text-[10.5px] font-semibold text-[#343E42]">
+                    {t}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {r.resident_id === myResidentId && (
+            <button onClick={() => onDelete(r.id)} className="shrink-0 text-[11px] font-semibold text-[#93393E]">
+              Delete
+            </button>
+          )}
+        </div>
+      ))}
+      {open && (
+        <div className="mt-2 flex flex-col gap-2">
+          <p className="text-[11px] leading-relaxed text-[#343E42]">
+            Anything in particular you'd like mentioned when this is taught? A question, a myth to bust, an angle
+            to cover · both are optional.
+          </p>
+          <textarea
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            placeholder="Your comment (optional)"
+            className="input min-h-[60px]"
+          />
+          <div className="flex flex-wrap gap-1.5">
+            {TOPIC_REQUEST_TAGS.map((t) => (
+              <button
+                key={t}
+                type="button"
+                onClick={() => toggleTag(t)}
+                className={`rounded-lg px-2.5 py-1.5 text-[11px] font-bold ${
+                  tags.includes(t) ? "bg-[#0E7C72] text-white" : "bg-white text-[#232D30]"
+                }`}
+              >
+                {t}
+              </button>
+            ))}
+          </div>
+          <button
+            onClick={() => {
+              onAdd(claimId, comment, tags);
+              setComment("");
+              setTags([]);
+              setOpen(false);
+            }}
+            disabled={!comment.trim() && tags.length === 0}
+            className="rounded-xl bg-[#0E7C72] py-2.5 text-sm font-bold text-white disabled:opacity-40"
+          >
+            Send request
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -1316,6 +1458,8 @@ function CommittedTopicRow({
   isMine,
   code,
   resources,
+  requests,
+  myResidentId,
   onDeliver,
   onUndoDeliver,
   onScholarly,
@@ -1328,6 +1472,8 @@ function CommittedTopicRow({
   onExportNotes,
   onUpdateDetails,
   onEditFormat,
+  onAddRequest,
+  onDeleteRequest,
 }: {
   claim: Claim;
   claims: Claim[];
@@ -1336,6 +1482,8 @@ function CommittedTopicRow({
   isMine: boolean;
   code: string;
   resources: Resource[];
+  requests: TopicRequest[];
+  myResidentId: string;
   onDeliver: (id: string) => void;
   onUndoDeliver: (id: string) => void;
   onScholarly: (id: string) => void;
@@ -1346,6 +1494,8 @@ function CommittedTopicRow({
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
+  onAddRequest: (claimId: string, comment: string, tags: string[]) => void;
+  onDeleteRequest: (id: string) => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onEditFormat: (id: string, format: string) => void;
 }) {
@@ -1367,7 +1517,7 @@ function CommittedTopicRow({
           ? "bg-[#FAEBD4] text-[#8F5205]"
           : "bg-[#DCEAF5] text-[#2B5F8A]";
   const statusLabel = c.scholarly
-    ? "Scholarly"
+    ? "Delivered · Scholarly"
     : deliveryState === "delivered"
       ? "Delivered"
       : deliveryState === "missed"
@@ -1564,6 +1714,14 @@ function CommittedTopicRow({
                 </div>
               )
             ))}
+          <TopicRequests
+            claimId={c.id}
+            requests={requests}
+            codeById={codeById}
+            myResidentId={myResidentId}
+            onAdd={onAddRequest}
+            onDelete={onDeleteRequest}
+          />
           <ResourceShare
             title={c.topic_title}
             resources={resources}

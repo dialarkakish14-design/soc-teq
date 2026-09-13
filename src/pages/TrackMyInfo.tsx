@@ -501,7 +501,7 @@ export function TrackMyInfo({
                         ? "bg-[#FAEBD4] text-[#8F5205]"
                         : "bg-[#DCEAF5] text-[#2B5F8A]";
                 const statusLabel = c.scholarly
-                  ? "Scholarly"
+                  ? "Delivered · Scholarly"
                   : deliveryState === "delivered"
                     ? "Delivered"
                     : deliveryState === "missed"
