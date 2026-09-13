@@ -1870,50 +1870,60 @@ function ResultsSummary({
             stats.followupMean >= stats.baselineMean ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"
           }`}
         >
-          <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Change since baseline</div>
+          <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">
+            Group average change since baseline
+          </div>
           <div className="mt-0.5 flex items-center justify-between">
             <div className="text-[11px] opacity-90">
-              {stats.baselineMean.toFixed(1)}% → {stats.followupMean.toFixed(1)}%
+              {stats.baselineMean.toFixed(1)}% → {stats.followupMean.toFixed(1)}% · n={stats.n} completed both
             </div>
             <div className="font-mono text-2xl font-semibold">
               {stats.followupMean >= stats.baselineMean ? "+" : ""}
               {(stats.followupMean - stats.baselineMean).toFixed(1)}
             </div>
           </div>
-          <div className="mt-2.5 grid grid-cols-2 gap-x-2 gap-y-1 border-t border-white/25 pt-2.5 text-[10.5px] opacity-90">
+          <p className="mt-2.5 rounded-xl bg-white/15 px-2.5 py-2 text-[11px] leading-relaxed opacity-95">
+            The {stats.n} resident{stats.n === 1 ? "" : "s"} in the group who took both the baseline and the
+            follow-up went, on average, from a score of {stats.baselineMean.toFixed(1)}% to{" "}
+            {stats.followupMean.toFixed(1)}%,
+            {stats.followupMean >= stats.baselineMean ? " an improvement" : " a drop"} of{" "}
+            {Math.abs(stats.followupMean - stats.baselineMean).toFixed(1)} points as a group.
+            {stats.ci95 && stats.meanDiff != null ? (
+              stats.significant ? (
+                <>
+                  {" "}
+                  Because the group is small, there's always a chance a result like this happened randomly rather
+                  than reflecting a real change. Here, though, the numbers say it's unlikely to be random: even in
+                  the least favorable realistic scenario, the group would still show an improvement of at least{" "}
+                  {stats.ci95[0].toFixed(1)} points, which is what "statistically significant" means below.
+                </>
+              ) : (
+                <>
+                  {" "}
+                  With a group this small, we can't yet rule out that this result happened by chance. The true
+                  group-average change is likely somewhere between {stats.ci95[0].toFixed(1)} and{" "}
+                  {stats.ci95[1].toFixed(1)} points. Since that range includes a change of zero, it's possible the
+                  real effect is smaller than it looks, or not there at all. A larger cohort would settle this.
+                </>
+              )
+            ) : (
+              " There's only one resident with both scores on file, so there's no way yet to tell a real change from random variation. That needs at least 2."
+            )}
+          </p>
+          <div className="mt-2 grid grid-cols-2 gap-x-2 gap-y-1 border-t border-white/25 pt-2 text-[10.5px] opacity-80">
             <div>
-              Baseline: {stats.baselineMean.toFixed(1)}% ± {stats.baselineSd != null ? stats.baselineSd.toFixed(1) : "n/a"}{" "}
-              SD (n={stats.baselineN})
+              Baseline SD: {stats.baselineSd != null ? stats.baselineSd.toFixed(1) : "n/a"} (n={stats.baselineN})
             </div>
             <div>
-              Follow-up: {stats.followupMean.toFixed(1)}% ± {stats.followupSd != null ? stats.followupSd.toFixed(1) : "n/a"}{" "}
-              SD (n={stats.followupN})
+              Follow-up SD: {stats.followupSd != null ? stats.followupSd.toFixed(1) : "n/a"} (n={stats.followupN})
             </div>
           </div>
-          {stats.ci95 && stats.meanDiff != null ? (
-            <div className="mt-2 text-[10.5px] leading-relaxed opacity-90">
-              Paired change (n={stats.n}): {stats.meanDiff >= 0 ? "+" : ""}
-              {stats.meanDiff.toFixed(1)} pts, 95% CI [{stats.ci95[0].toFixed(1)}, {stats.ci95[1].toFixed(1)}],
-              t({stats.df}) = {stats.t!.toFixed(2)} · {stats.significant ? "significant" : "not significant"} at
-              p &lt; 0.05
-            </div>
-          ) : (
-            <div className="mt-2 text-[10.5px] opacity-90">
-              Need at least 2 residents with both a baseline and follow-up score for a significance test.
+          {stats.ci95 && stats.meanDiff != null && (
+            <div className="mt-1 text-[10.5px] opacity-80">
+              For citing: 95% CI [{stats.ci95[0].toFixed(1)}, {stats.ci95[1].toFixed(1)}], t({stats.df}) ={" "}
+              {stats.t!.toFixed(2)}, {stats.significant ? "significant" : "not significant"} at p &lt; 0.05
             </div>
           )}
-          <p className="mt-2.5 rounded-xl bg-white/15 px-2.5 py-2 text-[10.5px] leading-relaxed opacity-95">
-            {stats.ci95 && stats.meanDiff != null
-              ? "This compares each resident's own baseline and follow-up score, which is more sensitive than " +
-                "just comparing two group averages side by side. The 95% CI is the range the true average change " +
-                "most likely falls within: the narrower it is, the more precise the estimate. " +
-                (stats.significant
-                  ? "\"Significant\" here means this change is unlikely to be due to chance alone."
-                  : "\"Not significant\" here usually reflects a small cohort rather than proof that nothing " +
-                    "changed: a wider study would give a more definitive answer.")
-              : "With fewer than 2 residents having both a baseline and follow-up score, there isn't enough " +
-                "data yet to say whether this change reflects a real effect or could plausibly be chance."}
-          </p>
         </div>
       )}
       {stats.pairs.length > 0 && (
