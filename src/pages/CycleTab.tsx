@@ -2184,7 +2184,7 @@ function StartPhase4({ resident, onStarted }: { resident: Resident; onStarted: (
   return (
     <div className="rounded-2xl bg-[#EEE7F3] p-4 shadow-sm">
       <h3 className="font-bold text-[#5E3F73]">6 months are up. Begin impact evaluation?</h3>
-      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#5E3F73]">
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#3D2850]">
         This opens the follow-up assessment, taken the same way as the baseline, so the group can see the change
         six months on. Any resident can start this, but talk it over with {resident.pgy} and your program director
         first.
