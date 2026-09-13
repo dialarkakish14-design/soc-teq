@@ -1902,11 +1902,27 @@ function ResultsSummary({
               Need at least 2 residents with both a baseline and follow-up score for a significance test.
             </div>
           )}
+          <p className="mt-2.5 rounded-xl bg-white/15 px-2.5 py-2 text-[10.5px] leading-relaxed opacity-95">
+            {stats.ci95 && stats.meanDiff != null
+              ? "This compares each resident's own baseline and follow-up score, which is more sensitive than " +
+                "just comparing two group averages side by side. The 95% CI is the range the true average change " +
+                "most likely falls within: the narrower it is, the more precise the estimate. " +
+                (stats.significant
+                  ? "\"Significant\" here means this change is unlikely to be due to chance alone."
+                  : "\"Not significant\" here usually reflects a small cohort rather than proof that nothing " +
+                    "changed: a wider study would give a more definitive answer.")
+              : "With fewer than 2 residents having both a baseline and follow-up score, there isn't enough " +
+                "data yet to say whether this change reflects a real effect or could plausibly be chance."}
+          </p>
         </div>
       )}
       {stats.pairs.length > 0 && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">Individual change</h3>
+          <p className="mt-0.5 text-[11.5px] leading-relaxed text-[#343E42]">
+            Each resident's own baseline → follow-up score, by resident code · this is what the paired change
+            above is actually calculated from.
+          </p>
           {stats.pairs.map((p) => (
             <div key={p.resident_id} className="flex items-center justify-between border-t border-[#E2EAE9] py-2.5 first:border-t-0">
               <span className="text-[13px] font-semibold text-[#232D30]">{codeById[p.resident_id] ?? "?"}</span>
@@ -2053,18 +2069,23 @@ function AssessmentCard({
           </div>
         )
       )}
-      {mine && !editing && (
-        <button
-          onClick={() => {
-            setScore(String(mine.score));
-            setEditing(true);
-          }}
-          className="mt-2 text-xs font-semibold text-[#343E42]"
-        >
-          Edit score · typo, or the grade was corrected
-        </button>
+      {mean != null ? (
+        <p className="mt-2 text-[10.5px] text-[#343E42]">Scores are locked now that the group average is in.</p>
+      ) : (
+        mine &&
+        !editing && (
+          <button
+            onClick={() => {
+              setScore(String(mine.score));
+              setEditing(true);
+            }}
+            className="mt-2 text-xs font-semibold text-[#343E42]"
+          >
+            Edit score · typo, or the grade was corrected
+          </button>
+        )
       )}
-      {(!mine || editing) && (
+      {mean == null && (!mine || editing) && (
         <div className="mt-3 flex gap-2">
           <input
             type="number"
