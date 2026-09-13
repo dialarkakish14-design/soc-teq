@@ -2053,7 +2053,7 @@ function AssessmentCard({
       <div className="flex items-center justify-between">
         <div>
           <h3 className="font-bold text-[#0E1A1C]">{label}</h3>
-          <p className="mt-0.5 text-[12.5px] text-[#343E42]">{desc}</p>
+          <p className="mt-0.5 text-[12.5px] text-[#232D30]">{desc}</p>
         </div>
         <span
           className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${
@@ -2416,7 +2416,7 @@ function StartNextCycle({
   return (
     <div className="rounded-2xl bg-[#DCEAF5] p-4 shadow-sm">
       <h3 className="font-bold text-[#2B5F8A]">Ready to begin Cycle {nextNumber}?</h3>
-      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#1D4568]">
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#12283F]">
         This starts a fresh 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and
         nothing carried over from before for claiming or shared readings. This cycle's results stay available
         under Cycle history below. Any resident can start this, but talk it over with {resident.pgy} and your
