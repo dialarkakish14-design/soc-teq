@@ -599,7 +599,12 @@ create table cycles (
   -- the 6-month mark, so it's never sent twice. See
   -- patch_phase4_reminder.sql.
   phase4_reminder_sent_at timestamptz,
-  unique (program_id, pgy)
+  -- Not unique per (program_id, pgy) -- a program year can start a new
+  -- cycle once its current one reaches impact evaluation, so
+  -- created_at (not the unique constraint that used to live here) is
+  -- what every function uses to find "the current cycle." See
+  -- patch_repeating_cycles.sql.
+  created_at timestamptz not null default now()
 );
 
 create table claims (
@@ -677,19 +682,31 @@ create policy cycles_select on cycles for select
 -- lead" isn't reliably identifiable for every program that signs up. See
 -- patch_manual_cycle_start.sql.
 
+-- A new cycle can start once the current one (if any) has reached impact
+-- evaluation -- not once it's fully wrapped up, since deciding "we're
+-- really done with follow-up data collection" is a social call for the
+-- cohort to make, same trust model as every other phase transition here.
 create or replace function start_cycle(p_pgy text)
 returns void
 language plpgsql security definer set search_path = public as $$
 declare
   v_program_id uuid;
+  v_latest cycles%rowtype;
 begin
   v_program_id := my_program_id();
   if v_program_id is null or p_pgy <> my_pgy() then
     raise exception 'Not authorized for this program year';
   end if;
-  if exists (select 1 from cycles where program_id = v_program_id and pgy = p_pgy) then
-    raise exception 'Cycle 1 has already started for this program year';
+
+  select * into v_latest from cycles
+  where program_id = v_program_id and pgy = p_pgy
+  order by created_at desc
+  limit 1;
+
+  if v_latest.id is not null and v_latest.phase4_started_at is null then
+    raise exception 'The current cycle for this program year hasn''t reached impact evaluation yet';
   end if;
+
   insert into cycles (program_id, pgy, start_date) values (v_program_id, p_pgy, current_date);
 end;
 $$;
@@ -711,15 +728,18 @@ begin
     raise exception 'Not authorized for this program year';
   end if;
 
-  select * into v_cycle from cycles where program_id = v_program_id and pgy = p_pgy;
+  select * into v_cycle from cycles
+  where program_id = v_program_id and pgy = p_pgy
+  order by created_at desc
+  limit 1;
   if v_cycle.id is null then
-    raise exception 'Cycle 1 hasn''t started yet';
+    raise exception 'The cycle hasn''t started yet';
   end if;
   if v_cycle.phase2_started_at is not null then
     raise exception 'Identification and baseline has already started';
   end if;
   if v_cycle.start_date + 90 > current_date then
-    raise exception 'Identification and baseline can''t start until 3 months into Cycle 1';
+    raise exception 'Identification and baseline can''t start until 3 months into the cycle';
   end if;
 
   update cycles set phase2_started_at = now() where id = v_cycle.id;
@@ -744,7 +764,10 @@ begin
     raise exception 'Not authorized for this program year';
   end if;
 
-  select * into v_cycle from cycles where program_id = v_program_id and pgy = p_pgy;
+  select * into v_cycle from cycles
+  where program_id = v_program_id and pgy = p_pgy
+  order by created_at desc
+  limit 1;
   if v_cycle.id is null or v_cycle.phase2_started_at is null then
     raise exception 'Identification and baseline hasn''t started yet';
   end if;
@@ -774,7 +797,10 @@ begin
     raise exception 'Not authorized for this program year';
   end if;
 
-  select * into v_cycle from cycles where program_id = v_program_id and pgy = p_pgy;
+  select * into v_cycle from cycles
+  where program_id = v_program_id and pgy = p_pgy
+  order by created_at desc
+  limit 1;
   if v_cycle.id is null or v_cycle.phase3_started_at is null then
     raise exception 'Resident-led remediation hasn''t started yet';
   end if;
@@ -782,7 +808,7 @@ begin
     raise exception 'Impact evaluation has already started';
   end if;
   if v_cycle.start_date + 180 > current_date then
-    raise exception 'Impact evaluation can''t start until 6 months into Cycle 1';
+    raise exception 'Impact evaluation can''t start until 6 months into the cycle';
   end if;
 
   update cycles set phase4_started_at = now() where id = v_cycle.id;
@@ -848,7 +874,10 @@ begin
   end if;
 
   select to_jsonb(c), c.id into v_cycle, v_cycle_id
-  from cycles c where c.program_id = v_program_id and c.pgy = p_pgy;
+  from cycles c
+  where c.program_id = v_program_id and c.pgy = p_pgy
+  order by c.created_at desc
+  limit 1;
 
   select count(*) into v_cohort_count
   from residents where program_id = v_program_id and pgy = p_pgy;
