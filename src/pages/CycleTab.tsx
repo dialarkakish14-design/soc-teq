@@ -313,6 +313,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       .insert({
         program_id: resident.program_id,
         pgy: resident.pgy,
+        cycle_id: cycle!.id,
         topic_title: title,
         resident_id: resident.id,
         source: source.trim(),
@@ -570,6 +571,8 @@ export function CycleTab({ resident }: { resident: Resident }) {
       )}
 
       <PhaseCards phase={displayPhase} />
+
+      <CycleHistorySection resident={resident} />
 
       {toast && (
         <div className="fixed bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-2xl bg-[#0E1A1C] px-4 py-3.5 text-sm font-semibold text-white shadow-lg">
@@ -1836,40 +1839,20 @@ function CommittedTopicRow({
   );
 }
 
-function Phase4({
-  assessments,
-  resident,
-  claims,
-  cohortCount,
-  onAssess,
-  onEditAssess,
-}: {
-  assessments: Assessment[];
-  resident: Resident;
-  claims: Claim[];
-  cohortCount: number;
-  onAssess: (phase: "baseline" | "followup", score: number) => void;
-  onEditAssess: (id: string, score: number) => void;
-}) {
+// The comparison box + claimed-topics summary, shared between the current
+// cycle's "View results" reveal and a past cycle's history entry — the
+// same content either way, just gated behind a click instead of always
+// showing, since seeing it appear automatically every time the tab opens
+// got repetitive fast.
+function ResultsSummary({ claims, assessments }: { claims: Claim[]; assessments: Assessment[] }) {
   const baseline = assessments.filter((a) => a.phase === "baseline");
   const followup = assessments.filter((a) => a.phase === "followup");
   const mean = (list: Assessment[]) => (list.length ? list.reduce((a, x) => a + x.score, 0) / list.length : null);
-  const bothComplete = cohortCount > 0 && baseline.length >= cohortCount && followup.length >= cohortCount;
-  const b = bothComplete ? mean(baseline) : null;
-  const f = bothComplete ? mean(followup) : null;
+  const b = mean(baseline);
+  const f = mean(followup);
 
   return (
     <>
-      <AssessmentCard
-        phase="followup"
-        label="Follow-up assessment"
-        desc="Same format as the baseline, six months on."
-        assessments={assessments}
-        resident={resident}
-        cohortCount={cohortCount}
-        onAssess={onAssess}
-        onEditAssess={onEditAssess}
-      />
       {b != null && f != null && (
         <div className={`rounded-2xl px-4 py-3.5 ${f >= b ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"}`}>
           <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Change since baseline</div>
@@ -1906,6 +1889,53 @@ function Phase4({
           ))
         )}
       </div>
+    </>
+  );
+}
+
+function Phase4({
+  assessments,
+  resident,
+  claims,
+  cohortCount,
+  onAssess,
+  onEditAssess,
+}: {
+  assessments: Assessment[];
+  resident: Resident;
+  claims: Claim[];
+  cohortCount: number;
+  onAssess: (phase: "baseline" | "followup", score: number) => void;
+  onEditAssess: (id: string, score: number) => void;
+}) {
+  const [showResults, setShowResults] = useState(false);
+  const baseline = assessments.filter((a) => a.phase === "baseline");
+  const followup = assessments.filter((a) => a.phase === "followup");
+  const bothComplete = cohortCount > 0 && baseline.length >= cohortCount && followup.length >= cohortCount;
+
+  return (
+    <>
+      <AssessmentCard
+        phase="followup"
+        label="Follow-up assessment"
+        desc="Same format as the baseline, six months on."
+        assessments={assessments}
+        resident={resident}
+        cohortCount={cohortCount}
+        onAssess={onAssess}
+        onEditAssess={onEditAssess}
+      />
+      {bothComplete &&
+        (showResults ? (
+          <ResultsSummary claims={claims} assessments={assessments} />
+        ) : (
+          <button
+            onClick={() => setShowResults(true)}
+            className="rounded-2xl bg-[#0E1A1C] py-3.5 text-sm font-bold text-white"
+          >
+            View results · before/after and what was claimed this cycle
+          </button>
+        ))}
     </>
   );
 }
@@ -2012,6 +2042,62 @@ function AssessmentCard({
           )}
         </div>
       )}
+    </div>
+  );
+}
+
+// Past cycles a resident actually had a claim or assessment in -- not
+// gated by their current pgy, since that changes year to year while their
+// historical participation doesn't. Loaded lazily: the list up front, then
+// one cycle's full detail only once it's actually opened.
+function CycleHistorySection({ resident }: { resident: Resident }) {
+  const [history, setHistory] = useState<{ id: string; start_date: string }[]>([]);
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [detail, setDetail] = useState<Record<string, { claims: Claim[]; assessments: Assessment[] }>>({});
+  const [loadingId, setLoadingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.rpc("list_my_cycle_history").then(({ data }) => setHistory((data as typeof history) ?? []));
+  }, [resident.id]);
+
+  async function toggle(id: string) {
+    if (openId === id) return setOpenId(null);
+    setOpenId(id);
+    if (detail[id]) return;
+    setLoadingId(id);
+    const { data, error } = await supabase.rpc("get_cycle_history_detail", { p_cycle_id: id });
+    setLoadingId(null);
+    if (error || !data) return;
+    const result = data as { claims: Claim[]; assessments: Assessment[] };
+    setDetail((prev) => ({ ...prev, [id]: { claims: result.claims ?? [], assessments: result.assessments ?? [] } }));
+  }
+
+  if (history.length === 0) return null;
+
+  return (
+    <div className="rounded-3xl bg-white p-4 shadow-sm">
+      <h3 className="font-bold text-[#0E1A1C]">Cycle history</h3>
+      <p className="mt-0.5 text-[12.5px] text-[#343E42]">Past cycles you were part of.</p>
+      {history.map((h) => (
+        <div key={h.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
+          <button onClick={() => toggle(h.id)} className="flex w-full items-center justify-between gap-2 text-left">
+            <span className="text-sm font-semibold text-[#232D30]">Cycle started {formatDateShort(h.start_date)}</span>
+            <span className={`text-lg font-extrabold text-[#343E42] transition-transform ${openId === h.id ? "rotate-180" : ""}`}>
+              ▾
+            </span>
+          </button>
+          {openId === h.id &&
+            (loadingId === h.id ? (
+              <div className="mt-2 text-xs text-[#343E42]">Loading…</div>
+            ) : (
+              detail[h.id] && (
+                <div className="mt-2">
+                  <ResultsSummary claims={detail[h.id].claims} assessments={detail[h.id].assessments} />
+                </div>
+              )
+            ))}
+        </div>
+      ))}
     </div>
   );
 }

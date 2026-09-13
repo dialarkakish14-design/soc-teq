@@ -231,6 +231,7 @@ export interface Resource {
   id: string;
   program_id: string;
   pgy: Pgy;
+  cycle_id: string;
   topic_title: string;
   resident_id: string;
   source: string;

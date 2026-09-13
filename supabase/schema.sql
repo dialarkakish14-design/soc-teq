@@ -653,6 +653,11 @@ create table resources (
   id uuid primary key default gen_random_uuid(),
   program_id uuid not null references programs (id),
   pgy text not null check (pgy in ('PGY-2', 'PGY-3', 'PGY-4')),
+  -- Scoped to the cycle it was shared in, not just program/pgy, so a new
+  -- cycle starts with an empty shared-readings slate instead of carrying
+  -- over every paper from every past cycle. See
+  -- patch_resources_per_cycle.sql.
+  cycle_id uuid not null references cycles (id) on delete cascade,
   topic_title text not null,
   resident_id uuid not null references residents (id),
   source text not null,
@@ -893,7 +898,7 @@ begin
     from assessments a where a.cycle_id = v_cycle_id;
 
     select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc), '[]'::jsonb) into v_resources
-    from resources r where r.program_id = v_program_id and r.pgy = p_pgy;
+    from resources r where r.cycle_id = v_cycle_id;
 
     select coalesce(jsonb_agg(to_jsonb(tr) order by tr.created_at), '[]'::jsonb) into v_requests
     from topic_requests tr
@@ -939,6 +944,91 @@ end;
 $$;
 
 grant execute on function get_cycle_dashboard(text) to authenticated;
+
+-- Cycle history: lets a resident look back at a cycle they were actually
+-- part of, even after a new cycle has started for their program year, and
+-- even if they've since moved up a PGY year -- access is gated by having
+-- actually had a claim or assessment in that specific cycle_id, not by
+-- matching pgy, since a resident's pgy changes over time but their
+-- historical participation never does. See patch_cycle_history.sql.
+create or replace function list_my_cycle_history()
+returns table (
+  id uuid,
+  start_date date,
+  phase4_started_at timestamptz
+)
+language sql stable security definer set search_path = public as $$
+  select c.id, c.start_date, c.phase4_started_at
+  from cycles c
+  where (
+      exists (select 1 from claims cl where cl.cycle_id = c.id and cl.resident_id = auth.uid())
+      or exists (select 1 from assessments a where a.cycle_id = c.id and a.resident_id = auth.uid())
+    )
+    and c.id <> (
+      select c2.id from cycles c2
+      where c2.program_id = c.program_id and c2.pgy = c.pgy
+      order by c2.created_at desc
+      limit 1
+    )
+  order by c.start_date desc;
+$$;
+
+grant execute on function list_my_cycle_history() to authenticated;
+
+create or replace function get_cycle_history_detail(p_cycle_id uuid)
+returns jsonb
+language plpgsql stable security definer set search_path = public as $$
+declare
+  v_cycle jsonb;
+  v_claims jsonb;
+  v_assessments jsonb;
+  v_resources jsonb;
+  v_cohort jsonb;
+begin
+  if not exists (
+    select 1 from claims where cycle_id = p_cycle_id and resident_id = auth.uid()
+    union all
+    select 1 from assessments where cycle_id = p_cycle_id and resident_id = auth.uid()
+  ) then
+    raise exception 'Not authorized for this cycle';
+  end if;
+
+  select to_jsonb(c) into v_cycle from cycles c where c.id = p_cycle_id;
+  if v_cycle is null then
+    raise exception 'Cycle not found';
+  end if;
+
+  select coalesce(jsonb_agg(to_jsonb(cl)), '[]'::jsonb) into v_claims
+  from claims cl where cl.cycle_id = p_cycle_id;
+
+  select coalesce(jsonb_agg(to_jsonb(a)), '[]'::jsonb) into v_assessments
+  from assessments a where a.cycle_id = p_cycle_id;
+
+  select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc), '[]'::jsonb) into v_resources
+  from resources r where r.cycle_id = p_cycle_id;
+
+  select coalesce(jsonb_agg(jsonb_build_object('id', res.id, 'resident_code', res.resident_code)), '[]'::jsonb) into v_cohort
+  from (
+    select distinct res.id, res.resident_code
+    from residents res
+    where res.id in (
+      select resident_id from claims where cycle_id = p_cycle_id
+      union
+      select resident_id from assessments where cycle_id = p_cycle_id
+    )
+  ) res;
+
+  return jsonb_build_object(
+    'cycle', v_cycle,
+    'claims', v_claims,
+    'assessments', v_assessments,
+    'resources', v_resources,
+    'cohort', v_cohort
+  );
+end;
+$$;
+
+grant execute on function get_cycle_history_detail(uuid) to authenticated;
 
 create policy claims_select on claims for select
   using (
@@ -1012,7 +1102,15 @@ create policy resources_select on resources for select
   using (program_id = my_program_id() and pgy = my_pgy());
 
 create policy resources_insert on resources for insert
-  with check (resident_id = auth.uid() and program_id = my_program_id() and pgy = my_pgy());
+  with check (
+    resident_id = auth.uid()
+    and program_id = my_program_id()
+    and pgy = my_pgy()
+    and exists (
+      select 1 from cycles c
+      where c.id = resources.cycle_id and c.program_id = my_program_id() and c.pgy = my_pgy()
+    )
+  );
 
 create policy resources_delete on resources for delete
   using (resident_id = auth.uid());
