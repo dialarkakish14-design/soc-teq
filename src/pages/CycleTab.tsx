@@ -2320,9 +2320,10 @@ function StartNextCycle({
     <div className="rounded-2xl bg-[#DCEAF5] p-4 shadow-sm">
       <h3 className="font-bold text-[#2B5F8A]">Ready to begin Cycle {nextNumber}?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#1D4568]">
-        This starts a fresh 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and an
-        empty slate for claiming and shared readings. This cycle's results stay available under Cycle history
-        below. Any resident can start this, but talk it over with {resident.pgy} and your program director first.
+        This starts a fresh 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and
+        nothing carried over from before for claiming or shared readings. This cycle's results stay available
+        under Cycle history below. Any resident can start this, but talk it over with {resident.pgy} and your
+        program director first.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
