@@ -172,6 +172,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
   const allClaimed = priority.length > 0 && claimedTitles.size >= priority.length;
   const delivered = claims.filter((c) => c.status === "delivered");
+  const allDelivered = claims.length > 0 && claims.every((c) => c.status === "delivered");
   const scholarly = claims.filter((c) => c.scholarly);
 
   // Every mutation below updates local state directly from the result
@@ -539,7 +540,15 @@ export function CycleTab({ resident }: { resident: Resident }) {
             onAddRequest={addTopicRequest}
             onDeleteRequest={deleteTopicRequest}
           />
-          {daysSinceStart(cycle.start_date) >= 180 && <StartPhase4 resident={resident} onStarted={load} />}
+          {daysSinceStart(cycle.start_date) >= 180 &&
+            (allDelivered ? (
+              <StartPhase4 resident={resident} onStarted={load} />
+            ) : (
+              <div className="rounded-2xl bg-[#F5F8F7] px-4 py-3.5 text-[12.5px] text-[#343E42]">
+                {delivered.length} of {claims.length} claimed topics delivered so far. Once every topic is marked
+                delivered, the option to begin impact evaluation appears here.
+              </div>
+            ))}
         </>
       )}
       {phase4Started && (
@@ -2172,6 +2181,9 @@ function StartPhase4({ resident, onStarted }: { resident: Resident; onStarted: (
         This opens the follow-up assessment, taken the same way as the baseline, so the cohort can see the change
         six months on. Any resident can start this, but talk it over with {resident.pgy} and your program director
         first.
+      </p>
+      <p className="mt-1.5 rounded-xl bg-white px-3 py-2 text-[11.5px] font-semibold leading-relaxed text-[#5E3F73]">
+        Reminder: export the CSV above before moving on to impact evaluation.
       </p>
       {error && (
         <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
