@@ -2138,7 +2138,7 @@ function AssessmentCard({
 // historical participation doesn't. Loaded lazily: the list up front, then
 // one cycle's full detail only once it's actually opened.
 function CycleHistorySection({ resident }: { resident: Resident }) {
-  const [history, setHistory] = useState<{ id: string; start_date: string }[]>([]);
+  const [history, setHistory] = useState<{ id: string; cycle_number: number; start_date: string }[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<
     Record<string, { claims: Claim[]; assessments: Assessment[]; codeById: Record<string, string> }>
@@ -2177,7 +2177,9 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
       {history.map((h) => (
         <div key={h.id} className="mt-2.5 border-t border-[#E2EAE9] pt-2.5">
           <button onClick={() => toggle(h.id)} className="flex w-full items-center justify-between gap-2 text-left">
-            <span className="text-sm font-semibold text-[#232D30]">Cycle started {formatDateShort(h.start_date)}</span>
+            <span className="text-sm font-semibold text-[#232D30]">
+              Cycle {h.cycle_number} · started {formatDateShort(h.start_date)}
+            </span>
             <span className={`text-lg font-extrabold text-[#343E42] transition-transform ${openId === h.id ? "rotate-180" : ""}`}>
               ▾
             </span>

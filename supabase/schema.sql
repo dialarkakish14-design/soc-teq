@@ -960,11 +960,16 @@ grant execute on function get_cycle_dashboard(text) to authenticated;
 create or replace function list_my_cycle_history()
 returns table (
   id uuid,
+  cycle_number int,
   start_date date,
   phase4_started_at timestamptz
 )
 language sql stable security definer set search_path = public as $$
-  select c.id, c.start_date, c.phase4_started_at
+  select
+    c.id,
+    (select count(*)::int from cycles c2 where c2.program_id = c.program_id and c2.pgy = c.pgy and c2.created_at <= c.created_at),
+    c.start_date,
+    c.phase4_started_at
   from cycles c
   where (
       exists (select 1 from claims cl where cl.cycle_id = c.id and cl.resident_id = auth.uid())
