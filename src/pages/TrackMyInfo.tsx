@@ -513,14 +513,14 @@ export function TrackMyInfo({
                         <div className="text-[11.5px] text-[#343E42]">{c.format}</div>
                       </div>
                       <div className="flex shrink-0 gap-1.5">
-                        <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-                          {statusLabel}
-                        </span>
                         {c.scholarly && (
                           <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
                             Scholarly
                           </span>
                         )}
+                        <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+                          {statusLabel}
+                        </span>
                       </div>
                     </div>
                     {(deliveryState === "pending" || deliveryState === "missed") && (
