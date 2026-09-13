@@ -488,6 +488,13 @@ export function CycleTab({ resident }: { resident: Resident }) {
 
       <EngagementBox claimRate={claimRate} delivered={delivered} scholarly={scholarly} />
 
+      {phase3Started && !phase4Started && allDelivered && daysSinceStart(cycle.start_date) < 180 && (
+        <div className="rounded-2xl bg-[#EEE7F3] px-4 py-3.5 text-[12.5px] leading-relaxed text-[#5E3F73]">
+          Every claimed topic has been delivered. Impact evaluation opens once this cycle reaches 6 months, and
+          everyone in {resident.pgy} will get an email reminder when it does.
+        </div>
+      )}
+
       {phase === 1 && <Phase1 count={priority.length} />}
       {phase !== 1 && !phase2Started && <StartPhase2 resident={resident} onStarted={load} />}
       {phase2Started && !phase3Started && (

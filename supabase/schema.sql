@@ -595,6 +595,10 @@ create table cycles (
   phase2_started_at timestamptz,
   phase3_started_at timestamptz,
   phase4_started_at timestamptz,
+  -- Set once send-phase4-reminders has emailed this cycle's cohort about
+  -- the 6-month mark, so it's never sent twice. See
+  -- patch_phase4_reminder.sql.
+  phase4_reminder_sent_at timestamptz,
   unique (program_id, pgy)
 );
 
@@ -786,6 +790,39 @@ end;
 $$;
 
 grant execute on function start_phase4(text) to authenticated;
+
+-- Every cycle that just crossed the 6-month mark, hasn't started impact
+-- evaluation yet, and hasn't already had the reminder sent -- joined out
+-- to every resident in that cohort. See patch_phase4_reminder.sql and
+-- supabase/functions/send-phase4-reminders.
+create or replace function phase4_reminder_candidates()
+returns table (
+  cycle_id uuid,
+  resident_id uuid,
+  email text,
+  full_name text
+)
+language sql stable security definer set search_path = public as $$
+  select c.id, r.id, r.email, r.full_name
+  from cycles c
+  join residents r on r.program_id = c.program_id and r.pgy = c.pgy
+  where c.phase3_started_at is not null
+    and c.phase4_started_at is null
+    and c.phase4_reminder_sent_at is null
+    and c.start_date + 180 <= current_date;
+$$;
+
+revoke all on function phase4_reminder_candidates() from public, anon, authenticated;
+grant execute on function phase4_reminder_candidates() to service_role;
+
+create or replace function record_phase4_reminder_sent(p_cycle_id uuid)
+returns void
+language sql security definer set search_path = public as $$
+  update cycles set phase4_reminder_sent_at = now() where id = p_cycle_id;
+$$;
+
+revoke all on function record_phase4_reminder_sent(uuid) from public, anon, authenticated;
+grant execute on function record_phase4_reminder_sent(uuid) to service_role;
 
 -- Loads everything the Cycle tab needs in one round trip instead of two
 -- sequential ones — see patch_cycle_dashboard_rpc.sql for the full
