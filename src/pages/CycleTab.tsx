@@ -2063,7 +2063,7 @@ function AssessmentCard({
           {mine ? `${mine.score}%` : "Not taken"}
         </span>
       </div>
-      <p className="mt-2 text-[11.5px] leading-relaxed text-[#343E42]">
+      <p className="mt-2 text-[11.5px] leading-relaxed text-[#232D30]">
         Enter your own score below · it's yours alone to see until every {resident.pgy} resident has entered
         theirs, then the group average appears here instead of individual scores.
       </p>
@@ -2417,7 +2417,7 @@ function StartNextCycle({
     <div className="rounded-2xl bg-[#DCEAF5] p-4 shadow-sm">
       <h3 className="font-bold text-[#2B5F8A]">Ready to begin Cycle {nextNumber}?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#12283F]">
-        This starts a fresh 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and
+        This starts a new 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and
         nothing carried over from before for claiming or shared readings. This cycle's results stay available
         under Cycle history below. Any resident can start this, but talk it over with {resident.pgy} and your
         program director first.
