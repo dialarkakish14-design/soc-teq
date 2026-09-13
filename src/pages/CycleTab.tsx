@@ -473,7 +473,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
       <div className="rounded-3xl bg-white p-4 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h3 className="font-bold text-[#0E1A1C]">Cycle 1</h3>
+            <h3 className="font-bold text-[#0E1A1C]">Cycle {cycle.cycle_number}</h3>
             <div className="text-xs text-[#343E42]">
               Month {month} of 6 · started {formatDateShort(cycle.start_date)}
             </div>
@@ -560,14 +560,17 @@ export function CycleTab({ resident }: { resident: Resident }) {
         </>
       )}
       {phase4Started && (
-        <Phase4
-          assessments={assessments}
-          resident={resident}
-          claims={claims}
-          cohortCount={cohortCount}
-          onAssess={recordAssessment}
-          onEditAssess={editAssessment}
-        />
+        <>
+          <Phase4
+            assessments={assessments}
+            resident={resident}
+            claims={claims}
+            cohortCount={cohortCount}
+            onAssess={recordAssessment}
+            onEditAssess={editAssessment}
+          />
+          <StartNextCycle resident={resident} onStarted={load} nextNumber={cycle.cycle_number + 1} />
+        </>
       )}
 
       <PhaseCards phase={displayPhase} />
@@ -2287,6 +2290,49 @@ function StartPhase4({ resident, onStarted }: { resident: Resident; onStarted: (
         className="mt-3 w-full rounded-2xl bg-[#5E3F73] py-3 text-sm font-bold text-white disabled:opacity-60"
       >
         {busy ? "Starting…" : "Begin impact evaluation"}
+      </button>
+    </div>
+  );
+}
+
+function StartNextCycle({
+  resident,
+  onStarted,
+  nextNumber,
+}: {
+  resident: Resident;
+  onStarted: () => void;
+  nextNumber: number;
+}) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function start() {
+    setBusy(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("start_cycle", { p_pgy: resident.pgy });
+    setBusy(false);
+    if (rpcError) return setError(rpcError.message);
+    onStarted();
+  }
+
+  return (
+    <div className="rounded-2xl bg-[#DCEAF5] p-4 shadow-sm">
+      <h3 className="font-bold text-[#2B5F8A]">Ready to begin Cycle {nextNumber}?</h3>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#1D4568]">
+        This starts a fresh 6-month cycle for {resident.pgy}: a new baseline period, new priority topics, and an
+        empty slate for claiming and shared readings. This cycle's results stay available under Cycle history
+        below. Any resident can start this, but talk it over with {resident.pgy} and your program director first.
+      </p>
+      {error && (
+        <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
+      )}
+      <button
+        onClick={start}
+        disabled={busy}
+        className="mt-3 w-full rounded-2xl bg-[#2B5F8A] py-3 text-sm font-bold text-white disabled:opacity-60"
+      >
+        {busy ? "Starting…" : `Begin Cycle ${nextNumber}`}
       </button>
     </div>
   );

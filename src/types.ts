@@ -156,6 +156,9 @@ export interface Cycle {
   program_id: string;
   pgy: Pgy;
   start_date: string;
+  // 1 for this program year's first-ever cycle, 2 for the next, etc. —
+  // computed server-side, not stored.
+  cycle_number: number;
   // Set only when a resident explicitly starts each phase — see CycleTab.tsx.
   phase2_started_at: string | null;
   phase3_started_at: string | null;

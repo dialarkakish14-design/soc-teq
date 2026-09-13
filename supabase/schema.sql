@@ -878,7 +878,13 @@ begin
     raise exception 'Not authorized for this program year';
   end if;
 
-  select to_jsonb(c), c.id into v_cycle, v_cycle_id
+  select
+    to_jsonb(c) || jsonb_build_object(
+      'cycle_number',
+      (select count(*) from cycles c2 where c2.program_id = c.program_id and c2.pgy = c.pgy and c2.created_at <= c.created_at)
+    ),
+    c.id
+  into v_cycle, v_cycle_id
   from cycles c
   where c.program_id = v_program_id and c.pgy = p_pgy
   order by c.created_at desc
