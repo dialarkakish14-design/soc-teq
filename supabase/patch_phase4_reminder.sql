@@ -44,19 +44,24 @@ $$;
 revoke all on function record_phase4_reminder_sent(uuid) from public, anon, authenticated;
 grant execute on function record_phase4_reminder_sent(uuid) to service_role;
 
--- Schedule separately, after deploying the send-phase4-reminders function
--- and setting its CRON_SECRET/BREVO_API_KEY secrets (reuse the same
--- values as send-reminders). Once a day is plenty -- this only depends on
--- a date threshold, not anything time-sensitive within the day.
+-- Schedule separately, after deploying the send-phase4-reminders function.
+-- It needs its own PHASE4_CRON_SECRET secret (deliberately separate from
+-- send-reminders' CRON_SECRET, so setting this one up can't break the
+-- other's already-scheduled job) plus BREVO_API_KEY, which it already
+-- gets for free since that's a project-wide secret. Once a day is plenty
+-- here -- this only depends on a date threshold, not anything
+-- time-sensitive within the day.
 --   select cron.schedule(
 --     'send-phase4-reminders',
 --     '0 6 * * *',
 --     $$
 --     select net.http_post(
---       url := 'https://hnkckozojgdtizufanmz.supabase.co/functions/v1/send-phase4-reminders',
---       headers := jsonb_build_object('content-type', 'application/json', 'x-cron-secret', '<CRON_SECRET>'),
+--       url := 'https://hnkckozojgdtizufanmz.supabase.co/functions/v1/<actual-function-url>',
+--       headers := jsonb_build_object('content-type', 'application/json', 'x-cron-secret', '<PHASE4_CRON_SECRET>'),
 --       body := '{}'::jsonb
 --     );
 --     $$
 --   );
--- Replace <CRON_SECRET> with the same value used for send-reminders.
+-- Replace <actual-function-url> with whatever slug Supabase assigned the
+-- function (check its URL on the Edge Functions page), and
+-- <PHASE4_CRON_SECRET> with the value you set for the new secret.

@@ -17,7 +17,10 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const CRON_SECRET = Deno.env.get("CRON_SECRET")!;
+// Its own secret, separate from send-reminders' CRON_SECRET, so setting
+// up this function can't accidentally break the other's already-scheduled
+// cron job.
+const CRON_SECRET = Deno.env.get("PHASE4_CRON_SECRET")!;
 const BREVO_API_KEY = Deno.env.get("BREVO_API_KEY")!;
 
 interface Candidate {
