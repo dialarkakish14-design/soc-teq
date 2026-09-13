@@ -1,4 +1,4 @@
-import { RATING_DOMAINS, THRESHOLD, type Absence, type Rating, type RatingDomainKey } from "../types";
+import { RATING_DOMAINS, THRESHOLD, type Absence, type Assessment, type Rating, type RatingDomainKey } from "../types";
 
 export function todayLocalDate(): string {
   const d = new Date();
@@ -348,5 +348,101 @@ export function monthlyBrief(entries: TopicEntry[]): MonthlyBrief | null {
     strongestVal: per[strongest.key],
     gapTitles: scored.filter((o) => isBelowThreshold(o.score.overall)).map((o) => o.entry.title),
     uncoveredTitles: entries.filter((e) => !e.socCovered).map((e) => e.title),
+  };
+}
+
+function mean(xs: number[]): number | null {
+  return xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null;
+}
+
+function sampleSd(xs: number[]): number | null {
+  if (xs.length < 2) return null;
+  const m = mean(xs)!;
+  const variance = xs.reduce((a, x) => a + (x - m) ** 2, 0) / (xs.length - 1);
+  return Math.sqrt(variance);
+}
+
+// Two-tailed 95% critical t-values by degrees of freedom (standard stats
+// table) — beyond df 30 the t-distribution is close enough to normal that
+// 1.96 is a standard approximation.
+const T_CRITICAL_95: Record<number, number> = {
+  1: 12.706, 2: 4.303, 3: 3.182, 4: 2.776, 5: 2.571, 6: 2.447, 7: 2.365, 8: 2.306, 9: 2.262, 10: 2.228,
+  11: 2.201, 12: 2.179, 13: 2.160, 14: 2.145, 15: 2.131, 16: 2.120, 17: 2.110, 18: 2.101, 19: 2.093, 20: 2.086,
+  21: 2.080, 22: 2.074, 23: 2.069, 24: 2.064, 25: 2.060, 26: 2.056, 27: 2.052, 28: 2.048, 29: 2.045, 30: 2.042,
+};
+function tCritical95(df: number): number {
+  return T_CRITICAL_95[df] ?? 1.96;
+}
+
+export interface AssessmentPair {
+  resident_id: string;
+  baseline: number;
+  followup: number;
+  diff: number;
+}
+
+export interface PairedAssessmentStats {
+  baselineMean: number | null;
+  baselineSd: number | null;
+  baselineN: number;
+  followupMean: number | null;
+  followupSd: number | null;
+  followupN: number;
+  // Only residents with both a baseline and a follow-up score — the
+  // actual paired sample the significance test runs on, smaller than
+  // either total above whenever someone only has one of the two.
+  n: number;
+  meanDiff: number | null;
+  sdDiff: number | null;
+  t: number | null;
+  df: number | null;
+  ci95: [number, number] | null;
+  significant: boolean | null;
+  pairs: AssessmentPair[];
+}
+
+// A paired analysis, not just two independent means, since baseline and
+// follow-up are the same residents measured twice — pairing is both more
+// statistically powerful and the methodologically correct comparison.
+export function pairedAssessmentStats(baseline: Assessment[], followup: Assessment[]): PairedAssessmentStats {
+  const baseById = new Map(baseline.map((a) => [a.resident_id, a.score]));
+  const followById = new Map(followup.map((a) => [a.resident_id, a.score]));
+  const pairs: AssessmentPair[] = [...baseById.entries()]
+    .filter(([rid]) => followById.has(rid))
+    .map(([rid, b]) => ({ resident_id: rid, baseline: b, followup: followById.get(rid)!, diff: followById.get(rid)! - b }));
+
+  const n = pairs.length;
+  const diffs = pairs.map((p) => p.diff);
+  const meanDiff = mean(diffs);
+  const sdDiff = sampleSd(diffs);
+
+  let t: number | null = null;
+  let df: number | null = null;
+  let ci95: [number, number] | null = null;
+  let significant: boolean | null = null;
+  if (n >= 2 && sdDiff != null && sdDiff > 0 && meanDiff != null) {
+    df = n - 1;
+    const se = sdDiff / Math.sqrt(n);
+    t = meanDiff / se;
+    const crit = tCritical95(df);
+    ci95 = [meanDiff - crit * se, meanDiff + crit * se];
+    significant = Math.abs(t) > crit;
+  }
+
+  return {
+    baselineMean: mean(baseline.map((a) => a.score)),
+    baselineSd: sampleSd(baseline.map((a) => a.score)),
+    baselineN: baseline.length,
+    followupMean: mean(followup.map((a) => a.score)),
+    followupSd: sampleSd(followup.map((a) => a.score)),
+    followupN: followup.length,
+    n,
+    meanDiff,
+    sdDiff,
+    t,
+    df,
+    ci95,
+    significant,
+    pairs,
   };
 }

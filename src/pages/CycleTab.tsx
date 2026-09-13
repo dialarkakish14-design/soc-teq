@@ -8,6 +8,7 @@ import {
   daysSinceStart,
   formatDateShort,
   isBelowThreshold,
+  pairedAssessmentStats,
   scoreTopic,
 } from "../lib/domain";
 import { downloadCsv } from "../lib/csv";
@@ -566,6 +567,7 @@ export function CycleTab({ resident }: { resident: Resident }) {
             resident={resident}
             claims={claims}
             cohortCount={cohortCount}
+            codeById={codeById}
             onAssess={recordAssessment}
             onEditAssess={editAssessment}
           />
@@ -1847,27 +1849,76 @@ function CommittedTopicRow({
 // same content either way, just gated behind a click instead of always
 // showing, since seeing it appear automatically every time the tab opens
 // got repetitive fast.
-function ResultsSummary({ claims, assessments }: { claims: Claim[]; assessments: Assessment[] }) {
+function ResultsSummary({
+  claims,
+  assessments,
+  codeById,
+}: {
+  claims: Claim[];
+  assessments: Assessment[];
+  codeById: Record<string, string>;
+}) {
   const baseline = assessments.filter((a) => a.phase === "baseline");
   const followup = assessments.filter((a) => a.phase === "followup");
-  const mean = (list: Assessment[]) => (list.length ? list.reduce((a, x) => a + x.score, 0) / list.length : null);
-  const b = mean(baseline);
-  const f = mean(followup);
+  const stats = pairedAssessmentStats(baseline, followup);
 
   return (
     <>
-      {b != null && f != null && (
-        <div className={`rounded-2xl px-4 py-3.5 ${f >= b ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"}`}>
+      {stats.baselineMean != null && stats.followupMean != null && (
+        <div
+          className={`rounded-2xl px-4 py-3.5 ${
+            stats.followupMean >= stats.baselineMean ? "bg-[#064B45] text-[#DCEEEB]" : "bg-[#8F5205] text-[#FBF1E1]"
+          }`}
+        >
           <div className="font-mono text-[9.5px] uppercase tracking-widest opacity-85">Change since baseline</div>
           <div className="mt-0.5 flex items-center justify-between">
             <div className="text-[11px] opacity-90">
-              {b.toFixed(1)}% → {f.toFixed(1)}% · {followup.length} taken
+              {stats.baselineMean.toFixed(1)}% → {stats.followupMean.toFixed(1)}%
             </div>
             <div className="font-mono text-2xl font-semibold">
-              {f >= b ? "+" : ""}
-              {(f - b).toFixed(1)}
+              {stats.followupMean >= stats.baselineMean ? "+" : ""}
+              {(stats.followupMean - stats.baselineMean).toFixed(1)}
             </div>
           </div>
+          <div className="mt-2.5 grid grid-cols-2 gap-x-2 gap-y-1 border-t border-white/25 pt-2.5 text-[10.5px] opacity-90">
+            <div>
+              Baseline: {stats.baselineMean.toFixed(1)}% ± {stats.baselineSd != null ? stats.baselineSd.toFixed(1) : "n/a"}{" "}
+              SD (n={stats.baselineN})
+            </div>
+            <div>
+              Follow-up: {stats.followupMean.toFixed(1)}% ± {stats.followupSd != null ? stats.followupSd.toFixed(1) : "n/a"}{" "}
+              SD (n={stats.followupN})
+            </div>
+          </div>
+          {stats.ci95 && stats.meanDiff != null ? (
+            <div className="mt-2 text-[10.5px] leading-relaxed opacity-90">
+              Paired change (n={stats.n}): {stats.meanDiff >= 0 ? "+" : ""}
+              {stats.meanDiff.toFixed(1)} pts, 95% CI [{stats.ci95[0].toFixed(1)}, {stats.ci95[1].toFixed(1)}],
+              t({stats.df}) = {stats.t!.toFixed(2)} · {stats.significant ? "significant" : "not significant"} at
+              p &lt; 0.05
+            </div>
+          ) : (
+            <div className="mt-2 text-[10.5px] opacity-90">
+              Need at least 2 residents with both a baseline and follow-up score for a significance test.
+            </div>
+          )}
+        </div>
+      )}
+      {stats.pairs.length > 0 && (
+        <div className="rounded-3xl bg-white p-4 shadow-sm">
+          <h3 className="font-bold text-[#0E1A1C]">Individual change</h3>
+          {stats.pairs.map((p) => (
+            <div key={p.resident_id} className="flex items-center justify-between border-t border-[#E2EAE9] py-2.5 first:border-t-0">
+              <span className="text-[13px] font-semibold text-[#232D30]">{codeById[p.resident_id] ?? "?"}</span>
+              <span className="font-mono text-[12.5px] text-[#343E42]">
+                {p.baseline}% → {p.followup}%{" "}
+                <b className={p.diff >= 0 ? "text-[#064B45]" : "text-[#8F5205]"}>
+                  {p.diff >= 0 ? "+" : ""}
+                  {p.diff}
+                </b>
+              </span>
+            </div>
+          ))}
         </div>
       )}
       <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -1901,6 +1952,7 @@ function Phase4({
   resident,
   claims,
   cohortCount,
+  codeById,
   onAssess,
   onEditAssess,
 }: {
@@ -1908,6 +1960,7 @@ function Phase4({
   resident: Resident;
   claims: Claim[];
   cohortCount: number;
+  codeById: Record<string, string>;
   onAssess: (phase: "baseline" | "followup", score: number) => void;
   onEditAssess: (id: string, score: number) => void;
 }) {
@@ -1930,7 +1983,7 @@ function Phase4({
       />
       {bothComplete &&
         (showResults ? (
-          <ResultsSummary claims={claims} assessments={assessments} />
+          <ResultsSummary claims={claims} assessments={assessments} codeById={codeById} />
         ) : (
           <button
             onClick={() => setShowResults(true)}
@@ -2056,7 +2109,9 @@ function AssessmentCard({
 function CycleHistorySection({ resident }: { resident: Resident }) {
   const [history, setHistory] = useState<{ id: string; start_date: string }[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Record<string, { claims: Claim[]; assessments: Assessment[] }>>({});
+  const [detail, setDetail] = useState<
+    Record<string, { claims: Claim[]; assessments: Assessment[]; codeById: Record<string, string> }>
+  >({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
   useEffect(() => {
@@ -2071,8 +2126,15 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
     const { data, error } = await supabase.rpc("get_cycle_history_detail", { p_cycle_id: id });
     setLoadingId(null);
     if (error || !data) return;
-    const result = data as { claims: Claim[]; assessments: Assessment[] };
-    setDetail((prev) => ({ ...prev, [id]: { claims: result.claims ?? [], assessments: result.assessments ?? [] } }));
+    const result = data as { claims: Claim[]; assessments: Assessment[]; cohort: { id: string; resident_code: string }[] };
+    setDetail((prev) => ({
+      ...prev,
+      [id]: {
+        claims: result.claims ?? [],
+        assessments: result.assessments ?? [],
+        codeById: Object.fromEntries((result.cohort ?? []).map((r) => [r.id, r.resident_code])),
+      },
+    }));
   }
 
   if (history.length === 0) return null;
@@ -2095,7 +2157,11 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
             ) : (
               detail[h.id] && (
                 <div className="mt-2">
-                  <ResultsSummary claims={detail[h.id].claims} assessments={detail[h.id].assessments} />
+                  <ResultsSummary
+                    claims={detail[h.id].claims}
+                    assessments={detail[h.id].assessments}
+                    codeById={detail[h.id].codeById}
+                  />
                 </div>
               )
             ))}
