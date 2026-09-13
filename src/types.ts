@@ -39,6 +39,9 @@ export interface Day {
   date: string;
   logger_id: string | null;
   emergency_claims: number;
+  // Null only for a day logged before any cycle ever existed for this
+  // program year.
+  cycle_id: string | null;
 }
 
 export const SESSION_TYPES = [

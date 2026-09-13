@@ -687,6 +687,48 @@ create policy cycles_select on cycles for select
 -- lead" isn't reliably identifiable for every program that signs up. See
 -- patch_manual_cycle_start.sql.
 
+-- Scopes daily logging (Today/Cases/Summary/Track My Info) to the current
+-- cycle. Declared here, after `cycles` exists, rather than alongside the
+-- `days` table itself further up -- `days` is created long before `cycles`
+-- in this file, so the FK and the policies referencing it have to live
+-- down here instead. See patch_days_per_cycle.sql.
+alter table days add column if not exists cycle_id uuid references cycles (id) on delete cascade;
+
+-- Null when no cycle has ever been created yet for that program year --
+-- daily logging can start before "Begin Cycle 1" is ever clicked, and in
+-- that state everything should stay visible rather than nothing at all.
+create or replace function my_current_cycle_id()
+returns uuid
+language sql stable security definer set search_path = public as $$
+  select c.id from cycles c
+  where c.program_id = my_program_id() and c.pgy = my_pgy()
+  order by c.created_at desc
+  limit 1;
+$$;
+
+-- Overrides the days_select/days_insert declared with the table further
+-- up. Postgres RLS applies to every access to a table, including
+-- subqueries inside another table's policy, so this alone also narrows
+-- sessions_select/topics_select/ratings_select/absences_select (each
+-- already checks visibility by joining back to days) -- no changes
+-- needed to those, or to any client code that reads topics/days without
+-- an explicit cycle filter of its own.
+drop policy if exists days_select on days;
+create policy days_select on days for select
+  using (
+    program_id = my_program_id()
+    and pgy = my_pgy()
+    and (my_current_cycle_id() is null or cycle_id is not distinct from my_current_cycle_id())
+  );
+
+drop policy if exists days_insert on days;
+create policy days_insert on days for insert
+  with check (
+    program_id = my_program_id()
+    and pgy = my_pgy()
+    and cycle_id is not distinct from my_current_cycle_id()
+  );
+
 -- A new cycle can start once the current one (if any) has reached impact
 -- evaluation -- not once it's fully wrapped up, since deciding "we're
 -- really done with follow-up data collection" is a social call for the

@@ -118,7 +118,14 @@ export function Summary({
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
       supabase.from("private_notes").select("topic_id, note, updated_at").eq("resident_id", resident.id),
-      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+      supabase
+        .from("cycles")
+        .select("*")
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
       supabase
         .from("resources")
         .select("*")
@@ -134,8 +141,12 @@ export function Summary({
       Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
     );
     setPrivateNotes((noteRows as PrivateNoteRow[] | null) ?? []);
-    setCycle((cycleRow as Cycle | null) ?? null);
-    setResources((resourceRows as Resource[] | null) ?? []);
+    const currentCycle = (cycleRow as Cycle | null) ?? null;
+    setCycle(currentCycle);
+    // Scoped to the current cycle, same as the Cycle tab -- a resource
+    // shared under an earlier cycle shouldn't keep showing here once a
+    // new cycle has started.
+    setResources(((resourceRows as Resource[] | null) ?? []).filter((r) => r.cycle_id === currentCycle?.id));
     setLoading(false);
   }, [resident.program_id, resident.pgy, resident.id]);
 

@@ -80,12 +80,20 @@ export function Today({
         .select("id, resident_code")
         .eq("program_id", resident.program_id)
         .eq("pgy", resident.pgy),
-      supabase.from("cycles").select("*").eq("program_id", resident.program_id).eq("pgy", resident.pgy).maybeSingle(),
+      supabase
+        .from("cycles")
+        .select("*")
+        .eq("program_id", resident.program_id)
+        .eq("pgy", resident.pgy)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle(),
     ]);
     setCodeById(
       Object.fromEntries(((cohortRows as { id: string; resident_code: string }[] | null) ?? []).map((r) => [r.id, r.resident_code])),
     );
-    setCycle((cycleRow as Cycle | null) ?? null);
+    const currentCycle = (cycleRow as Cycle | null) ?? null;
+    setCycle(currentCycle);
 
     let { data: dayRow } = await supabase
       .from("days")
@@ -98,7 +106,7 @@ export function Today({
     if (!dayRow) {
       const { data: inserted, error: insertError } = await supabase
         .from("days")
-        .insert({ program_id: resident.program_id, pgy: resident.pgy, date })
+        .insert({ program_id: resident.program_id, pgy: resident.pgy, date, cycle_id: currentCycle?.id ?? null })
         .select("*")
         .single();
       if (insertError) {
