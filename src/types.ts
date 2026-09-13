@@ -159,6 +159,7 @@ export interface Cycle {
   // Set only when a resident explicitly starts each phase — see CycleTab.tsx.
   phase2_started_at: string | null;
   phase3_started_at: string | null;
+  phase4_started_at: string | null;
 }
 
 export const CLAIM_FORMATS = [

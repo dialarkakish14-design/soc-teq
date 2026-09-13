@@ -160,12 +160,14 @@ export function CycleTab({ resident }: { resident: Resident }) {
   const month = cycleMonth(cycle.start_date);
   const phase2Started = !!cycle.phase2_started_at;
   const phase3Started = !!cycle.phase3_started_at;
+  const phase4Started = !!cycle.phase4_started_at;
   // What's actually shown below is driven by the explicit phase2Started/
-  // phase3Started flags, not the raw calendar phase — a resident can (and
-  // often will) start Phase 3 before day 98, so the badge and roadmap need
-  // to reflect that instead of still reading "Phase 2" while Phase 3's
-  // claiming/delivery content is what's actually on screen.
-  const displayPhase: 1 | 2 | 3 | 4 = !phase2Started ? 1 : !phase3Started ? 2 : phase === 4 ? 4 : 3;
+  // phase3Started/phase4Started flags, not the raw calendar phase — a
+  // resident can (and often will) start Phase 3 before day 98, and Phase 4
+  // only begins once someone actually clicks into it past day 180, so the
+  // badge and roadmap need to reflect that instead of a silent date-based
+  // flip.
+  const displayPhase: 1 | 2 | 3 | 4 = !phase2Started ? 1 : !phase3Started ? 2 : !phase4Started ? 3 : 4;
   const claimedTitles = new Set(claims.map((c) => c.topic_title));
   const claimRate = priority.length ? Math.round((claimedTitles.size / priority.length) * 100) : 0;
   const allClaimed = priority.length > 0 && claimedTitles.size >= priority.length;
@@ -414,6 +416,56 @@ export function CycleTab({ resident }: { resident: Resident }) {
     ]);
   }
 
+  // The full Phase 3 record for the cycle, once every claim is actually
+  // done — everything a program director would want on file: who taught
+  // what, when and where, whether it became scholarly work, and every
+  // journal/comment attached to it.
+  function exportPhase3FullCsv() {
+    const rows = claims.map((c) => {
+      const journals = resources
+        .filter((r) => r.topic_title === c.topic_title)
+        .map((r) => `${r.source}${r.url ? ` (${r.url})` : ""}: ${r.takeaway}`)
+        .join(" | ");
+      const comments = requests
+        .filter((r) => r.claim_id === c.id)
+        .map((r) => {
+          const who = codeById[r.resident_id] ?? "?";
+          const tagPart = r.tags.length ? ` [${r.tags.join(", ")}]` : "";
+          return `${who}: ${r.comment}${tagPart}`;
+        })
+        .join(" | ");
+      return [
+        c.topic_title,
+        codeById[c.resident_id] ?? "?",
+        c.format,
+        c.deliver_date ?? "",
+        c.deliver_time ?? "",
+        c.deliver_location ?? "",
+        c.status,
+        c.scholarly ? "yes" : "no",
+        c.scholarly_status.join(", "),
+        journals,
+        comments,
+      ];
+    });
+    downloadCsv(`soc-teq_phase3-full-export_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
+      [
+        "topic",
+        "resident",
+        "format",
+        "deliver_date",
+        "deliver_time",
+        "deliver_location",
+        "status",
+        "scholarly",
+        "scholarly_status",
+        "journals",
+        "comments",
+      ],
+      ...rows,
+    ]);
+  }
+
   return (
     <div className="flex flex-col gap-3">
       <div className="rounded-3xl bg-white p-4 shadow-sm">
@@ -463,30 +515,34 @@ export function CycleTab({ resident }: { resident: Resident }) {
           )}
         </>
       )}
-      {phase3Started && phase !== 4 && (
-        <Phase3
-          claims={claims}
-          resident={resident}
-          codeById={codeById}
-          resources={resources}
-          requests={requests}
-          onDeliver={markDelivered}
-          onUndoDeliver={undoDelivered}
-          onScholarly={markScholarly}
-          onUndoScholarly={undoScholarly}
-          onUpdateScholarlyStatus={updateScholarlyStatus}
-          onShare={shareResource}
-          onDeleteResource={deleteResource}
-          onUpdateResource={updateResource}
-          onDownloadFile={downloadResourceFile}
-          onExportNotes={exportTopicNotesCsv}
-          onUpdateDetails={updateClaimDetails}
-          onEditFormat={editFormat}
-          onAddRequest={addTopicRequest}
-          onDeleteRequest={deleteTopicRequest}
-        />
+      {phase3Started && !phase4Started && (
+        <>
+          <Phase3
+            claims={claims}
+            resident={resident}
+            codeById={codeById}
+            resources={resources}
+            requests={requests}
+            onDeliver={markDelivered}
+            onUndoDeliver={undoDelivered}
+            onScholarly={markScholarly}
+            onUndoScholarly={undoScholarly}
+            onUpdateScholarlyStatus={updateScholarlyStatus}
+            onShare={shareResource}
+            onDeleteResource={deleteResource}
+            onUpdateResource={updateResource}
+            onDownloadFile={downloadResourceFile}
+            onExportNotes={exportTopicNotesCsv}
+            onExportAll={exportPhase3FullCsv}
+            onUpdateDetails={updateClaimDetails}
+            onEditFormat={editFormat}
+            onAddRequest={addTopicRequest}
+            onDeleteRequest={deleteTopicRequest}
+          />
+          {daysSinceStart(cycle.start_date) >= 180 && <StartPhase4 resident={resident} onStarted={load} />}
+        </>
       )}
-      {phase3Started && phase === 4 && (
+      {phase4Started && (
         <Phase4
           assessments={assessments}
           resident={resident}
@@ -940,6 +996,7 @@ function Phase3({
   onUpdateResource,
   onDownloadFile,
   onExportNotes,
+  onExportAll,
   onUpdateDetails,
   onEditFormat,
   onAddRequest,
@@ -960,6 +1017,7 @@ function Phase3({
   onUpdateResource: (id: string, source: string, url: string, takeaway: string, file: File | null) => void;
   onDownloadFile: (path: string, name: string) => void;
   onExportNotes: (title: string) => void;
+  onExportAll: () => void;
   onUpdateDetails: (id: string, deliverDate: string, deliverTime: string, deliverLocation: string, markRescheduled: boolean) => void;
   onEditFormat: (id: string, format: string) => void;
   onAddRequest: (claimId: string, comment: string, tags: string[]) => void;
@@ -984,6 +1042,7 @@ function Phase3({
     return 0;
   });
   let upcomingSeen = 0;
+  const allDelivered = claims.length > 0 && claims.every((c) => c.status === "delivered");
 
   return (
     <div className="rounded-3xl bg-gradient-to-br from-[#E4EEF8] to-[#FAFCFE] p-4 shadow-sm">
@@ -991,6 +1050,14 @@ function Phase3({
         <h3 className="font-extrabold text-[#2B5F8A]">What everyone committed to</h3>
         <span className={`shrink-0 text-xl font-extrabold text-[#2B5F8A] transition-transform ${open ? "rotate-180" : ""}`}>▾</span>
       </button>
+      {open && allDelivered && (
+        <button
+          onClick={onExportAll}
+          className="mt-2 w-full rounded-xl bg-[#2B5F8A] py-2.5 text-xs font-bold text-white"
+        >
+          Export everything (CSV) · every topic, time/place, journal and comment
+        </button>
+      )}
       {open && claims.length > 0 && (
         <p className="mt-1 text-[11px] leading-relaxed text-[#2B5F8A]">
           Everyone's claimed topics, closest upcoming first. When you deliver, consider all 5 Likert items. Your
@@ -2063,6 +2130,41 @@ function StartPhase3({ resident, onStarted }: { resident: Resident; onStarted: (
         className="mt-3 w-full rounded-2xl bg-[#0E7C72] py-3 text-sm font-bold text-white disabled:opacity-60"
       >
         {busy ? "Starting…" : "Begin resident-led remediation"}
+      </button>
+    </div>
+  );
+}
+
+function StartPhase4({ resident, onStarted }: { resident: Resident; onStarted: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+
+  async function start() {
+    setBusy(true);
+    setError("");
+    const { error: rpcError } = await supabase.rpc("start_phase4", { p_pgy: resident.pgy });
+    setBusy(false);
+    if (rpcError) return setError(rpcError.message);
+    onStarted();
+  }
+
+  return (
+    <div className="rounded-2xl bg-[#EEE7F3] p-4 shadow-sm">
+      <h3 className="font-bold text-[#5E3F73]">6 months are up. Begin impact evaluation?</h3>
+      <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#5E3F73]">
+        This opens the follow-up assessment, taken the same way as the baseline, so the cohort can see the change
+        six months on. Any resident can start this, but talk it over with {resident.pgy} and your program director
+        first.
+      </p>
+      {error && (
+        <div className="mt-2.5 rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
+      )}
+      <button
+        onClick={start}
+        disabled={busy}
+        className="mt-3 w-full rounded-2xl bg-[#5E3F73] py-3 text-sm font-bold text-white disabled:opacity-60"
+      >
+        {busy ? "Starting…" : "Begin impact evaluation"}
       </button>
     </div>
   );
