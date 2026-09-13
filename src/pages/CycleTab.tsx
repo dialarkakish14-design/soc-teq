@@ -1204,6 +1204,7 @@ function TopicRequests({
   requests,
   codeById,
   myResidentId,
+  isMine,
   onAdd,
   onDelete,
 }: {
@@ -1211,6 +1212,7 @@ function TopicRequests({
   requests: TopicRequest[];
   codeById: Record<string, string>;
   myResidentId: string;
+  isMine: boolean;
   onAdd: (claimId: string, comment: string, tags: string[]) => void;
   onDelete: (id: string) => void;
 }) {
@@ -1222,15 +1224,19 @@ function TopicRequests({
     setTags((prev) => (prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]));
   }
 
+  if (requests.length === 0 && isMine) return null;
+
   return (
     <div className="mt-3 rounded-xl bg-[#F5F8F7] p-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold text-[#232D30]">
           {requests.length === 0 ? "No requests yet" : `${requests.length} request${requests.length === 1 ? "" : "s"} from your cohort`}
         </span>
-        <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
-          {open ? "Done" : "Ask for something"}
-        </button>
+        {!isMine && (
+          <button onClick={() => setOpen((o) => !o)} className="text-xs font-bold text-[#0E7C72]">
+            {open ? "Done" : "Ask for something"}
+          </button>
+        )}
       </div>
       {requests.map((r) => (
         <div key={r.id} className="mt-2 flex items-start justify-between gap-2 border-t border-[#E2EAE9] pt-2">
@@ -1259,8 +1265,8 @@ function TopicRequests({
       {open && (
         <div className="mt-2 flex flex-col gap-2">
           <p className="text-[11px] leading-relaxed text-[#343E42]">
-            Anything in particular you'd like mentioned when this is taught? A question, a myth to bust, an angle
-            to cover · both are optional.
+            Anything in particular you'd like mentioned when this is taught? A question, myths/misconceptions, or
+            an angle to cover · comment and tags are both optional.
           </p>
           <textarea
             value={comment}
@@ -1574,18 +1580,16 @@ function CommittedTopicRow({
   const c = claim;
   const isOther = !(CLAIM_FORMATS as readonly string[]).includes(c.format);
   const deliveryState = claimDeliveryState(c.status, c.deliver_date);
-  const statusColor = c.scholarly
-    ? "bg-[#EEE7F3] text-[#5E3F73]"
-    : deliveryState === "delivered"
+  const statusColor =
+    deliveryState === "delivered"
       ? "bg-[#DCEFEB] text-[#064B45]"
       : deliveryState === "missed"
         ? "bg-[#F8E4E4] text-[#93393E]"
         : deliveryState === "pending"
           ? "bg-[#FAEBD4] text-[#8F5205]"
           : "bg-[#DCEAF5] text-[#2B5F8A]";
-  const statusLabel = c.scholarly
-    ? "Delivered · Scholarly"
-    : deliveryState === "delivered"
+  const statusLabel =
+    deliveryState === "delivered"
       ? "Delivered"
       : deliveryState === "missed"
         ? "Missed"
@@ -1604,9 +1608,16 @@ function CommittedTopicRow({
               {isMine ? "You" : code} · {c.format}
             </div>
           </div>
-          <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-            {statusLabel}
-          </span>
+          <div className="flex shrink-0 gap-1.5">
+            <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+              {statusLabel}
+            </span>
+            {c.scholarly && (
+              <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
+                Scholarly
+              </span>
+            )}
+          </div>
         </div>
       ) : (
         <button onClick={() => setExpanded((o) => !o)} className="flex w-full items-center justify-between gap-2 text-left">
@@ -1616,10 +1627,15 @@ function CommittedTopicRow({
               {isMine ? "You" : code} · {c.format}
             </div>
           </div>
-          <div className="flex shrink-0 items-center gap-2">
+          <div className="flex shrink-0 items-center gap-1.5">
             <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
               {statusLabel}
             </span>
+            {c.scholarly && (
+              <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
+                Scholarly
+              </span>
+            )}
             <span className={`text-xl font-extrabold text-[#5B9BD5] transition-transform ${expanded ? "rotate-180" : ""}`}>▾</span>
           </div>
         </button>
@@ -1786,6 +1802,7 @@ function CommittedTopicRow({
             requests={requests}
             codeById={codeById}
             myResidentId={myResidentId}
+            isMine={isMine}
             onAdd={onAddRequest}
             onDelete={onDeleteRequest}
           />

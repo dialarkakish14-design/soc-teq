@@ -491,24 +491,20 @@ export function TrackMyInfo({
               myClaims.map((c) => {
                 const sc = breakdownByTitle.get(c.topic_title);
                 const deliveryState = claimDeliveryState(c.status, c.deliver_date);
-                const statusColor = c.scholarly
-                  ? "bg-[#EEE7F3] text-[#5E3F73]"
-                  : deliveryState === "delivered"
-                    ? "bg-[#DCEFEB] text-[#064B45]"
-                    : deliveryState === "missed"
-                      ? "bg-[#F8E4E4] text-[#93393E]"
-                      : deliveryState === "pending"
-                        ? "bg-[#FAEBD4] text-[#8F5205]"
-                        : "bg-[#DCEAF5] text-[#2B5F8A]";
-                const statusLabel = c.scholarly
-                  ? "Delivered · Scholarly"
-                  : deliveryState === "delivered"
-                    ? "Delivered"
-                    : deliveryState === "missed"
-                      ? "Missed"
-                      : deliveryState === "pending"
-                        ? "Pending"
-                        : "Planned";
+                const statusColor = deliveryState === "delivered"
+                  ? "bg-[#DCEFEB] text-[#064B45]"
+                  : deliveryState === "missed"
+                    ? "bg-[#F8E4E4] text-[#93393E]"
+                    : deliveryState === "pending"
+                      ? "bg-[#FAEBD4] text-[#8F5205]"
+                      : "bg-[#DCEAF5] text-[#2B5F8A]";
+                const statusLabel = deliveryState === "delivered"
+                  ? "Delivered"
+                  : deliveryState === "missed"
+                    ? "Missed"
+                    : deliveryState === "pending"
+                      ? "Pending"
+                      : "Planned";
                 return (
                   <div key={c.id} className="border-t border-[#E2EAE9] py-3 first:border-t-0">
                     <div className="flex items-center justify-between">
@@ -516,9 +512,16 @@ export function TrackMyInfo({
                         <div className="text-[14px] font-bold text-[#0E1A1C]">{c.topic_title}</div>
                         <div className="text-[11.5px] text-[#343E42]">{c.format}</div>
                       </div>
-                      <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
-                        {statusLabel}
-                      </span>
+                      <div className="flex shrink-0 gap-1.5">
+                        <span className={`whitespace-nowrap rounded-lg px-2 py-1 font-mono text-[10px] font-semibold uppercase ${statusColor}`}>
+                          {statusLabel}
+                        </span>
+                        {c.scholarly && (
+                          <span className="whitespace-nowrap rounded-lg bg-[#EEE7F3] px-2 py-1 font-mono text-[10px] font-semibold uppercase text-[#5E3F73]">
+                            Scholarly
+                          </span>
+                        )}
+                      </div>
                     </div>
                     {(deliveryState === "pending" || deliveryState === "missed") && (
                       <p className="mt-1 text-[11px] leading-relaxed text-[#343E42]">
