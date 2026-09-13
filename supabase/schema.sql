@@ -1036,6 +1036,7 @@ declare
   v_claims jsonb;
   v_assessments jsonb;
   v_resources jsonb;
+  v_requests jsonb;
   v_cohort jsonb;
 begin
   if not exists (
@@ -1060,6 +1061,11 @@ begin
   select coalesce(jsonb_agg(to_jsonb(r) order by r.created_at desc), '[]'::jsonb) into v_resources
   from resources r where r.cycle_id = p_cycle_id;
 
+  select coalesce(jsonb_agg(to_jsonb(tr) order by tr.created_at), '[]'::jsonb) into v_requests
+  from topic_requests tr
+  join claims cl on cl.id = tr.claim_id
+  where cl.cycle_id = p_cycle_id;
+
   select coalesce(jsonb_agg(jsonb_build_object('id', res.id, 'resident_code', res.resident_code)), '[]'::jsonb) into v_cohort
   from (
     select distinct res.id, res.resident_code
@@ -1076,6 +1082,7 @@ begin
     'claims', v_claims,
     'assessments', v_assessments,
     'resources', v_resources,
+    'requests', v_requests,
     'cohort', v_cohort
   );
 end;

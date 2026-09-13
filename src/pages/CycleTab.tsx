@@ -71,6 +71,59 @@ function findScheduleClash(claims: Claim[], date: string, time: string, excludeC
   return claims.find((c) => c.id !== excludeClaimId && c.deliver_date === date && c.deliver_time === time) ?? null;
 }
 
+// Shared between the current cycle's "Export everything" and a past
+// cycle's history export — same full record either way: who taught what,
+// when and where, whether it became scholarly work, and every journal/
+// comment attached to it.
+const PHASE3_EXPORT_HEADER = [
+  "topic",
+  "resident",
+  "format",
+  "deliver_date",
+  "deliver_time",
+  "deliver_location",
+  "status",
+  "scholarly",
+  "scholarly_status",
+  "journals",
+  "comments",
+];
+
+function buildPhase3ExportRows(
+  claims: Claim[],
+  resources: Resource[],
+  requests: TopicRequest[],
+  codeById: Record<string, string>,
+): (string | number)[][] {
+  return claims.map((c) => {
+    const journals = resources
+      .filter((r) => r.topic_title === c.topic_title)
+      .map((r) => `${r.source}${r.url ? ` (${r.url})` : ""}: ${r.takeaway}`)
+      .join(" | ");
+    const comments = requests
+      .filter((r) => r.claim_id === c.id)
+      .map((r) => {
+        const who = codeById[r.resident_id] ?? "?";
+        const tagPart = r.tags.length ? ` [${r.tags.join(", ")}]` : "";
+        return `${who}: ${r.comment}${tagPart}`;
+      })
+      .join(" | ");
+    return [
+      c.topic_title,
+      codeById[c.resident_id] ?? "?",
+      c.format,
+      c.deliver_date ?? "",
+      c.deliver_time ?? "",
+      c.deliver_location ?? "",
+      c.status,
+      c.scholarly ? "yes" : "no",
+      c.scholarly_status.join(", "),
+      journals,
+      comments,
+    ];
+  });
+}
+
 export function CycleTab({ resident }: { resident: Resident }) {
   const [cycle, setCycle] = useState<Cycle | null>(null);
   const [claims, setClaims] = useState<Claim[]>([]);
@@ -424,48 +477,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
   // what, when and where, whether it became scholarly work, and every
   // journal/comment attached to it.
   function exportPhase3FullCsv() {
-    const rows = claims.map((c) => {
-      const journals = resources
-        .filter((r) => r.topic_title === c.topic_title)
-        .map((r) => `${r.source}${r.url ? ` (${r.url})` : ""}: ${r.takeaway}`)
-        .join(" | ");
-      const comments = requests
-        .filter((r) => r.claim_id === c.id)
-        .map((r) => {
-          const who = codeById[r.resident_id] ?? "?";
-          const tagPart = r.tags.length ? ` [${r.tags.join(", ")}]` : "";
-          return `${who}: ${r.comment}${tagPart}`;
-        })
-        .join(" | ");
-      return [
-        c.topic_title,
-        codeById[c.resident_id] ?? "?",
-        c.format,
-        c.deliver_date ?? "",
-        c.deliver_time ?? "",
-        c.deliver_location ?? "",
-        c.status,
-        c.scholarly ? "yes" : "no",
-        c.scholarly_status.join(", "),
-        journals,
-        comments,
-      ];
-    });
     downloadCsv(`soc-teq_phase3-full-export_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
-      [
-        "topic",
-        "resident",
-        "format",
-        "deliver_date",
-        "deliver_time",
-        "deliver_location",
-        "status",
-        "scholarly",
-        "scholarly_status",
-        "journals",
-        "comments",
-      ],
-      ...rows,
+      PHASE3_EXPORT_HEADER,
+      ...buildPhase3ExportRows(claims, resources, requests, codeById),
     ]);
   }
 
@@ -2141,7 +2155,10 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
   const [history, setHistory] = useState<{ id: string; cycle_number: number; start_date: string }[]>([]);
   const [openId, setOpenId] = useState<string | null>(null);
   const [detail, setDetail] = useState<
-    Record<string, { claims: Claim[]; assessments: Assessment[]; codeById: Record<string, string> }>
+    Record<
+      string,
+      { claims: Claim[]; assessments: Assessment[]; resources: Resource[]; requests: TopicRequest[]; codeById: Record<string, string> }
+    >
   >({});
   const [loadingId, setLoadingId] = useState<string | null>(null);
 
@@ -2157,15 +2174,30 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
     const { data, error } = await supabase.rpc("get_cycle_history_detail", { p_cycle_id: id });
     setLoadingId(null);
     if (error || !data) return;
-    const result = data as { claims: Claim[]; assessments: Assessment[]; cohort: { id: string; resident_code: string }[] };
+    const result = data as {
+      claims: Claim[];
+      assessments: Assessment[];
+      resources: Resource[];
+      requests: TopicRequest[];
+      cohort: { id: string; resident_code: string }[];
+    };
     setDetail((prev) => ({
       ...prev,
       [id]: {
         claims: result.claims ?? [],
         assessments: result.assessments ?? [],
+        resources: result.resources ?? [],
+        requests: result.requests ?? [],
         codeById: Object.fromEntries((result.cohort ?? []).map((r) => [r.id, r.resident_code])),
       },
     }));
+  }
+
+  function exportHistoryCsv(cycleNumber: number, d: (typeof detail)[string]) {
+    downloadCsv(`soc-teq_cycle${cycleNumber}-full-export_${resident.pgy.replace("-", "")}.csv`, [
+      PHASE3_EXPORT_HEADER,
+      ...buildPhase3ExportRows(d.claims, d.resources, d.requests, d.codeById),
+    ]);
   }
 
   if (history.length === 0) return null;
@@ -2189,7 +2221,13 @@ function CycleHistorySection({ resident }: { resident: Resident }) {
               <div className="mt-2 text-xs text-[#343E42]">Loading…</div>
             ) : (
               detail[h.id] && (
-                <div className="mt-2">
+                <div className="mt-2 flex flex-col gap-2.5">
+                  <button
+                    onClick={() => exportHistoryCsv(h.cycle_number, detail[h.id])}
+                    className="rounded-xl bg-[#2B5F8A] py-2.5 text-xs font-bold text-white"
+                  >
+                    Export everything (CSV) · Cycle {h.cycle_number}
+                  </button>
                   <ResultsSummary
                     claims={detail[h.id].claims}
                     assessments={detail[h.id].assessments}
