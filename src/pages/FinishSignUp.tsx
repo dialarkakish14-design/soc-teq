@@ -87,7 +87,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
               role === r ? "bg-white text-[#0E1A1C] shadow-sm" : "text-[#343E42]"
             }`}
           >
-            {r === "resident" ? "Resident" : "Program director"}
+            {r === "resident" ? "Resident" : "Program Director"}
           </button>
         ))}
       </div>
@@ -134,7 +134,7 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
 
         <label className="block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">
-            {role === "pd" ? "Program director access code" : "Program access code"}
+            {role === "pd" ? "Program Director access code" : "Program access code"}
           </div>
           <input
             value={accessCode}

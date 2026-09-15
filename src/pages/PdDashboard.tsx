@@ -22,7 +22,7 @@ export function PdDashboard({ pd, onLogout }: { pd: ProgramDirector; onLogout: (
     <div className="mx-auto min-h-dvh max-w-md px-5 py-8">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Program director</h1>
+          <h1 className="text-2xl font-extrabold tracking-tight text-[#0E1A1C]">Program Director</h1>
           <p className="mt-1 text-sm text-[#343E42]">{programName || "…"}</p>
         </div>
         <button onClick={onLogout} className="text-sm font-semibold text-[#343E42]">

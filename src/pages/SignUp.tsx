@@ -168,7 +168,7 @@ export function SignUp({
               role === r ? "bg-white text-[#0E1A1C] shadow-sm" : "text-[#343E42]"
             }`}
           >
-            {r === "resident" ? "Resident" : "Program director"}
+            {r === "resident" ? "Resident" : "Program Director"}
           </button>
         ))}
       </div>
@@ -247,8 +247,7 @@ export function SignUp({
             ))}
           </select>
           <p className="mt-1.5 text-[11.5px] text-[#343E42]">
-            SoC-TEQ is in early pilot with a small number of programs. Interested in piloting it at
-            yours? Email{" "}
+            Interested in piloting it at your program? Email Diala at{" "}
             <a href="mailto:dialarkakish1@hotmail.com" className="font-semibold text-[#0E7C72]">
               dialarkakish1@hotmail.com
             </a>
@@ -256,7 +255,7 @@ export function SignUp({
           </p>
         </Field>
 
-        <Field label={role === "pd" ? "Program director access code" : "Program access code"}>
+        <Field label={role === "pd" ? "Program Director access code" : "Program access code"}>
           <input
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
