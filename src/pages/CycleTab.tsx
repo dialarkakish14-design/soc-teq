@@ -29,7 +29,7 @@ import {
   type TopicRequest,
 } from "../types";
 
-interface PriorityTopic {
+export interface PriorityTopic {
   title: string;
   overall: number;
   perItem: Record<string, number>;
@@ -38,7 +38,7 @@ interface PriorityTopic {
 
 // Same "Mixed across IV-VI counts toward all three" expansion Cases.tsx
 // already uses for its own Fitzpatrick coverage view.
-function expandTones(skinTypes: (SkinType | null)[]): Set<SkinType> {
+export function expandTones(skinTypes: (SkinType | null)[]): Set<SkinType> {
   const seen = new Set<SkinType>();
   for (const s of skinTypes) {
     if (s === "Mixed across IV–VI") FITZPATRICK_TONES.forEach((t) => seen.add(t));
@@ -75,7 +75,7 @@ function findScheduleClash(claims: Claim[], date: string, time: string, excludeC
 // cycle's history export — same full record either way: who taught what,
 // when and where, whether it became scholarly work, and every journal/
 // comment attached to it.
-const PHASE3_EXPORT_HEADER = [
+export const PHASE3_EXPORT_HEADER = [
   "topic",
   "resident",
   "format",
@@ -89,7 +89,7 @@ const PHASE3_EXPORT_HEADER = [
   "comments",
 ];
 
-function buildPhase3ExportRows(
+export function buildPhase3ExportRows(
   claims: Claim[],
   resources: Resource[],
   requests: TopicRequest[],
@@ -727,7 +727,7 @@ function TopicSearchInput({
 // Same visual as the Fitzpatrick coverage strip on the Cases tab, reused
 // here so a priority topic also shows which skin tones it's actually
 // been shown in, not just its RM score.
-function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
+export function FitzpatrickStrip({ tones }: { tones: Set<SkinType> }) {
   if (tones.size === 0) return null;
   const missing = FITZPATRICK_TONES.filter((t) => !tones.has(t));
   return (
@@ -1863,7 +1863,7 @@ function CommittedTopicRow({
 // same content either way, just gated behind a click instead of always
 // showing, since seeing it appear automatically every time the tab opens
 // got repetitive fast.
-function ResultsSummary({
+export function ResultsSummary({
   claims,
   assessments,
   codeById,
