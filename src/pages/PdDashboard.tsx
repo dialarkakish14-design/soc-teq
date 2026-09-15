@@ -170,7 +170,7 @@ export function PdDashboard({ pd, onLogout }: { pd: ProgramDirector; onLogout: (
       </div>
 
       <p className="mt-6 text-[11.5px] leading-relaxed text-[#343E42]">
-        Everything above is shown by resident code, never by name. Browsing individual shared
+        Everything above is shown by resident code. Browsing individual shared
         materials one at a time (rather than in the export) is coming in a later update.
       </p>
     </div>

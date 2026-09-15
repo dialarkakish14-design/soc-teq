@@ -89,7 +89,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "Privacy and trust",
     title: "Designed without patient identifiers",
     subtitle: "",
-    body: "No patient-identifying information is collected or stored. In ratings and exports, residents appear only as Resident A, B, C, never by name.\n\nAuthentication is handled through Supabase, and passwords are not visible to SoC-TEQ.",
+    body: "No patient-identifying information is collected or stored. In ratings and exports, residents appear only as Resident A, B, C.\n\nAuthentication is handled through Supabase, and passwords are not visible to SoC-TEQ.",
     tone: "teal",
   },
   {
