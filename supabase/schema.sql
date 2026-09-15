@@ -1509,4 +1509,4 @@ revoke all on function reset_program_data(uuid) from public, anon, authenticated
 -- ---------- seed: the Wayne State pilot program ----------
 
 insert into programs (name, access_code, profile_complete)
-values ('Wayne State University — Dermatology', 'WSUDERM2026', true);
+values ('Wayne State University Dermatology', 'WSUDERM2026', true);

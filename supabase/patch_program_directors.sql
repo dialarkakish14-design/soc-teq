@@ -108,4 +108,4 @@ $$;
 grant execute on function complete_pd_signup(uuid, text, text, text) to authenticated;
 
 -- Set a program's PD access code to enable PD sign-ups for it, e.g.:
---   update programs set pd_access_code = 'WSUDERM2026PD' where name = 'Wayne State University — Dermatology';
+--   update programs set pd_access_code = 'WSUDERM2026PD' where name = 'Wayne State University Dermatology';
