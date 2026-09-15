@@ -27,6 +27,7 @@ export function SignUp({
   const [accessCode, setAccessCode] = useState("");
   const [precourse, setPrecourse] = useState(false);
   const [error, setError] = useState("");
+  const [emailTaken, setEmailTaken] = useState(false);
   const [pendingConfirmation, setPendingConfirmation] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -40,6 +41,7 @@ export function SignUp({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    setEmailTaken(false);
 
     if (!fullName.trim()) return setError("Add your full name.");
     if (!/^[a-z0-9._-]{3,}$/.test(username.trim().toLowerCase())) {
@@ -96,7 +98,7 @@ export function SignUp({
       // versus one identity for a genuinely new signup. That's the only way
       // to tell the two cases apart on this end.
       if (signUpData.user && signUpData.user.identities?.length === 0) {
-        setError("An account with that email already exists. Try logging in, or use \"Forgot your password?\" if you don't remember it.");
+        setEmailTaken(true);
         return;
       }
 
@@ -286,6 +288,16 @@ export function SignUp({
             </span>
             I've gone through what SoC-TEQ is and how it works before joining.
           </button>
+        )}
+
+        {emailTaken && (
+          <div className="rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">
+            An account with that email already exists.
+            <button type="button" onClick={onGoLogin} className="ml-1 underline underline-offset-2">
+              Log in
+            </button>{" "}
+            instead, or use "Forgot your password?" there if you don't remember it.
+          </div>
         )}
 
         {error && (

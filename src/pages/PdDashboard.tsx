@@ -33,9 +33,8 @@ export function PdDashboard({ pd, onLogout }: { pd: ProgramDirector; onLogout: (
       <div className="mt-8 rounded-3xl bg-white p-5 shadow-sm">
         <h2 className="font-bold text-[#0E1A1C]">Welcome, {pd.full_name.split(" ")[0]}</h2>
         <p className="mt-2 text-sm leading-relaxed text-[#232D30]">
-          Your account is set up. The dashboard itself — case coverage across every PGY year,
-          baseline/follow-up results, claimed-topic status, and shared prep materials — is coming
-          next.
+          Your account is set up. The dashboard itself is coming next: case coverage across every
+          PGY year, baseline/follow-up results, claimed-topic status, and shared prep materials.
         </p>
         <p className="mt-3 text-[12.5px] leading-relaxed text-[#343E42]">
           You'll see results across every PGY year in {programName || "your program"}, without
