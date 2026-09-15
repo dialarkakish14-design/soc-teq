@@ -967,7 +967,7 @@ begin
       join sessions se on se.id = ti.session_id
       join days d on d.id = se.day_id
       left join ratings rt on rt.topic_id = ti.id
-      where ti.soc_covered = true and d.program_id = v_program_id and d.pgy = p_pgy
+      where ti.soc_covered = true and d.program_id = v_program_id and d.pgy = p_pgy and d.cycle_id = v_cycle_id
       group by ti.title
     ) grp;
   else
