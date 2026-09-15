@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
-import { buildEmailRedirectUrl } from "../lib/pendingSignup";
+import { buildEmailRedirectUrl, buildPdEmailRedirectUrl } from "../lib/pendingSignup";
 import type { Pgy, ProgramPublic } from "../types";
 
 const PGY_LEVELS: Pgy[] = ["PGY-2", "PGY-3", "PGY-4"];
+type Role = "resident" | "pd";
 
 export function SignUp({
   onDone,
@@ -14,6 +15,7 @@ export function SignUp({
   onGoLogin: () => void;
   onBack: () => void;
 }) {
+  const [role, setRole] = useState<Role>("resident");
   const [programs, setPrograms] = useState<ProgramPublic[]>([]);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -46,19 +48,27 @@ export function SignUp({
     if (password.length < 6) return setError("Password needs at least 6 characters.");
     if (!email.trim()) return setError("Add your email.");
     if (!programId) return setError("Choose your dermatology program.");
-    if (!accessCode.trim()) return setError("Add your program access code.");
-    if (!precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
+    if (!accessCode.trim()) return setError(role === "pd" ? "Add your program director access code." : "Add your program access code.");
+    if (role === "resident" && !precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
 
     setBusy(true);
     try {
-      const pending = {
-        p_program_id: programId,
-        p_pgy: pgy,
-        p_full_name: fullName.trim(),
-        p_username: username.trim().toLowerCase(),
-        p_access_code: accessCode.trim(),
-        p_precourse: precourse,
-      };
+      const emailRedirectTo =
+        role === "pd"
+          ? buildPdEmailRedirectUrl({
+              p_program_id: programId,
+              p_full_name: fullName.trim(),
+              p_username: username.trim().toLowerCase(),
+              p_access_code: accessCode.trim(),
+            })
+          : buildEmailRedirectUrl({
+              p_program_id: programId,
+              p_pgy: pgy,
+              p_full_name: fullName.trim(),
+              p_username: username.trim().toLowerCase(),
+              p_access_code: accessCode.trim(),
+              p_precourse: precourse,
+            });
 
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: email.trim(),
@@ -67,7 +77,7 @@ export function SignUp({
           // Carries the profile fields through the confirmation link itself,
           // so completing the join works regardless of which device/browser
           // the resident opens the email on.
-          emailRedirectTo: buildEmailRedirectUrl(pending),
+          emailRedirectTo,
           // Also mirrors name/username into user_metadata immediately, so the
           // Confirm Signup email itself (sent right now, before the account
           // exists) can personalize with {{ .Data.full_name }} — the redirect
@@ -95,7 +105,22 @@ export function SignUp({
         return;
       }
 
-      const { error: rpcError } = await supabase.rpc("complete_signup", pending);
+      const { error: rpcError } =
+        role === "pd"
+          ? await supabase.rpc("complete_pd_signup", {
+              p_program_id: programId,
+              p_full_name: fullName.trim(),
+              p_username: username.trim().toLowerCase(),
+              p_access_code: accessCode.trim(),
+            })
+          : await supabase.rpc("complete_signup", {
+              p_program_id: programId,
+              p_pgy: pgy,
+              p_full_name: fullName.trim(),
+              p_username: username.trim().toLowerCase(),
+              p_access_code: accessCode.trim(),
+              p_precourse: precourse,
+            });
       if (rpcError) {
         setError(rpcError.message);
         return;
@@ -132,6 +157,21 @@ export function SignUp({
       </button>
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Create your account</h1>
       <p className="mt-2 text-sm text-[#232D30]">You'll need your program's access code to join.</p>
+
+      <div className="mt-5 flex rounded-2xl bg-[#EAEFEE] p-1">
+        {(["resident", "pd"] as Role[]).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRole(r)}
+            className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-colors ${
+              role === r ? "bg-white text-[#0E1A1C] shadow-sm" : "text-[#343E42]"
+            }`}
+          >
+            {r === "resident" ? "Resident" : "Program director"}
+          </button>
+        ))}
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <Field label="Full name">
@@ -183,13 +223,15 @@ export function SignUp({
           />
         </Field>
 
-        <Field label="PGY level">
-          <select value={pgy} onChange={(e) => setPgy(e.target.value as Pgy)} className="input">
-            {PGY_LEVELS.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
-        </Field>
+        {role === "resident" && (
+          <Field label="PGY level">
+            <select value={pgy} onChange={(e) => setPgy(e.target.value as Pgy)} className="input">
+              {PGY_LEVELS.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </Field>
+        )}
 
         <Field label="Dermatology program">
           <select
@@ -214,7 +256,7 @@ export function SignUp({
           </p>
         </Field>
 
-        <Field label="Program access code">
+        <Field label={role === "pd" ? "Program director access code" : "Program access code"}>
           <input
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
@@ -222,22 +264,30 @@ export function SignUp({
             autoComplete="off"
             className="input text-center font-mono uppercase tracking-widest"
           />
+          {role === "pd" && (
+            <p className="mt-1.5 text-[11.5px] text-[#343E42]">
+              This is separate from the resident access code. Your program will have given you this
+              one specifically.
+            </p>
+          )}
         </Field>
 
-        <button
-          type="button"
-          onClick={() => setPrecourse((v) => !v)}
-          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#232D30] shadow-sm"
-        >
-          <span
-            className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${
-              precourse ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9]"
-            }`}
+        {role === "resident" && (
+          <button
+            type="button"
+            onClick={() => setPrecourse((v) => !v)}
+            className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#232D30] shadow-sm"
           >
-            {precourse ? "✓" : ""}
-          </span>
-          I've gone through what SoC-TEQ is and how it works before joining.
-        </button>
+            <span
+              className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${
+                precourse ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9]"
+              }`}
+            >
+              {precourse ? "✓" : ""}
+            </span>
+            I've gone through what SoC-TEQ is and how it works before joining.
+          </button>
+        )}
 
         {error && (
           <div className="rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">
@@ -253,10 +303,12 @@ export function SignUp({
           {busy ? "Creating…" : "Create account"}
         </button>
 
-        <div className="text-xs text-[#343E42]">
-          Your name is visible to your group. It never appears next to a rating or in exported
-          data.
-        </div>
+        {role === "resident" && (
+          <div className="text-xs text-[#343E42]">
+            Your name is visible to your group. It never appears next to a rating or in exported
+            data.
+          </div>
+        )}
 
         <button type="button" onClick={onGoLogin} className="mt-1 text-sm font-semibold text-[#0E7C72]">
           Already registered? Log in

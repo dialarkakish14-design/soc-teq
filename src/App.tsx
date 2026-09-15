@@ -14,15 +14,21 @@ import { TrackMyInfo } from "./pages/TrackMyInfo";
 import { Team } from "./pages/Team";
 import { FAQ } from "./pages/FAQ";
 import { FinishSignUp } from "./pages/FinishSignUp";
+import { PdDashboard } from "./pages/PdDashboard";
 import { supabase } from "./lib/supabase";
-import { readPendingSignupFromUrl, clearPendingSignupFromUrl } from "./lib/pendingSignup";
+import {
+  readPendingSignupFromUrl,
+  clearPendingSignupFromUrl,
+  readPendingPdSignupFromUrl,
+  clearPendingPdSignupFromUrl,
+} from "./lib/pendingSignup";
 import { BottomNav, type NavScreen } from "./components/BottomNav";
 
 type Screen = "landing" | "signup" | "login" | "mission" | "how" | "why";
 type InfoOverlay = "mission" | "how" | "why" | null;
 
 function App() {
-  const { session, resident, programTimezone, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } =
+  const { session, resident, pd, programTimezone, loading, refreshResident, isPasswordRecovery, clearPasswordRecovery } =
     useAuth();
   const [screen, setScreen] = useState<Screen>("landing");
   const [navScreen, setNavScreen] = useState<NavScreen>("today");
@@ -30,13 +36,31 @@ function App() {
   const [finishingSignup, setFinishingSignup] = useState(false);
   const [autoAttempted, setAutoAttempted] = useState(false);
 
-  // If "Confirm email" is on, signUp() returns no session and complete_signup
-  // never ran. The profile fields travel in the confirmation link's query
-  // params (see lib/pendingSignup.ts), so they're available here regardless
-  // of which device/browser the link was opened on. Falls through to a
-  // manual form below if that data isn't present for any reason.
+  // If "Confirm email" is on, signUp() returns no session and complete_
+  // signup/complete_pd_signup never ran. The profile fields travel in the
+  // confirmation link's query params (see lib/pendingSignup.ts), so
+  // they're available here regardless of which device/browser the link
+  // was opened on — resident and PD pending signups use distinct query
+  // param names, so trying both is safe. Falls through to a manual form
+  // below if neither is present for any reason.
   useEffect(() => {
-    if (!session || resident || finishingSignup || autoAttempted) return;
+    if (!session || resident || pd || finishingSignup || autoAttempted) return;
+
+    const pendingPd = readPendingPdSignupFromUrl();
+    if (pendingPd) {
+      setFinishingSignup(true);
+      supabase.rpc("complete_pd_signup", pendingPd).then(({ error }) => {
+        if (!error) {
+          clearPendingPdSignupFromUrl();
+          supabase.auth.updateUser({ data: { full_name: pendingPd.p_full_name, username: pendingPd.p_username } });
+        }
+        setFinishingSignup(false);
+        setAutoAttempted(true);
+        refreshResident();
+      });
+      return;
+    }
+
     const pending = readPendingSignupFromUrl();
     if (!pending) {
       setAutoAttempted(true);
@@ -58,7 +82,7 @@ function App() {
       setAutoAttempted(true);
       refreshResident();
     });
-  }, [session, resident, finishingSignup, autoAttempted, refreshResident]);
+  }, [session, resident, pd, finishingSignup, autoAttempted, refreshResident]);
 
   if (loading) {
     return <div className="p-8 text-center text-sm text-[#343E42]">Loading…</div>;
@@ -132,7 +156,11 @@ function App() {
     );
   }
 
-  if (session && !resident) {
+  if (session && pd) {
+    return <PdDashboard pd={pd} onLogout={() => supabase.auth.signOut()} />;
+  }
+
+  if (session && !resident && !pd) {
     if (!autoAttempted || finishingSignup) {
       return <div className="p-8 text-center text-sm text-[#343E42]">Finishing your sign-up…</div>;
     }

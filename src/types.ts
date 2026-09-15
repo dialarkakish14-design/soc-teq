@@ -14,6 +14,14 @@ export interface Resident {
   reminder_hours_before: 1 | 3 | null;
 }
 
+export interface ProgramDirector {
+  id: string;
+  program_id: string;
+  full_name: string;
+  email: string;
+  username: string;
+}
+
 export interface ProgramPublic {
   id: string;
   name: string;

@@ -57,3 +57,45 @@ export function clearPendingSignupFromUrl(): void {
   Object.values(KEYS).forEach((k) => url.searchParams.delete(k));
   window.history.replaceState({}, "", url.pathname + url.search + url.hash);
 }
+
+// Same trick, for a program director signing up instead — distinct query
+// param names so the two never collide when read back from the same URL.
+export interface PendingPdSignup {
+  p_program_id: string;
+  p_full_name: string;
+  p_username: string;
+  p_access_code: string;
+}
+
+const PD_KEYS: Record<keyof PendingPdSignup, string> = {
+  p_program_id: "pdsu_program",
+  p_full_name: "pdsu_name",
+  p_username: "pdsu_user",
+  p_access_code: "pdsu_code",
+};
+
+export function buildPdEmailRedirectUrl(pending: PendingPdSignup): string {
+  const params = new URLSearchParams({
+    [PD_KEYS.p_program_id]: pending.p_program_id,
+    [PD_KEYS.p_full_name]: pending.p_full_name,
+    [PD_KEYS.p_username]: pending.p_username,
+    [PD_KEYS.p_access_code]: pending.p_access_code,
+  });
+  return `${window.location.origin}/?${params.toString()}`;
+}
+
+export function readPendingPdSignupFromUrl(): PendingPdSignup | null {
+  const params = new URLSearchParams(window.location.search);
+  const program = params.get(PD_KEYS.p_program_id);
+  const name = params.get(PD_KEYS.p_full_name);
+  const user = params.get(PD_KEYS.p_username);
+  const code = params.get(PD_KEYS.p_access_code);
+  if (!program || !name || !user || !code) return null;
+  return { p_program_id: program, p_full_name: name, p_username: user, p_access_code: code };
+}
+
+export function clearPendingPdSignupFromUrl(): void {
+  const url = new URL(window.location.href);
+  Object.values(PD_KEYS).forEach((k) => url.searchParams.delete(k));
+  window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+}

@@ -11,6 +11,10 @@ create table programs (
   id uuid primary key default gen_random_uuid(),
   name text not null,
   access_code text not null,
+  -- Separate from access_code above so program directors sign up through
+  -- their own code, never a resident's. Null means PD sign-ups aren't
+  -- enabled for this program yet. See patch_program_directors.sql.
+  pd_access_code text,
   profile_complete boolean not null default false,
   setting text,
   patient_mix text,
@@ -38,6 +42,26 @@ create table residents (
   reminder_hours_before smallint check (reminder_hours_before is null or reminder_hours_before in (1, 3)),
   created_at timestamptz not null default now()
 );
+
+-- Program Director accounts: a separate identity from residents, tied to
+-- a program (not a PGY) -- no daily logging, no ratings, no cohort. Signs
+-- up through its own pd_access_code so the two populations can't cross
+-- into each other's signup flow. Shares the same username-based Login
+-- screen as residents (see get_email_for_username further down), so a PD
+-- needs a username too. See patch_program_directors.sql.
+create table program_directors (
+  id uuid primary key references auth.users (id) on delete cascade,
+  program_id uuid not null references programs (id),
+  full_name text not null,
+  email text not null,
+  username text not null unique,
+  created_at timestamptz not null default now()
+);
+
+alter table program_directors enable row level security;
+
+create policy program_directors_select on program_directors for select
+  using (id = auth.uid());
 
 create table days (
   id uuid primary key default gen_random_uuid(),
@@ -327,10 +351,15 @@ grant select on programs_public to anon, authenticated;
 -- Looks up the email for a username so the login screen can authenticate by
 -- username while Supabase Auth itself keys off email. Never reveals which
 -- usernames exist beyond a plain match, and the login screen shows no hints.
+-- Checks both account types, since login is one shared screen for
+-- residents and program directors alike.
 create or replace function get_email_for_username(p_username text)
 returns text
 language sql stable security definer set search_path = public as $$
-  select email from residents where username = lower(trim(p_username));
+  select email from residents where username = lower(trim(p_username))
+  union all
+  select email from program_directors where username = lower(trim(p_username))
+  limit 1;
 $$;
 
 grant execute on function get_email_for_username(text) to anon, authenticated;
@@ -414,6 +443,76 @@ end;
 $$;
 
 grant execute on function complete_signup(uuid, text, text, text, text, boolean) to authenticated;
+
+-- Mirrors my_program_id()/my_pgy() for the PD side -- used by the
+-- cross-PGY dashboard functions in a later patch.
+create or replace function my_pd_program_id()
+returns uuid
+language sql stable security definer set search_path = public as $$
+  select program_id from program_directors where id = auth.uid();
+$$;
+
+-- Validates the PD access code server-side and creates the
+-- program_directors row -- mirrors complete_signup() above closely.
+create or replace function complete_pd_signup(
+  p_program_id uuid,
+  p_full_name text,
+  p_username text,
+  p_access_code text
+)
+returns program_directors
+language plpgsql security definer set search_path = public as $$
+declare
+  v_program programs;
+  v_username text := lower(trim(p_username));
+  v_pd program_directors;
+begin
+  if auth.uid() is null then
+    raise exception 'Not authenticated';
+  end if;
+
+  if exists (select 1 from residents where id = auth.uid())
+    or exists (select 1 from program_directors where id = auth.uid()) then
+    raise exception 'A profile already exists for this account';
+  end if;
+
+  if v_username !~ '^[a-z0-9._-]{3,}$' then
+    raise exception 'Pick a username of at least 3 characters, letters and numbers only';
+  end if;
+
+  if exists (select 1 from residents where username = v_username)
+    or exists (select 1 from program_directors where username = v_username) then
+    raise exception 'That username is taken';
+  end if;
+
+  select * into v_program from programs where id = p_program_id;
+  if v_program is null or not v_program.profile_complete then
+    raise exception 'That program is not accepting sign-ups';
+  end if;
+
+  if v_program.pd_access_code is null or trim(v_program.pd_access_code) = '' then
+    raise exception 'This program has not enabled program director sign-ups yet';
+  end if;
+
+  if upper(trim(p_access_code)) <> upper(trim(v_program.pd_access_code)) then
+    raise exception 'That access code does not match';
+  end if;
+
+  insert into program_directors (id, program_id, full_name, email, username)
+  values (
+    auth.uid(),
+    p_program_id,
+    trim(p_full_name),
+    (select email from auth.users where id = auth.uid()),
+    v_username
+  )
+  returning * into v_pd;
+
+  return v_pd;
+end;
+$$;
+
+grant execute on function complete_pd_signup(uuid, text, text, text) to authenticated;
 
 -- ---------- absences + the 4am close job ----------
 -- See supabase/patch_absences_close_job.sql for the full commentary; this

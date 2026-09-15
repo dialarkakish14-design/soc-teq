@@ -3,12 +3,15 @@ import { supabase } from "../lib/supabase";
 import type { Pgy, ProgramPublic } from "../types";
 
 const PGY_LEVELS: Pgy[] = ["PGY-2", "PGY-3", "PGY-4"];
+type Role = "resident" | "pd";
 
-// Shown whenever a signed-in auth user has no residents row yet — most often
-// right after clicking an email confirmation link, since that can open in a
-// different browser/tab than the one signup happened in, so there's no
-// guarantee the in-progress form data survived to auto-finish the join.
+// Shown whenever a signed-in auth user has no residents or program_
+// directors row yet — most often right after clicking an email
+// confirmation link, since that can open in a different browser/tab than
+// the one signup happened in, so there's no guarantee the in-progress
+// form data survived to auto-finish the join.
 export function FinishSignUp({ email, onDone }: { email: string; onDone: () => void }) {
+  const [role, setRole] = useState<Role>("resident");
   const [programs, setPrograms] = useState<ProgramPublic[]>([]);
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
@@ -35,18 +38,26 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
       return setError("Pick a username of at least 3 characters, letters and numbers only.");
     }
     if (!programId) return setError("Choose your dermatology program.");
-    if (!accessCode.trim()) return setError("Add your program access code.");
-    if (!precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
+    if (!accessCode.trim()) return setError(role === "pd" ? "Add your program director access code." : "Add your program access code.");
+    if (role === "resident" && !precourse) return setError("Confirm you've gone through how SoC-TEQ works before joining.");
 
     setBusy(true);
-    const { error: rpcError } = await supabase.rpc("complete_signup", {
-      p_program_id: programId,
-      p_pgy: pgy,
-      p_full_name: fullName.trim(),
-      p_username: username.trim().toLowerCase(),
-      p_access_code: accessCode.trim(),
-      p_precourse: precourse,
-    });
+    const { error: rpcError } =
+      role === "pd"
+        ? await supabase.rpc("complete_pd_signup", {
+            p_program_id: programId,
+            p_full_name: fullName.trim(),
+            p_username: username.trim().toLowerCase(),
+            p_access_code: accessCode.trim(),
+          })
+        : await supabase.rpc("complete_signup", {
+            p_program_id: programId,
+            p_pgy: pgy,
+            p_full_name: fullName.trim(),
+            p_username: username.trim().toLowerCase(),
+            p_access_code: accessCode.trim(),
+            p_precourse: precourse,
+          });
     setBusy(false);
     if (rpcError) {
       setError(rpcError.message);
@@ -63,8 +74,23 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
     <div className="mx-auto min-h-dvh max-w-md px-5 py-8">
       <h1 className="text-3xl font-extrabold tracking-tight text-[#0E1A1C]">Finish joining</h1>
       <p className="mt-2 text-sm text-[#232D30]">
-        Your email ({email}) is confirmed. Finish setting up your resident profile to continue.
+        Your email ({email}) is confirmed. Finish setting up your profile to continue.
       </p>
+
+      <div className="mt-5 flex rounded-2xl bg-[#EAEFEE] p-1">
+        {(["resident", "pd"] as Role[]).map((r) => (
+          <button
+            key={r}
+            type="button"
+            onClick={() => setRole(r)}
+            className={`flex-1 rounded-xl py-2.5 text-sm font-bold transition-colors ${
+              role === r ? "bg-white text-[#0E1A1C] shadow-sm" : "text-[#343E42]"
+            }`}
+          >
+            {r === "resident" ? "Resident" : "Program director"}
+          </button>
+        ))}
+      </div>
 
       <form onSubmit={handleSubmit} className="mt-6 flex flex-col gap-4">
         <label className="block">
@@ -83,14 +109,16 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
           />
         </label>
 
-        <label className="block">
-          <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">PGY level</div>
-          <select value={pgy} onChange={(e) => setPgy(e.target.value as Pgy)} className="input">
-            {PGY_LEVELS.map((p) => (
-              <option key={p}>{p}</option>
-            ))}
-          </select>
-        </label>
+        {role === "resident" && (
+          <label className="block">
+            <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">PGY level</div>
+            <select value={pgy} onChange={(e) => setPgy(e.target.value as Pgy)} className="input">
+              {PGY_LEVELS.map((p) => (
+                <option key={p}>{p}</option>
+              ))}
+            </select>
+          </label>
+        )}
 
         <label className="block">
           <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Dermatology program</div>
@@ -105,7 +133,9 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
         </label>
 
         <label className="block">
-          <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">Program access code</div>
+          <div className="mb-1.5 text-xs font-bold text-[#0E1A1C]">
+            {role === "pd" ? "Program director access code" : "Program access code"}
+          </div>
           <input
             value={accessCode}
             onChange={(e) => setAccessCode(e.target.value)}
@@ -115,20 +145,22 @@ export function FinishSignUp({ email, onDone }: { email: string; onDone: () => v
           />
         </label>
 
-        <button
-          type="button"
-          onClick={() => setPrecourse((v) => !v)}
-          className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#232D30] shadow-sm"
-        >
-          <span
-            className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${
-              precourse ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9]"
-            }`}
+        {role === "resident" && (
+          <button
+            type="button"
+            onClick={() => setPrecourse((v) => !v)}
+            className="mt-2 flex items-start gap-3 rounded-2xl bg-white p-4 text-left text-xs font-semibold leading-relaxed text-[#232D30] shadow-sm"
           >
-            {precourse ? "✓" : ""}
-          </span>
-          I've gone through what SoC-TEQ is and how it works before joining.
-        </button>
+            <span
+              className={`mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-md border-2 ${
+                precourse ? "border-[#0E7C72] bg-[#0E7C72] text-white" : "border-[#E2EAE9]"
+              }`}
+            >
+              {precourse ? "✓" : ""}
+            </span>
+            I've gone through what SoC-TEQ is and how it works before joining.
+          </button>
+        )}
 
         {error && (
           <div className="rounded-xl bg-[#F8E4E4] px-3.5 py-2.5 text-sm font-semibold text-[#93393E]">{error}</div>
