@@ -153,8 +153,10 @@ export function scoreTopic(ratings: Rating[]): TopicScore | null {
   return { perItem, overall, n: ratings.length };
 }
 
+// Inclusive of the threshold itself — a topic averaging exactly 3.5 is
+// still flagged, not just anything strictly under it.
 export function isBelowThreshold(overall: number): boolean {
-  return overall < THRESHOLD;
+  return overall <= THRESHOLD;
 }
 
 // A flattened, date-stamped topic — the shape every Summary aggregation

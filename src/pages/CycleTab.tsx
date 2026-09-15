@@ -71,6 +71,26 @@ function findScheduleClash(claims: Claim[], date: string, time: string, excludeC
   return claims.find((c) => c.id !== excludeClaimId && c.deliver_date === date && c.deliver_time === time) ?? null;
 }
 
+// Shared between the resident-side "Export priority topics" and the PD
+// dashboard's own priority-needs export — same shape either way: the
+// group's RM score, its five-domain breakdown, and which Fitzpatrick
+// tones were actually covered.
+export const PRIORITY_EXPORT_HEADER = [
+  "topic",
+  "overall_rm",
+  ...RATING_DOMAINS.map((d) => d.key),
+  ...FITZPATRICK_TONES.map((t) => t.replace("Fitzpatrick ", "fitzpatrick_")),
+];
+
+export function buildPriorityExportRows(priority: PriorityTopic[]): (string | number)[][] {
+  return priority.map((p) => [
+    p.title,
+    p.overall.toFixed(2),
+    ...RATING_DOMAINS.map((d) => (p.perItem[d.key] != null ? p.perItem[d.key].toFixed(2) : "")),
+    ...FITZPATRICK_TONES.map((t) => (p.tones.has(t) ? 1 : 0)),
+  ]);
+}
+
 // Shared between the current cycle's "Export everything" and a past
 // cycle's history export — same full record either way: who taught what,
 // when and where, whether it became scholarly work, and every journal/
@@ -446,21 +466,9 @@ export function CycleTab({ resident }: { resident: Resident }) {
   }
 
   function exportPriorityCsv() {
-    const header = [
-      "topic",
-      "overall_rm",
-      ...RATING_DOMAINS.map((d) => d.key),
-      ...FITZPATRICK_TONES.map((t) => t.replace("Fitzpatrick ", "fitzpatrick_")),
-    ];
-    const rows = priority.map((p) => [
-      p.title,
-      p.overall.toFixed(2),
-      ...RATING_DOMAINS.map((d) => (p.perItem[d.key] != null ? p.perItem[d.key].toFixed(2) : "")),
-      ...FITZPATRICK_TONES.map((t) => (p.tones.has(t) ? 1 : 0)),
-    ]);
     downloadCsv(`soc-teq_priority-topics_${resident.pgy.replace("-", "")}_${new Date().toISOString().slice(0, 10)}.csv`, [
-      header,
-      ...rows,
+      PRIORITY_EXPORT_HEADER,
+      ...buildPriorityExportRows(priority),
     ]);
   }
 
@@ -670,7 +678,7 @@ function Phase1({ count }: { count: number }) {
       <h3 className="font-bold text-[#0E1A1C]">Keep logging</h3>
       <p className="mt-1.5 text-[13px] text-[#232D30]">
         {count} skin of color topic{count === 1 ? "" : "s"} logged so far this cycle. At the end of month 3
-        everything scoring below {THRESHOLD} becomes your group's priority list.
+        everything scoring {THRESHOLD} or below becomes your group's priority list.
       </p>
     </div>
   );
@@ -818,7 +826,7 @@ function Phase2({
           what to prep questions on.
         </p>
         {priority.length === 0 ? (
-          <div className="mt-3 text-center text-sm text-[#6B4A17]">Nothing scored below {THRESHOLD} this cycle.</div>
+          <div className="mt-3 text-center text-sm text-[#6B4A17]">Nothing scored {THRESHOLD} or below this cycle.</div>
         ) : (
           <>
             <div className="mt-2.5 rounded-xl bg-[#8F5205] px-3 py-2.5 text-[12px] font-semibold text-white">
@@ -2342,7 +2350,7 @@ function StartPhase2({ resident, onStarted }: { resident: Resident; onStarted: (
     <div className="rounded-2xl bg-[#FAEBD4] p-4 shadow-sm">
       <h3 className="font-bold text-[#8F5205]">3 months are up. Begin identification and baseline?</h3>
       <p className="mt-1.5 text-[12.5px] leading-relaxed text-[#8F5205]">
-        This flags every topic scoring below {THRESHOLD} as a priority need, opens claiming (choosing what
+        This flags every topic scoring {THRESHOLD} or below as a priority need, opens claiming (choosing what
         you'll build over months 4–6) and the baseline assessment. Any resident can start this, but talk it over
         with {resident.pgy} and your program director first.
       </p>

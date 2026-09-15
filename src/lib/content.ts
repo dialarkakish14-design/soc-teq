@@ -37,7 +37,10 @@ export const COVERAGE_DEFINITIONS: { title: string; body: string }[] = [
 ];
 
 export const RM_DEFINITION =
-  "RM — Representational Mean. A topic's overall score: the mean of the five rating items (depth, visual clarity, nuance, management, confidence), each averaged across everyone who rated it. Below 3.5 flags it as a priority educational need.";
+  "RM · Representational Mean. A topic's overall score: the mean of the five rating items (depth, visual clarity, nuance, management, confidence), each averaged across everyone who rated it. A score of 3.5 or below flags it as a priority educational need.";
+
+export const FITZPATRICK_DEFINITION =
+  "Fitzpatrick skin type is a scale from I (always burns, never tans) to VI (never burns, deeply pigmented). SoC-TEQ tracks whether a topic's teaching actually showed images of types IV, V, and VI: the tones most often under-represented in standard dermatology teaching.";
 
 export type MissionTone = "teal" | "rose" | "plum" | "amber" | "sage";
 
@@ -75,7 +78,7 @@ export const MISSION_CARDS: MissionCard[] = [
     eyebrow: "The six-month loop",
     title: "From observation to reassessment",
     subtitle: "",
-    body: "Months 1–3 build the picture. At the end of month 3, topics averaging below 3.5 are identified for focused follow-up and baseline assessment.\n\nMonths 4–6 support resident-led learning around those topics, followed by reassessment to see what was retained.\n\nThe interval is deliberate: immediate confidence does not always reflect what remains over time.",
+    body: "Months 1–3 build the picture. At the end of month 3, topics averaging 3.5 or below are identified for focused follow-up and baseline assessment.\n\nMonths 4–6 support resident-led learning around those topics, followed by reassessment to see what was retained.\n\nThe interval is deliberate: immediate confidence does not always reflect what remains over time.",
     tone: "amber",
   },
   {

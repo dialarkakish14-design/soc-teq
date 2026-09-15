@@ -157,7 +157,26 @@ function App() {
   }
 
   if (session && pd) {
-    return <PdDashboard pd={pd} onLogout={() => supabase.auth.signOut()} />;
+    return (
+      <>
+        <PdDashboard pd={pd} onLogout={() => supabase.auth.signOut()} onAbout={() => setInfoOverlay("mission")} />
+        {infoOverlay && (
+          <div className="fixed inset-0 z-40 overflow-y-auto bg-[#F2F6F5]">
+            {infoOverlay === "mission" ? (
+              <Mission
+                onBack={() => setInfoOverlay(null)}
+                onHow={() => setInfoOverlay("how")}
+                onWhy={() => setInfoOverlay("why")}
+              />
+            ) : infoOverlay === "how" ? (
+              <HowToUse onDone={() => setInfoOverlay(null)} onBack={() => setInfoOverlay(null)} />
+            ) : (
+              <WhyThisMatters onBack={() => setInfoOverlay("mission")} onHow={() => setInfoOverlay("how")} />
+            )}
+          </div>
+        )}
+      </>
+    );
   }
 
   if (session && !resident && !pd) {

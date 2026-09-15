@@ -90,7 +90,7 @@ export function HowToUse({ onDone, onBack }: { onDone: () => void; onBack: () =>
             What happens next
           </div>
           <p className="mt-2 text-[13.5px] leading-relaxed text-[#16211F]">
-            The five ratings are averaged across the team. Topics averaging below 3.5 are identified
+            The five ratings are averaged across the team. Topics averaging 3.5 or below are identified
             for focused follow-up during the next learning cycle.
           </p>
         </div>

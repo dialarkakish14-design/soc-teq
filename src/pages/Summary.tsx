@@ -1162,7 +1162,7 @@ function ScoreTrendCard({ points }: { points: ScorePoint[] }) {
       </div>
 
       <p className="mt-3.5 text-[11.5px] leading-relaxed text-[#343E42]">
-        Amber bars are weeks that averaged below {THRESHOLD}. Gray means nothing was rated that week.
+        Amber bars are weeks that averaged {THRESHOLD} or below. Gray means nothing was rated that week.
       </p>
     </div>
   );
@@ -1279,7 +1279,7 @@ function PeriodContent({
         )}
         <p className="mt-3 text-[12.5px] text-[#232D30]">
           {label} · {stats.coveredCount} of {stats.visualCount} visually relevant topics fully SoC-covered.{" "}
-          {stats.gaps.length} flagged below {THRESHOLD}.
+          {stats.gaps.length} flagged at {THRESHOLD} or below.
         </p>
         {exclusions && exclusions.withExclusion > 0 && (
           <p className="mt-1.5 text-[11px] leading-relaxed text-[#343E42]">
@@ -1333,7 +1333,7 @@ function PeriodContent({
       {stats.gaps.length > 0 && (
         <div className="rounded-3xl bg-white p-4 shadow-sm">
           <h3 className="font-bold text-[#0E1A1C]">
-            Priority educational needs <span className="font-normal text-[#343E42]">· below {THRESHOLD}</span>
+            Priority educational needs <span className="font-normal text-[#343E42]">· {THRESHOLD} or below</span>
           </h3>
           {stats.gaps.map(({ entry, score }) => {
             const full = byId.get(entry.id);
@@ -1410,8 +1410,8 @@ function BriefCard({
       <ul className="mt-2.5 list-disc space-y-1.5 pl-4 text-[13.5px] text-[#D6EBE7]">
         <li>
           {brief.gapTitles.length
-            ? `Priority needs: ${brief.gapTitles.join(", ")}, below ${THRESHOLD}.`
-            : `No topic fell below ${THRESHOLD} ${periodWord}.`}
+            ? `Priority needs: ${brief.gapTitles.join(", ")}, at ${THRESHOLD} or below.`
+            : `No topic fell to ${THRESHOLD} or below ${periodWord}.`}
         </li>
         <li>
           Weakest item is {brief.weakest.name.toLowerCase()}. {brief.weakest.statement}
