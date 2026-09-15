@@ -1343,8 +1343,20 @@ create table private_notes (
 
 alter table private_notes enable row level security;
 
+-- Scoped to the current cycle, same as everything else -- unlike the
+-- other tables here, this policy had no join back to days at all before,
+-- so a resident's private notes from a finished cycle kept showing up
+-- after a new one started. The nested exists is still subject to
+-- days_select's own RLS, which is what actually narrows this to the
+-- current cycle.
 create policy private_notes_select on private_notes for select
-  using (resident_id = auth.uid());
+  using (
+    resident_id = auth.uid()
+    and exists (
+      select 1 from topics t join sessions s on s.id = t.session_id join days d on d.id = s.day_id
+      where t.id = private_notes.topic_id and d.program_id = my_program_id() and d.pgy = my_pgy()
+    )
+  );
 
 create policy private_notes_insert on private_notes for insert
   with check (
